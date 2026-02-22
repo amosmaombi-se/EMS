@@ -27,9 +27,7 @@ class SendWhatsAppMessageJob implements ShouldQueue
     private $message;
     private $data;
 
-    /**
-     * Create job instance
-     */
+ 
     public function __construct(Notification $notification, Message $message, array $data = [])
     {
         $this->notification = $notification;

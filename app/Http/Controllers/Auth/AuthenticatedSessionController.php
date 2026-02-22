@@ -38,10 +38,6 @@ class AuthenticatedSessionController extends Controller
         private readonly WhatsAppService $whatsappService
     ) {}
 
-    // =========================================================================
-    // LOGIN PAGE
-    // =========================================================================
-
     public function create(): Response
     {
         return Inertia::render('Welcome', [
@@ -50,35 +46,22 @@ class AuthenticatedSessionController extends Controller
         ]);
     }
 
-    // =========================================================================
-    // HANDLE LOGIN SUBMISSION
-    //
-    //  ┌─────────────────────────────────────────────────────────────┐
-    //  │  two_factor_enabled = 0  →  Send OTP → show Auth/OTP page  │
-    //  │  two_factor_enabled = 1  →  Direct login → /dashboard      │
-    //  └─────────────────────────────────────────────────────────────┘
-    // =========================================================================
-
     public function store(Request $request): Response|RedirectResponse
     {
         try {
-            // ── 1. Rate limiting ──────────────────────────────────────────────
             if (RateLimiter::tooManyAttempts($this->throttleKey($request), self::RATE_LIMIT_ATTEMPTS)) {
                 throw ValidationException::withMessages([
                     'username' => ['Too many login attempts. Please try again later.'],
                 ]);
             }
 
-            // ── 2. Basic field validation ─────────────────────────────────────
             $credentials = $request->validate([
                 'username' => 'required|string',
                 'password' => 'required|string|min:8',
             ]);
 
-            // ── 3. Determine login type (email or phone) ──────────────────────
             $loginType = $this->determineLoginType($credentials['username']);
 
-            // ── 4. Format validation (email syntax / phone digits) ────────────
             $validator = Validator::make(['username' => $credentials['username']], [
                 'username' => $loginType === 'email'
                     ? 'email'
@@ -91,28 +74,17 @@ class AuthenticatedSessionController extends Controller
                 ]);
             }
 
-            // ── 5. Verify credentials + is_active check ───────────────────────
             $user = $this->validateUserCredentials($credentials);
 
-            // ── 6. Stamp last login metadata ──────────────────────────────────
             $user->update([
                 'last_login_at' => Carbon::now(),
                 'last_login_ip' => $request->ip(),
             ]);
 
-            // ── 7. Clear rate limiter on successful auth ──────────────────────
             RateLimiter::clear($this->throttleKey($request));
 
-            // ── 8. Branch on two_factor_enabled ──────────────────────────────
             if ((int) $user->two_factor_enabled === 1) {
-
-                /*
-                |------------------------------------------------------------
-                | two_factor_enabled = 1
-                | The user already has 2FA set up (two_factor_secret is set).
-                | Trust the password alone → log in directly → /dashboard
-                |------------------------------------------------------------
-                */
+              
                 Auth::login($user);
                 $request->session()->regenerate();
 
@@ -125,17 +97,9 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->intended(RouteServiceProvider::HOME);
             }
 
-            /*
-            |----------------------------------------------------------------
-            | two_factor_enabled = 0
-            | 2FA is disabled, so we enforce a one-time OTP before granting
-            | access — send the OTP then redirect to the OTP page.
-            |----------------------------------------------------------------
-            */
             $otp                = $this->generateAndCacheOTP($user->id);
             $notificationStatus = $this->sendOTPNotifications($user, $otp);
 
-            // Ensure at least one channel delivered the OTP
             if (
                 !$notificationStatus['sms']      &&
                 !$notificationStatus['email']    &&
@@ -187,10 +151,6 @@ class AuthenticatedSessionController extends Controller
         }
     }
 
-    // =========================================================================
-    // VERIFY OTP  (only reached when two_factor_enabled = 0)
-    // =========================================================================
-
     public function verifyOTP(Request $request): RedirectResponse|Response
     {
         try {
@@ -201,7 +161,6 @@ class AuthenticatedSessionController extends Controller
 
             $user = User::findOrFail($data['userId']);
 
-            // Validate OTP value
             try {
                 $this->validateOTP($data['userId'], $data['otp']);
             } catch (\Exception $e) {
@@ -211,7 +170,6 @@ class AuthenticatedSessionController extends Controller
                 ]);
             }
 
-            // OTP passed → finalise login
             Auth::login($user);
             $request->session()->regenerate();
             $this->clearOTPCache($user->id);
@@ -241,10 +199,6 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
     }
-
-    // =========================================================================
-    // RESEND OTP
-    // =========================================================================
 
     public function resendOTP(Request $request): Response
     {
@@ -323,10 +277,7 @@ class AuthenticatedSessionController extends Controller
         }
     }
 
-    // =========================================================================
-    // LOGOUT (Web)
-    // =========================================================================
-
+  
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
@@ -336,9 +287,6 @@ class AuthenticatedSessionController extends Controller
         return redirect('/');
     }
 
-    // =========================================================================
-    // LOGOUT (API / Sanctum)
-    // =========================================================================
 
     public function logout(Request $request): \Illuminate\Http\JsonResponse
     {
@@ -353,23 +301,12 @@ class AuthenticatedSessionController extends Controller
         return response()->json(['message' => 'Successfully logged out']);
     }
 
-    // =========================================================================
-    // PRIVATE HELPERS
-    // =========================================================================
-
-    /**
-     * Returns 'email' or 'phone' based on the identifier format.
-     */
     private function determineLoginType(string $username): string
     {
         return filter_var($username, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
     }
 
-    /**
-     * Find the user, check password, check is_active.
-     *
-     * @throws ValidationException
-     */
+   
     private function validateUserCredentials(array $credentials): User
     {
         $loginType = $this->determineLoginType($credentials['username']);
@@ -380,14 +317,12 @@ class AuthenticatedSessionController extends Controller
 
         $user = User::where($loginType, $credentials['username'])->first();
 
-        // Wrong credentials
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'username' => ['The provided credentials are incorrect.'],
             ]);
         }
 
-        // Soft-deleted or deactivated account
         if (!(bool) $user->is_active) {
             throw ValidationException::withMessages([
                 'username' => ['Your account has been deactivated. Please contact support.'],
@@ -397,17 +332,12 @@ class AuthenticatedSessionController extends Controller
         return $user;
     }
 
-    /**
-     * Generates a zero-padded 6-digit OTP string.
-     */
     private function generateOTP(): string
     {
         return str_pad(random_int(0, 999999), self::OTP_LENGTH, '0', STR_PAD_LEFT);
     }
 
-    /**
-     * Generates an OTP and stores it in cache with a TTL.
-     */
+  
     private function generateAndCacheOTP(int $userId): string
     {
         $otp = $this->generateOTP();
@@ -421,20 +351,17 @@ class AuthenticatedSessionController extends Controller
         return $otp;
     }
 
-    /**
-     * Attempts delivery via WhatsApp → SMS → Email (all in parallel).
-     * Returns an array of booleans keyed by channel name.
-     */
+   
     private function sendOTPNotifications(User $user, string $otp, bool $isResend = false): array
     {
         $status  = ['sms' => false, 'email' => false, 'whatsapp' => false];
         $label   = $isResend ? 'Resend OTP' : 'Login OTP';
         $message = "Your {$label} is: {$otp}. Valid for " . self::OTP_EXPIRY_MINUTES . " minutes. Do not share this code.";
 
-        // WhatsApp ─────────────────────────────────────────────────────────────
+        // WhatsApp 
         if ($user->phone) {
             try {
-                $result             = $this->whatsappService->sendMessage([
+                $result = $this->whatsappService->sendMessage([
                     'phone'    => $user->phone,
                     'message'  => "🔐 *Login Verification*\n\n{$message}\n\n_Do not share this code with anyone._",
                     'user_id'  => $user->id,
@@ -442,22 +369,22 @@ class AuthenticatedSessionController extends Controller
                     'priority' => 'high',
                 ]);
                 $status['whatsapp'] = $result['success'] ?? false;
-
                 Log::info('WhatsApp OTP ' . ($status['whatsapp'] ? 'sent' : 'failed'), ['user_id' => $user->id]);
             } catch (\Exception $e) {
                 Log::error('WhatsApp OTP error', ['user_id' => $user->id, 'error' => $e->getMessage()]);
             }
         }
 
-        // SMS ──────────────────────────────────────────────────────────────────
+        // SMS
         if ($user->phone) {
             try {
-                $result        = $this->smsService->sendSms([
+                $result = $this->smsService->sendSms([
                     'phone'        => $user->phone,
                     'message'      => $message,
                     'priority'     => 'high',
                     'type'         => 'otp',
                     'reference_id' => 'otp_' . $user->id,
+                    'event_id' => null,
                 ]);
                 $status['sms'] = $result['success'] ?? false;
 
@@ -467,10 +394,10 @@ class AuthenticatedSessionController extends Controller
             }
         }
 
-        // Email ────────────────────────────────────────────────────────────────
+        // Email
         if ($user->email) {
             try {
-                $result          = $this->emailService->sendNotification([
+                $result = $this->emailService->sendNotification([
                     'email'    => $user->email,
                     'phone'    => $user->phone,
                     'title'    => 'Login OTP',
@@ -490,11 +417,6 @@ class AuthenticatedSessionController extends Controller
         return $status;
     }
 
-    /**
-     * Checks the cached OTP matches.  Forgets it on success.
-     *
-     * @throws ValidationException
-     */
     private function validateOTP(int $userId, string $otp): void
     {
         $cachedOTP = Cache::get("otp_{$userId}");
@@ -514,11 +436,6 @@ class AuthenticatedSessionController extends Controller
         Cache::forget("otp_{$userId}");
     }
 
-    /**
-     * Guards against too-frequent or too-many resend requests.
-     *
-     * @throws \Exception
-     */
     private function validateResendAttempts(int $userId): void
     {
         $attempts     = Cache::get('otp_resend_attempts_' . $userId, 0);
@@ -534,9 +451,6 @@ class AuthenticatedSessionController extends Controller
         }
     }
 
-    /**
-     * Wipes all OTP cache keys for the given user.
-     */
     private function clearOTPCache(int $userId): void
     {
         Cache::forget("otp_{$userId}");
@@ -544,18 +458,11 @@ class AuthenticatedSessionController extends Controller
         Cache::forget("last_otp_sent_{$userId}");
     }
 
-    /**
-     * Unique rate-limiter key: lowercase username + IP address.
-     */
     private function throttleKey(Request $request): string
     {
         return strtolower((string) $request->input('username')) . '|' . $request->ip();
     }
 
-  
-    /**
-     * Human-readable summary of which channels received the OTP.
-     */
     private function generateResponseMessage(array $notificationStatus, string $loginType): string
     {
         $sentChannels = [];
@@ -576,9 +483,6 @@ class AuthenticatedSessionController extends Controller
         return 'OTP has been sent via ' . implode(', ', $sentChannels) . ' and ' . $last;
     }
 
-    /**
-     * Same as above plus a "remaining resend attempts" suffix.
-     */
     private function generateResendResponseMessage(array $notificationStatus, string $loginType, int $attempts): string
     {
         $base              = $this->generateResponseMessage($notificationStatus, $loginType);
