@@ -60,7 +60,7 @@ Route::middleware('auth')->group(function () {
     Route::get('bookings', [BookingController::class, 'index'])->name('bookings.index');
     Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('venues', [VenueController::class, 'index'])->name('venues.index');
-    Route::get('vendors', [VendorController::class, 'index'])->name('vendors.index');
+    // Route::get('vendors', [VendorController::class, 'index'])->name('vendors.index');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -130,8 +130,11 @@ Route::middleware(['auth'])->group(function () {
 
     // Bookings
     Route::resource('bookings', BookingController::class)->except(['edit', 'update']);
-    Route::post('bookings/{id}/confirm', [BookingController::class, 'confirm'])
-        ->name('bookings.confirm');
+
+    Route::get('bookings/{id}/edit', [BookingController::class, 'edit'])->name('bookings.edit');
+    Route::put('bookings/{id}', [BookingController::class, 'update'])->name('bookings.update');
+
+    Route::post('bookings/{id}/confirm', [BookingController::class, 'confirm'])->name('bookings.confirm');
     Route::post('bookings/{id}/cancel', [BookingController::class, 'cancel'])
         ->name('bookings.cancel');
     Route::post('bookings/{id}/complete', [BookingController::class, 'complete'])
@@ -155,7 +158,10 @@ Route::middleware(['auth'])->group(function () {
 
     // Vendors
     Route::get('vendors', [VendorController::class, 'index'])->name('vendors.index');
+    Route::get('vendors/create', [VendorController::class, 'create'])->name('vendors.create');
+    Route::get('vendors/edit/{id}', [VendorController::class, 'edit'])->name('vendors.edit');
     Route::get('vendors/{id}', [VendorController::class, 'show'])->name('vendors.show');
+
 
     // Reviews
     Route::post('reviews', [ReviewController::class, 'store'])->name('reviews.store');

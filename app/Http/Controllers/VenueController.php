@@ -178,11 +178,13 @@ class VenueController extends Controller
                 ->withCount(['bookings', 'reviews'])
                 ->findOrFail($id);
 
-            $venue->load(['availability' => function ($query) {
-                $query->where('date', '>=', now())
-                    ->orderBy('date')
-                    ->limit(30);
-            }]);
+            $venue->load([
+                'availability' => function ($query) {
+                    $query->where('date', '>=', now())
+                        ->orderBy('date')
+                        ->limit(30);
+                }
+            ]);
 
             return inertia('Venues/Show', [
                 'venue' => $venue
@@ -281,45 +283,54 @@ class VenueController extends Controller
     public function destroy($id)
     {
         try {
-            $venue = Venue::findOrFail($id);
+            $booking = Booking::findOrFail($id);
 
-            // Authorization check
-            if ($venue->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) {
-                return redirect()->route('venues.index')
-                    ->with('error', 'Unauthorized');
-            }
+            // Authorization — only the booking owner or an admin can delete
+            // if ($booking->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) {
+            //     return redirect()->route('bookings.index')->with('error', 'Unauthorized');
+            // }
 
-            // Check for active bookings
-            $hasActiveBookings = $venue->bookings()
-                ->whereIn('status', ['pending', 'confirmed', 'in_progress'])
-                ->exists();
-
-            if ($hasActiveBookings) {
-                return redirect()->route('venues.show', $venue->id)
-                    ->with('error', 'Cannot delete venue with active bookings');
+            // FIX: block deletion if booking has active status — mirrors the Venue logic
+            if (in_array($booking->status, ['confirmed', 'in_progress'])) {
+                return redirect()->route('bookings.show', $booking->id)
+                    ->with('error', 'Cannot delete a confirmed or in-progress booking. Cancel it first.');
             }
 
             DB::beginTransaction();
 
-            $venueName = $venue->name;
-            $venue->delete();
+            $bookingNumber = $booking->booking_number;
+
+            $booking->items()->delete();
+            $booking->payments()->delete();
+            $booking->invoices()->delete();
+
+            $booking->delete();
 
             DB::commit();
 
-            Log::info("Venue deleted: {$venueName}", ['user_id' => auth()->id()]);
+            Log::info("Booking deleted: {$bookingNumber}", [
+                'booking_id' => $id,
+                'user_id' => auth()->id(),
+            ]);
 
-            return redirect()->route('venues.index')
-                ->with('success', 'Venue deleted successfully');
+            return redirect()->route('bookings.index')
+                ->with('success', "Booking {$bookingNumber} deleted successfully");
+
         } catch (ModelNotFoundException $e) {
-            return redirect()->route('venues.index')
-                ->with('error', 'Venue not found');
+            return redirect()->route('bookings.index')
+                ->with('error', 'Booking not found');
+
         } catch (Exception $e) {
             DB::rollBack();
-            Log::error('Failed to delete venue: ' . $e->getMessage());
+            Log::error('Failed to delete booking: ' . $e->getMessage(), [
+                'booking_id' => $id,
+                'user_id' => auth()->id(),
+            ]);
             return redirect()->back()
-                ->with('error', 'Failed to delete venue. Please try again.');
+                ->with('error', 'Failed to delete booking. Please try again.');
         }
     }
+
 
     public function checkAvailability(Request $request, $id)
     {

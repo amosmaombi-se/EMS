@@ -20,9 +20,17 @@ class VenueAvailability extends Model
     ];
 
     protected $casts = [
-        'date' => 'date',
-        'start_time' => 'time',
-        'end_time' => 'time',
+        'date'           => 'date',
         'price_override' => 'decimal:2',
     ];
+
+    public function getStartTimeAttribute($value): ?string
+    {
+        return $value ? substr($value, 0, 5) : null;
+    }
+
+    public function getEndTimeAttribute($value): ?string
+    {
+        return $value ? substr($value, 0, 5) : null;
+    }
 }
