@@ -205,9 +205,6 @@
                                        min="0"
                                        class="w-full rounded-lg border border-gray-300 py-2 px-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm"
                                        placeholder="Amount in TZS">
-                                <p v-if="form.errors.estimated_budget" class="text-red-600 text-xs mt-1">
-                                    {{ form.errors.estimated_budget }}
-                                </p>
                             </div>
 
                             <div class="flex items-center pt-2 border-t border-gray-100">

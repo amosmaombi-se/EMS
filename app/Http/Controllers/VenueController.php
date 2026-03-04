@@ -285,11 +285,6 @@ class VenueController extends Controller
         try {
             $booking = Booking::findOrFail($id);
 
-            // Authorization — only the booking owner or an admin can delete
-            // if ($booking->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) {
-            //     return redirect()->route('bookings.index')->with('error', 'Unauthorized');
-            // }
-
             // FIX: block deletion if booking has active status — mirrors the Venue logic
             if (in_array($booking->status, ['confirmed', 'in_progress'])) {
                 return redirect()->route('bookings.show', $booking->id)

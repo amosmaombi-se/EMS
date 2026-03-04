@@ -107,7 +107,7 @@ class EventController extends Controller
                 'city' => 'required|string|max:100',
                 'postal_code' => 'nullable|string|max:20',
                 'expected_guests' => 'required|integer|min:1',
-                'estimated_budget' => 'required|numeric|min:0',
+                'estimated_budget' => 'nullable|numeric|min:0',
                 'status' => ['sometimes', Rule::in(['draft', 'planning', 'confirmed', 'ongoing', 'completed', 'cancelled'])],
                 'is_public' => 'sometimes|boolean',
             ]);
@@ -120,6 +120,7 @@ class EventController extends Controller
             $validated['state'] = 'default';
             $validated['country'] = 'Tanzania';
             $validated['actual_cost'] = 0;
+            $validated['estimated_budget'] =  $validated['estimated_budget']  ?? 0;
 
             $event = Event::create($validated);
 
@@ -238,13 +239,6 @@ class EventController extends Controller
         try {
             $event = Event::findOrFail($id);
 
-            // Authorization check
-            if ($event->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) {
-                return redirect()->route('events.index')
-                    ->with('error', 'Unauthorized');
-            }
-
-            // Pre-process time inputs to ensure proper format
             $request->merge([
                 'start_time' => $request->start_time ? $this->formatTime($request->start_time) : null,
                 'end_time' => $request->end_time ? $this->formatTime($request->end_time) : null,
@@ -261,13 +255,14 @@ class EventController extends Controller
                 'venue_address' => 'nullable|string',
                 'city' => 'sometimes|required|string|max:100',
                 'expected_guests' => 'sometimes|required|integer|min:1',
-                'estimated_budget' => 'sometimes|required|numeric|min:0',
+                'estimated_budget' => 'sometimes|nullable|numeric|min:0',
                 'actual_cost' => 'nullable|numeric|min:0',
                 'status' => ['sometimes', Rule::in(['draft', 'planning', 'confirmed', 'ongoing', 'completed', 'cancelled'])],
                 'notes' => 'nullable|string',
             ]);
 
             DB::beginTransaction();
+            
 
             $event->update($validated);
 
@@ -275,12 +270,10 @@ class EventController extends Controller
 
             Log::info("Event updated: {$event->title}", ['event_id' => $event->id, 'user_id' => auth()->id()]);
 
-            return redirect()->route('events.show', $event->id)
-                ->with('success', 'Event updated successfully');
+            return redirect()->route('events.show', $event->id)->with('success', 'Event updated successfully');
         } catch (ModelNotFoundException $e) {
             DB::rollBack();
-            return redirect()->route('events.index')
-                ->with('error', 'Event not found');
+            return redirect()->route('events.index')->with('error', 'Event not found');
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to update event: ' . $e->getMessage(), [
