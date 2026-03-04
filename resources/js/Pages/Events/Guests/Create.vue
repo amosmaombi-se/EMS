@@ -611,12 +611,13 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import Modal from '@/Components/Modal.vue'
-import { Link } from '@inertiajs/vue3'
+import { Link, usePage } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
 import Swal from 'sweetalert2'
 import * as XLSX from 'xlsx'   // npm install xlsx
 
 const props = defineProps({ event: Object })
+const page = usePage()
 
 // ── UI state ──────────────────────────────────────────────────────────────────
 const activeTab       = ref('manual')
@@ -916,7 +917,7 @@ const submit = async () => {
 
     isSubmitting.value = true
     try {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+        const csrfToken = page.props.csrf_token ?? document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
         const response = await fetch(route('events.guests.bulk-store', props.event.id), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },

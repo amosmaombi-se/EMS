@@ -17,56 +17,43 @@ class GuestImportTemplateController extends Controller
 {
     // ─── Column definitions ────────────────────────────────────────────────────
     private const COLUMNS = [
-        ['key' => 'first_name *',        'width' => 22,  'hint' => 'Required'],
-        ['key' => 'last_name *',         'width' => 22,  'hint' => 'Required'],
-        ['key' => 'email',               'width' => 32,  'hint' => 'Optional'],
-        ['key' => 'phone',               'width' => 20,  'hint' => 'Optional'],
-        ['key' => 'category',            'width' => 18,  'hint' => 'family/friends/colleagues/business/vip/sponsors/media/other'],
-        ['key' => 'guest_type',          'width' => 18,  'hint' => 'primary/plus_one/child/vendor/staff/speaker/performer'],
-        ['key' => 'rsvp_status',         'width' => 18,  'hint' => 'pending/attending/not_attending/maybe'],
-        ['key' => 'is_vip',              'width' => 12,  'hint' => 'TRUE or FALSE'],
-        ['key' => 'plus_one_allowed',    'width' => 20,  'hint' => 'TRUE or FALSE'],
-        ['key' => 'plus_ones',           'width' => 14,  'hint' => 'Number 0-10'],
-        ['key' => 'language_preference', 'width' => 22,  'hint' => 'en/es/fr/de'],
-        ['key' => 'notes',               'width' => 34,  'hint' => 'Optional free text'],
+        ['key' => 'first_name *', 'width' => 22, 'hint' => 'Required'],
+        ['key' => 'last_name *', 'width' => 22, 'hint' => 'Required'],
+        ['key' => 'email', 'width' => 32, 'hint' => 'Optional'],
+        ['key' => 'phone *', 'width' => 20, 'hint' => 'Optional'],
+        ['key' => 'category', 'width' => 18, 'hint' => 'family/friends/colleagues/business/vip/sponsors/media/other'],
+        ['key' => 'guest_type', 'width' => 18, 'hint' => 'primary/plus_one/child/vendor/staff/speaker/performer'],
+        ['key' => 'rsvp_status', 'width' => 18, 'hint' => 'pending/attending/not_attending/maybe'],
+        ['key' => 'is_vip', 'width' => 12, 'hint' => 'TRUE or FALSE'],
+        ['key' => 'plus_one_allowed', 'width' => 20, 'hint' => 'TRUE or FALSE'],
+        ['key' => 'plus_ones', 'width' => 14, 'hint' => 'Number 0-10'],
+        ['key' => 'language_preference', 'width' => 22, 'hint' => 'en/es/fr/de'],
+        ['key' => 'notes', 'width' => 34, 'hint' => 'Optional free text'],
     ];
 
     private const SAMPLE_ROWS = [
-        ['John',    'Smith',    'john.smith@email.com',  '+1-555-0101', 'friends',    'primary', 'attending',     'TRUE',  'TRUE',  '2', 'en', 'Vegetarian'],
-        ['Jane',    'Doe',      'jane.doe@email.com',    '+1-555-0102', 'family',     'primary', 'pending',       'FALSE', 'FALSE', '0', 'en', ''],
-        ['Carlos',  'Gomez',    'carlos@company.com',    '+1-555-0103', 'colleagues', 'primary', 'attending',     'FALSE', 'TRUE',  '1', 'es', 'Gluten-free'],
-        ['Alice',   'Johnson',  '',                      '',            'vip',        'primary', 'attending',     'TRUE',  'TRUE',  '3', 'en', 'VIP table'],
-        ['Bob',     'Williams', 'bob.w@biz.com',         '+1-555-0105', 'business',   'speaker', 'attending',     'TRUE',  'FALSE', '0', 'en', 'Keynote speaker'],
+        ['John', 'Smith', 'john.smith@email.com', '25575550101', 'friends', 'primary', 'attending', 'TRUE', 'TRUE', '2', 'en', 'Vegetarian'],
+        ['Jane', 'Doe', 'jane.doe@email.com', '25575550102', 'family', 'primary', 'pending', 'FALSE', 'FALSE', '0', 'en', ''],
+        ['Carlos', 'Gomez', 'carlos@company.com', '25575550103', 'colleagues', 'primary', 'attending', 'FALSE', 'TRUE', '1', 'es', 'Gluten-free'],
     ];
 
     // ── Dropdowns applied to data rows (col index => formula string) ───────────
     private const DROPDOWNS = [
-        5  => '"family,friends,colleagues,business,vip,sponsors,media,other"',
-        6  => '"primary,plus_one,child,vendor,staff,speaker,performer"',
-        7  => '"pending,attending,not_attending,maybe"',
-        8  => '"TRUE,FALSE"',
-        9  => '"TRUE,FALSE"',
+        5 => '"family,friends,colleagues,business,vip,sponsors,media,other"',
+        6 => '"primary,plus_one,child,vendor,staff,speaker,performer"',
+        7 => '"pending,attending,not_attending,maybe"',
+        8 => '"TRUE,FALSE"',
+        9 => '"TRUE,FALSE"',
         11 => '"en,es,fr,de"',
     ];
 
-    /**
-     * Download the guest import template.
-     *
-     * Route: GET /events/{event}/guests/import-template
-     * Query param: format=xlsx|csv  (default: xlsx)
-     */
+
     public function __invoke(Request $request, Event $event): StreamedResponse
     {
         $format = strtolower($request->query('format', 'xlsx'));
-
-        return $format === 'csv'
-            ? $this->csvResponse($event)
-            : $this->xlsxResponse($event);
+        return $format === 'csv' ? $this->csvResponse($event) : $this->xlsxResponse($event);
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // XLSX
-    // ──────────────────────────────────────────────────────────────────────────
     private function xlsxResponse(Event $event): StreamedResponse
     {
         $spreadsheet = new Spreadsheet();
@@ -99,19 +86,19 @@ class GuestImportTemplateController extends Controller
             $writer = new Xlsx($spreadsheet);
             $writer->save('php://output');
         }, $filename, [
-            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-            'Cache-Control'       => 'max-age=0',
+            'Cache-Control' => 'max-age=0',
         ]);
     }
 
     private function buildHeaderRow(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet): void
     {
         $headerStyle = [
-            'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'name' => 'Arial', 'size' => 10],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4F46E5']],
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'name' => 'Arial', 'size' => 10],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4F46E5']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
-            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['rgb' => 'FFFFFF']]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_MEDIUM, 'color' => ['rgb' => 'FFFFFF']]],
         ];
 
         foreach (self::COLUMNS as $i => $col) {
@@ -128,10 +115,10 @@ class GuestImportTemplateController extends Controller
     private function buildHintRow(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet): void
     {
         $hintStyle = [
-            'font'      => ['italic' => true, 'color' => ['rgb' => '6B7280'], 'name' => 'Arial', 'size' => 8],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FEF9C3']],
+            'font' => ['italic' => true, 'color' => ['rgb' => '6B7280'], 'name' => 'Arial', 'size' => 8],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FEF9C3']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
-            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'C7D2FE']]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'C7D2FE']]],
         ];
 
         foreach (self::COLUMNS as $i => $col) {
@@ -146,10 +133,10 @@ class GuestImportTemplateController extends Controller
     private function buildSampleRows(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet): void
     {
         $sampleStyle = [
-            'font'      => ['name' => 'Arial', 'size' => 9, 'color' => ['rgb' => '1E1B4B']],
-            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'EEF2FF']],
+            'font' => ['name' => 'Arial', 'size' => 9, 'color' => ['rgb' => '1E1B4B']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'EEF2FF']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT, 'vertical' => Alignment::VERTICAL_CENTER],
-            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'C7D2FE']]],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => 'C7D2FE']]],
         ];
 
         foreach (self::SAMPLE_ROWS as $rowIdx => $row) {
@@ -184,30 +171,30 @@ class GuestImportTemplateController extends Controller
         $sheet->setShowGridlines(false);
 
         $rows = [
-            ['Guest Import Instructions',                                                                         true,  'FFFFFF', '4F46E5', 14, 36],
-            ['',                                                                                                  false, 'FFFFFF', 'FFFFFF', 10, 10],
-            ['REQUIRED COLUMNS',                                                                                  true,  '1E1B4B', 'EEF2FF', 11, 22],
-            ['  first_name  — Guest\'s first name',                                                              false, '374151', 'F9FAFB', 10, 18],
-            ['  last_name   — Guest\'s last name',                                                               false, '374151', 'F9FAFB', 10, 18],
-            ['',                                                                                                  false, 'FFFFFF', 'FFFFFF', 10, 10],
-            ['OPTIONAL COLUMNS',                                                                                  true,  '1E1B4B', 'EEF2FF', 11, 22],
-            ['  email               — Used for invitations and duplicate detection',                              false, '374151', 'F9FAFB', 10, 18],
-            ['  phone               — Contact number',                                                           false, '374151', 'F9FAFB', 10, 18],
-            ['  category            — family | friends | colleagues | business | vip | sponsors | media | other',false, '374151', 'F9FAFB', 10, 18],
-            ['  guest_type          — primary | plus_one | child | vendor | staff | speaker | performer',        false, '374151', 'F9FAFB', 10, 18],
-            ['  rsvp_status         — pending | attending | not_attending | maybe  (default: pending)',          false, '374151', 'F9FAFB', 10, 18],
-            ['  is_vip              — TRUE or FALSE  (default: FALSE)',                                          false, '374151', 'F9FAFB', 10, 18],
-            ['  plus_one_allowed    — TRUE or FALSE  (default: FALSE)',                                          false, '374151', 'F9FAFB', 10, 18],
-            ['  plus_ones           — Number 0-10  (default: 0)',                                                false, '374151', 'F9FAFB', 10, 18],
-            ['  language_preference — en | es | fr | de  (default: en)',                                        false, '374151', 'F9FAFB', 10, 18],
-            ['  notes               — Any free-text notes',                                                      false, '374151', 'F9FAFB', 10, 18],
-            ['',                                                                                                  false, 'FFFFFF', 'FFFFFF', 10, 10],
-            ['TIPS',                                                                                              true,  '1E1B4B', 'FEF9C3', 11, 22],
-            ['  • Row 1 is the header — do not delete or rename columns',                                        false, '374151', 'FFFBEB', 10, 18],
-            ['  • Row 2 contains hints — you can delete it before importing',                                    false, '374151', 'FFFBEB', 10, 18],
-            ['  • Guests with duplicate emails are skipped automatically',                                       false, '374151', 'FFFBEB', 10, 18],
-            ['  • Up to 1000 guests per import file',                                                            false, '374151', 'FFFBEB', 10, 18],
-            ['  • Use the dropdown arrows in cells for valid option values',                                     false, '374151', 'FFFBEB', 10, 18],
+            ['Guest Import Instructions', true, 'FFFFFF', '4F46E5', 14, 36],
+            ['', false, 'FFFFFF', 'FFFFFF', 10, 10],
+            ['REQUIRED COLUMNS', true, '1E1B4B', 'EEF2FF', 11, 22],
+            ['  first_name  — Guest\'s first name', false, '374151', 'F9FAFB', 10, 18],
+            ['  last_name   — Guest\'s last name', false, '374151', 'F9FAFB', 10, 18],
+            ['', false, 'FFFFFF', 'FFFFFF', 10, 10],
+            ['OPTIONAL COLUMNS', true, '1E1B4B', 'EEF2FF', 11, 22],
+            ['  email               — Used for invitations and duplicate detection', false, '374151', 'F9FAFB', 10, 18],
+            ['  phone               — Contact number', false, '374151', 'F9FAFB', 10, 18],
+            ['  category            — family | friends | colleagues | business | vip | sponsors | media | other', false, '374151', 'F9FAFB', 10, 18],
+            ['  guest_type          — primary | plus_one | child | vendor | staff | speaker | performer', false, '374151', 'F9FAFB', 10, 18],
+            ['  rsvp_status         — pending | attending | not_attending | maybe  (default: pending)', false, '374151', 'F9FAFB', 10, 18],
+            ['  is_vip              — TRUE or FALSE  (default: FALSE)', false, '374151', 'F9FAFB', 10, 18],
+            ['  plus_one_allowed    — TRUE or FALSE  (default: FALSE)', false, '374151', 'F9FAFB', 10, 18],
+            ['  plus_ones           — Number 0-10  (default: 0)', false, '374151', 'F9FAFB', 10, 18],
+            ['  language_preference — en | es | fr | de  (default: en)', false, '374151', 'F9FAFB', 10, 18],
+            ['  notes               — Any free-text notes', false, '374151', 'F9FAFB', 10, 18],
+            ['', false, 'FFFFFF', 'FFFFFF', 10, 10],
+            ['TIPS', true, '1E1B4B', 'FEF9C3', 11, 22],
+            ['  • Row 1 is the header — do not delete or rename columns', false, '374151', 'FFFBEB', 10, 18],
+            ['  • Row 2 contains hints — you can delete it before importing', false, '374151', 'FFFBEB', 10, 18],
+            ['  • Guests with duplicate emails are skipped automatically', false, '374151', 'FFFBEB', 10, 18],
+            ['  • Up to 1000 guests per import file', false, '374151', 'FFFBEB', 10, 18],
+            ['  • Use the dropdown arrows in cells for valid option values', false, '374151', 'FFFBEB', 10, 18],
         ];
 
         foreach ($rows as $i => [$text, $bold, $fg, $bg, $size, $height]) {
@@ -215,17 +202,13 @@ class GuestImportTemplateController extends Controller
             $cell = $sheet->getCell("A{$row}");
             $cell->setValue($text);
             $sheet->getStyle("A{$row}")->applyFromArray([
-                'font'      => ['bold' => $bold, 'color' => ['rgb' => $fg], 'name' => 'Arial', 'size' => $size],
-                'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $bg]],
+                'font' => ['bold' => $bold, 'color' => ['rgb' => $fg], 'name' => 'Arial', 'size' => $size],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $bg]],
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT, 'vertical' => Alignment::VERTICAL_CENTER, 'indent' => 1],
             ]);
             $sheet->getRowDimension($row)->setRowHeight($height);
         }
     }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // CSV
-    // ──────────────────────────────────────────────────────────────────────────
     private function csvResponse(Event $event): StreamedResponse
     {
         $filename = 'guest_import_template_' . now()->format('Ymd') . '.csv';
@@ -233,27 +216,23 @@ class GuestImportTemplateController extends Controller
         return response()->streamDownload(function () {
             $handle = fopen('php://output', 'w');
 
-            // UTF-8 BOM so Excel opens it correctly
             fwrite($handle, "\xEF\xBB\xBF");
 
-            // Header row (strip the * markers for cleaner CSV)
             $headers = array_map(
                 fn($col) => str_replace(' *', '', $col['key']),
                 self::COLUMNS
             );
             fputcsv($handle, $headers);
 
-            // Hint row
             fputcsv($handle, array_column(self::COLUMNS, 'hint'));
 
-            // Sample rows
             foreach (self::SAMPLE_ROWS as $row) {
                 fputcsv($handle, $row);
             }
 
             fclose($handle);
         }, $filename, [
-            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }
