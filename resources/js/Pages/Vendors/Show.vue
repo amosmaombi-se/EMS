@@ -1,369 +1,329 @@
 <template>
     <AuthenticatedLayout>
-        <template #header>
-            <div class="flex items-center gap-4">
-                <Link :href="route('vendors.index')"
-                    class="inline-flex items-center p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                </Link>
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-3 flex-wrap">
-                        <h2 class="font-bold text-2xl text-gray-900 truncate">{{ vendor.business_name }}</h2>
-                        <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full"
-                            :class="getVerificationClass(vendor.verification_status)">
+        <div class="page-wrap">
+
+            <!-- ── Header ── -->
+            <div class="page-header">
+                <div>
+                    <div class="breadcrumb">
+                        <Link :href="route('vendors.index')" class="bc-link">Vendors</Link>
+                        <span class="bc-sep">›</span>
+                        <span class="bc-cur">{{ vendor.business_name }}</span>
+                    </div>
+                    <div class="name-row">
+                        <h1 class="page-title">{{ vendor.business_name }}</h1>
+                        <span class="verif-chip" :style="VERIF_STYLE[vendor.verification_status] || VERIF_STYLE.default">
+                            <span class="status-dot" :style="{background: VERIF_DOT[vendor.verification_status] || '#9E9890'}"></span>
                             {{ formatVerification(vendor.verification_status) }}
                         </span>
-                        <span v-if="vendor.is_featured"
-                            class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-amber-100 text-amber-800">
-                            ★ Featured
+                        <span v-if="vendor.is_featured" class="feat-badge">
+                            <svg width="10" height="10" fill="#b45309" viewBox="0 0 24 24"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                            Featured
                         </span>
                     </div>
-                    <p class="mt-1 text-sm text-gray-500">{{ vendor.category?.name }} · {{ vendor.city }}, {{ vendor.country }}</p>
+                    <p class="page-sub">{{ vendor.category?.name }}<span v-if="vendor.city"> · {{ vendor.city }}, {{ vendor.country }}</span></p>
                 </div>
-                <Link :href="route('vendors.edit', vendor.id)"
-                    class="inline-flex items-center px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
+                <Link :href="route('vendors.edit', vendor.id)" class="btn-cta">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     Edit Vendor
                 </Link>
             </div>
-        </template>
 
-        <div class="py-6">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- ── Two-col layout ── -->
+            <div class="layout">
 
-                    <!-- ── Main Content ─── -->
-                    <div class="lg:col-span-2 space-y-6">
+                <!-- ═══ MAIN ═══ -->
+                <div class="main-col">
 
-                        <!-- Cover + Logo -->
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                            <div class="relative h-56 bg-gradient-to-br from-indigo-100 to-gray-100">
-                                <img v-if="vendor.cover_image" :src="vendor.cover_image"
-                                    :alt="vendor.business_name" class="w-full h-full object-cover">
-                                <div v-else class="w-full h-full flex items-center justify-center">
-                                    <svg class="w-16 h-16 text-gray-200" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                                <div v-if="vendor.logo"
-                                    class="absolute -bottom-7 left-6 w-16 h-16 rounded-xl border-2 border-white shadow-lg overflow-hidden bg-white">
-                                    <img :src="vendor.logo" :alt="vendor.business_name"
-                                        class="w-full h-full object-cover">
-                                </div>
+                    <!-- Cover + About -->
+                    <div class="ep-card">
+                        <div class="cover-wrap">
+                            <img v-if="vendor.cover_image" :src="vendor.cover_image" :alt="vendor.business_name" class="cover-img">
+                            <div v-else class="cover-placeholder">
+                                <svg width="40" height="40" fill="none" stroke="rgba(192,23,15,.3)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                             </div>
-                            <div :class="vendor.logo ? 'pt-10 px-6 pb-6' : 'p-6'">
-                                <p v-if="vendor.description" class="text-sm text-gray-600 leading-relaxed">
-                                    {{ vendor.description }}
-                                </p>
-                                <p v-else class="text-sm text-gray-400 italic">No description provided.</p>
+                            <div v-if="vendor.logo" class="logo-badge">
+                                <img :src="vendor.logo" :alt="vendor.business_name" class="logo-badge-img">
                             </div>
                         </div>
+                        <div class="about-body" :class="vendor.logo ? 'about-with-logo' : ''">
+                            <div class="card-head-inline">
+                                <span class="card-icon" style="background:rgba(29,92,150,.1)">🏢</span>
+                                <span class="card-title">About</span>
+                            </div>
+                            <p v-if="vendor.description" class="about-text">{{ vendor.description }}</p>
+                            <p v-else class="about-empty">No description provided.</p>
+                        </div>
+                    </div>
 
-                        <!-- Service Areas + Specializations -->
-                        <div v-if="(vendor.service_areas?.length || vendor.specializations?.length)"
-                            class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <h3 class="text-base font-semibold text-gray-900 mb-4">Service Areas &
-                                Specializations</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div v-if="vendor.service_areas?.length">
-                                    <p class="text-sm font-medium text-gray-700 mb-2">Service Areas</p>
-                                    <div class="flex flex-wrap gap-2">
-                                        <span v-for="area in vendor.service_areas" :key="area"
-                                            class="inline-flex items-center px-2.5 py-1 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-200">
-                                            {{ area }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div v-if="vendor.specializations?.length">
-                                    <p class="text-sm font-medium text-gray-700 mb-2">Specializations</p>
-                                    <div class="flex flex-wrap gap-2">
-                                        <span v-for="spec in vendor.specializations" :key="spec"
-                                            class="inline-flex items-center px-2.5 py-1 bg-purple-50 text-purple-700 text-xs rounded-full border border-purple-200">
-                                            {{ spec }}
-                                        </span>
-                                    </div>
-                                </div>
+                    <!-- Service Areas & Specializations -->
+                    <div v-if="vendor.service_areas?.length || vendor.specializations?.length" class="ep-card">
+                        <div class="card-head">
+                            <span class="card-icon" style="background:rgba(240,90,0,.1)">🗺️</span>
+                            <div>
+                                <div class="card-title">Service Areas &amp; Specializations</div>
+                                <div class="card-sub">Where we operate and what we do best</div>
                             </div>
                         </div>
-
-                        <!-- Services -->
-                        <div v-if="vendor.services?.length" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <h3 class="text-base font-semibold text-gray-900 mb-4">Services
-                                <span class="text-sm font-normal text-gray-400">({{ vendor.services.length }})</span>
-                            </h3>
-                            <div class="divide-y divide-gray-100">
-                                <div v-for="service in vendor.services" :key="service.id"
-                                    class="py-3 flex items-center justify-between">
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-900">{{ service.name }}</p>
-                                        <p v-if="service.description" class="text-xs text-gray-500 mt-0.5">
-                                            {{ service.description }}</p>
-                                    </div>
-                                    <span v-if="service.price"
-                                        class="text-sm font-semibold text-indigo-600 ml-4 whitespace-nowrap">
-                                        TZS {{ formatPrice(service.price) }}
-                                    </span>
+                        <div class="card-body grid-2">
+                            <div v-if="vendor.service_areas?.length">
+                                <div class="section-lbl">Service Areas</div>
+                                <div class="tag-cloud">
+                                    <span v-for="area in vendor.service_areas" :key="area" class="tag-navy">{{ area }}</span>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Portfolio -->
-                        <div v-if="vendor.portfolios?.length"
-                            class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <h3 class="text-base font-semibold text-gray-900 mb-4">Portfolio</h3>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                <div v-for="item in vendor.portfolios" :key="item.id"
-                                    class="aspect-square rounded-lg overflow-hidden bg-gray-100">
-                                    <img v-if="item.image_url" :src="item.image_url" :alt="item.title"
-                                        class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
-                                    <div v-else
-                                        class="w-full h-full flex items-center justify-center text-gray-300">
-                                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Reviews -->
-                        <div v-if="vendor.reviews?.length"
-                            class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-base font-semibold text-gray-900">Reviews</h3>
-                                <span class="text-xs text-gray-500">{{ vendor.reviews_count }} total</span>
-                            </div>
-                            <div class="space-y-4">
-                                <div v-for="review in vendor.reviews.slice(0, 5)" :key="review.id"
-                                    class="border-b border-gray-50 last:border-0 pb-4 last:pb-0">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <p class="text-sm font-medium text-gray-900">
-                                            {{ review.user?.name ?? 'Anonymous' }}</p>
-                                        <div class="flex items-center">
-                                            <svg v-for="s in 5" :key="s" class="w-3.5 h-3.5"
-                                                :class="s <= review.rating ? 'text-amber-400' : 'text-gray-200'"
-                                                fill="currentColor" viewBox="0 0 24 24">
-                                                <path
-                                                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <p v-if="review.comment" class="text-xs text-gray-600">{{ review.comment }}</p>
+                            <div v-if="vendor.specializations?.length">
+                                <div class="section-lbl">Specializations</div>
+                                <div class="tag-cloud">
+                                    <span v-for="spec in vendor.specializations" :key="spec" class="tag-amber">{{ spec }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ── Sidebar ─── -->
-                    <div class="space-y-5">
-
-                        <!-- Overview -->
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-                            <h3 class="text-sm font-semibold text-gray-900 mb-4">Overview</h3>
-                            <div class="space-y-3">
-                                <div class="flex items-center justify-between py-2 border-b border-gray-50">
-                                    <span class="text-sm text-gray-500">Status</span>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full"
-                                        :class="vendor.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
-                                        {{ vendor.is_active ? 'Active' : 'Inactive' }}
-                                    </span>
-                                </div>
-                                <div class="flex items-center justify-between py-2 border-b border-gray-50">
-                                    <span class="text-sm text-gray-500">Category</span>
-                                    <span class="text-sm font-medium text-gray-900">{{ vendor.category?.name ?? '—' }}</span>
-                                </div>
-                                <div class="flex items-center justify-between py-2 border-b border-gray-50">
-                                    <span class="text-sm text-gray-500">Rating</span>
-                                    <div v-if="vendor.rating" class="flex items-center gap-1">
-                                        <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
-                                            <path
-                                                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                                        </svg>
-                                        <span class="text-sm font-medium text-gray-900">{{ vendor.rating }}</span>
-                                        <span class="text-xs text-gray-400">({{ vendor.total_reviews }})</span>
-                                    </div>
-                                    <span v-else class="text-sm text-gray-400">No reviews yet</span>
-                                </div>
-                                <div class="flex items-center justify-between py-2 border-b border-gray-50">
-                                    <span class="text-sm text-gray-500">Experience</span>
-                                    <span class="text-sm font-medium text-gray-900">
-                                        {{ vendor.years_of_experience ? vendor.years_of_experience + ' years' : '—' }}
-                                    </span>
-                                </div>
-                                <div class="flex items-center justify-between py-2 border-b border-gray-50">
-                                    <span class="text-sm text-gray-500">Team Size</span>
-                                    <span class="text-sm font-medium text-gray-900">
-                                        {{ vendor.team_size ?? '—' }}
-                                    </span>
-                                </div>
-                                <div v-if="vendor.minimum_order_value" class="flex items-center justify-between py-2 border-b border-gray-50">
-                                    <span class="text-sm text-gray-500">Min. Order</span>
-                                    <span class="text-sm font-bold text-indigo-600">
-                                        TZS {{ formatPrice(vendor.minimum_order_value) }}
-                                    </span>
-                                </div>
-                                <div class="flex items-center justify-between py-2">
-                                    <span class="text-sm text-gray-500">Total Bookings</span>
-                                    <span class="text-sm font-medium text-gray-900">{{ vendor.total_bookings ?? 0 }}</span>
-                                </div>
+                    <!-- Services -->
+                    <div v-if="vendor.services?.length" class="ep-card">
+                        <div class="card-head">
+                            <span class="card-icon" style="background:rgba(22,163,74,.1)">⚙️</span>
+                            <div>
+                                <div class="card-title">Services</div>
+                                <div class="card-sub">{{ vendor.services.length }} service{{ vendor.services.length !== 1 ? 's' : '' }} offered</div>
                             </div>
                         </div>
+                        <div class="services-list">
+                            <div v-for="service in vendor.services" :key="service.id" class="service-row">
+                                <div>
+                                    <div class="service-name">{{ service.name }}</div>
+                                    <div v-if="service.description" class="service-desc">{{ service.description }}</div>
+                                </div>
+                                <span v-if="service.price" class="service-price">TZS {{ formatPrice(service.price) }}</span>
+                            </div>
+                        </div>
+                    </div>
 
-                        <!-- Contact -->
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-                            <h3 class="text-sm font-semibold text-gray-900 mb-4">Contact</h3>
-                            <div class="space-y-3">
-                                <div v-if="vendor.contact_person" class="flex items-center gap-3">
-                                    <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs text-gray-500">Contact Person</p>
-                                        <p class="text-sm font-medium text-gray-900">{{ vendor.contact_person }}</p>
-                                    </div>
-                                </div>
-                                <div v-if="vendor.email" class="flex items-center gap-3">
-                                    <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs text-gray-500">Email</p>
-                                        <a :href="`mailto:${vendor.email}`"
-                                            class="text-sm font-medium text-indigo-600 hover:underline">
-                                            {{ vendor.email }}</a>
-                                    </div>
-                                </div>
-                                <div v-if="vendor.phone" class="flex items-center gap-3">
-                                    <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs text-gray-500">Phone</p>
-                                        <a :href="`tel:${vendor.phone}`"
-                                            class="text-sm font-medium text-indigo-600 hover:underline">{{ vendor.phone }}</a>
-                                    </div>
-                                </div>
-                                <div v-if="vendor.website" class="flex items-center gap-3">
-                                    <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs text-gray-500">Website</p>
-                                        <a :href="vendor.website" target="_blank" rel="noopener"
-                                            class="text-sm font-medium text-indigo-600 hover:underline truncate block max-w-[180px]">
-                                            {{ vendor.website }}</a>
+                    <!-- Portfolio -->
+                    <div v-if="vendor.portfolios?.length" class="ep-card">
+                        <div class="card-head">
+                            <span class="card-icon" style="background:rgba(249,178,51,.12)">🖼️</span>
+                            <div>
+                                <div class="card-title">Portfolio</div>
+                                <div class="card-sub">{{ vendor.portfolios.length }} item{{ vendor.portfolios.length !== 1 ? 's' : '' }}</div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="portfolio-grid">
+                                <div v-for="item in vendor.portfolios" :key="item.id" class="portfolio-item">
+                                    <img v-if="item.image_url" :src="item.image_url" :alt="item.title" class="portfolio-img">
+                                    <div v-else class="portfolio-placeholder">
+                                        <svg width="20" height="20" fill="none" stroke="#C8C0B8" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Location -->
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-                            <h3 class="text-sm font-semibold text-gray-900 mb-3">Location</h3>
-                            <address class="not-italic text-sm text-gray-600 leading-relaxed">
-                                {{ vendor.address }}<br>
-                                {{ vendor.city }}<span v-if="vendor.state">, {{ vendor.state }}</span>
-                                <span v-if="vendor.postal_code"> {{ vendor.postal_code }}</span><br>
-                                {{ vendor.country }}
+                    <!-- Reviews -->
+                    <div v-if="vendor.reviews?.length" class="ep-card">
+                        <div class="card-head">
+                            <span class="card-icon" style="background:rgba(192,23,15,.08)">⭐</span>
+                            <div>
+                                <div class="card-title">Reviews</div>
+                                <div class="card-sub">{{ vendor.reviews_count }} total</div>
+                            </div>
+                        </div>
+                        <div class="reviews-list">
+                            <div v-for="review in vendor.reviews.slice(0,5)" :key="review.id" class="review-row">
+                                <div class="review-top">
+                                    <div class="review-avatar">{{ (review.user?.name || 'A')[0].toUpperCase() }}</div>
+                                    <span class="review-author">{{ review.user?.name ?? 'Anonymous' }}</span>
+                                    <div class="stars">
+                                        <svg v-for="s in 5" :key="s" width="12" height="12" :fill="s <= review.rating ? '#F9B233' : '#E8E2DA'" viewBox="0 0 24 24"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                                    </div>
+                                </div>
+                                <p v-if="review.comment" class="review-text">{{ review.comment }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ═══ SIDEBAR ═══ -->
+                <div class="sidebar-col">
+
+                    <!-- Overview -->
+                    <div class="ep-card">
+                        <div class="card-head">
+                            <span class="card-icon" style="background:rgba(29,92,150,.1)">📊</span>
+                            <div><div class="card-title">Overview</div></div>
+                        </div>
+                        <div class="dl-list">
+                            <div class="dl-row">
+                                <span class="dl-label">Status</span>
+                                <span class="status-chip" :style="vendor.is_active ? ACTIVE_ON : ACTIVE_OFF">
+                                    <span class="status-dot" :style="{background: vendor.is_active ? '#16a34a' : '#9E9890'}"></span>
+                                    {{ vendor.is_active ? 'Active' : 'Inactive' }}
+                                </span>
+                            </div>
+                            <div class="dl-row">
+                                <span class="dl-label">Category</span>
+                                <span class="dl-value">{{ vendor.category?.name ?? '—' }}</span>
+                            </div>
+                            <div class="dl-row">
+                                <span class="dl-label">Rating</span>
+                                <div v-if="vendor.rating" class="rating-row">
+                                    <svg width="13" height="13" fill="#F9B233" viewBox="0 0 24 24"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                                    <span class="dl-value">{{ vendor.rating }}</span>
+                                    <span class="dl-muted">({{ vendor.total_reviews }})</span>
+                                </div>
+                                <span v-else class="dl-muted">No reviews</span>
+                            </div>
+                            <div class="dl-row">
+                                <span class="dl-label">Experience</span>
+                                <span class="dl-value">{{ vendor.years_of_experience ? vendor.years_of_experience + ' yrs' : '—' }}</span>
+                            </div>
+                            <div class="dl-row">
+                                <span class="dl-label">Team Size</span>
+                                <span class="dl-value">{{ vendor.team_size ?? '—' }}</span>
+                            </div>
+                            <div v-if="vendor.minimum_order_value" class="dl-row">
+                                <span class="dl-label">Min. Order</span>
+                                <span class="dl-value" style="color:#C0170F;font-weight:800">TZS {{ formatPrice(vendor.minimum_order_value) }}</span>
+                            </div>
+                            <div class="dl-row">
+                                <span class="dl-label">Bookings</span>
+                                <span class="dl-value">{{ vendor.total_bookings ?? 0 }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact -->
+                    <div class="ep-card">
+                        <div class="card-head">
+                            <span class="card-icon" style="background:rgba(240,90,0,.1)">📞</span>
+                            <div><div class="card-title">Contact</div></div>
+                        </div>
+                        <div class="contact-list">
+                            <div v-if="vendor.contact_person" class="contact-row">
+                                <div class="contact-icon" style="background:rgba(29,92,150,.12);color:#1D5C96">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                </div>
+                                <div>
+                                    <div class="contact-lbl">Contact Person</div>
+                                    <div class="contact-val">{{ vendor.contact_person }}</div>
+                                </div>
+                            </div>
+                            <div v-if="vendor.email" class="contact-row">
+                                <div class="contact-icon" style="background:rgba(22,163,74,.1);color:#16a34a">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                </div>
+                                <div>
+                                    <div class="contact-lbl">Email</div>
+                                    <a :href="`mailto:${vendor.email}`" class="contact-link">{{ vendor.email }}</a>
+                                </div>
+                            </div>
+                            <div v-if="vendor.phone" class="contact-row">
+                                <div class="contact-icon" style="background:rgba(249,178,51,.12);color:#b45309">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.65 3.32 2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                </div>
+                                <div>
+                                    <div class="contact-lbl">Phone</div>
+                                    <a :href="`tel:${vendor.phone}`" class="contact-link">{{ vendor.phone }}</a>
+                                </div>
+                            </div>
+                            <div v-if="vendor.website" class="contact-row">
+                                <div class="contact-icon" style="background:rgba(192,23,15,.08);color:#C0170F">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                                </div>
+                                <div>
+                                    <div class="contact-lbl">Website</div>
+                                    <a :href="vendor.website" target="_blank" rel="noopener" class="contact-link truncate-link">{{ vendor.website }}</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="ep-card">
+                        <div class="card-head">
+                            <span class="card-icon" style="background:rgba(249,178,51,.12)">📍</span>
+                            <div><div class="card-title">Location</div></div>
+                        </div>
+                        <div style="padding:14px 16px">
+                            <address class="address-block">
+                                <div v-if="vendor.address">{{ vendor.address }}</div>
+                                <div>{{ vendor.city }}<span v-if="vendor.state">, {{ vendor.state }}</span><span v-if="vendor.postal_code"> {{ vendor.postal_code }}</span></div>
+                                <div>{{ vendor.country }}</div>
                             </address>
+                            <a v-if="vendor.city"
+                               :href="`https://www.google.com/maps/search/${encodeURIComponent([vendor.address, vendor.city, vendor.country].filter(Boolean).join(', '))}`"
+                               target="_blank" rel="noopener" class="map-link">
+                                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                View on Google Maps
+                            </a>
                         </div>
+                    </div>
 
-                        <!-- Business Info -->
-                        <div v-if="vendor.business_registration_number || vendor.tax_id"
-                            class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-                            <h3 class="text-sm font-semibold text-gray-900 mb-3">Business Info</h3>
-                            <div class="space-y-2">
-                                <div v-if="vendor.business_registration_number"
-                                    class="flex items-center justify-between">
-                                    <span class="text-xs text-gray-500">Reg. Number</span>
-                                    <span class="text-xs font-medium text-gray-900">{{
-                                        vendor.business_registration_number }}</span>
-                                </div>
-                                <div v-if="vendor.tax_id" class="flex items-center justify-between">
-                                    <span class="text-xs text-gray-500">Tax ID</span>
-                                    <span class="text-xs font-medium text-gray-900">{{ vendor.tax_id }}</span>
-                                </div>
-                                <div v-if="vendor.verified_at" class="flex items-center justify-between">
-                                    <span class="text-xs text-gray-500">Verified At</span>
-                                    <span class="text-xs font-medium text-gray-900">{{ formatDate(vendor.verified_at) }}</span>
-                                </div>
+                    <!-- Business Info -->
+                    <div v-if="vendor.business_registration_number || vendor.tax_id || vendor.verified_at" class="ep-card">
+                        <div class="card-head">
+                            <span class="card-icon" style="background:rgba(22,163,74,.1)">📄</span>
+                            <div><div class="card-title">Business Info</div></div>
+                        </div>
+                        <div class="dl-list">
+                            <div v-if="vendor.business_registration_number" class="dl-row">
+                                <span class="dl-label">Reg. Number</span>
+                                <span class="dl-mono">{{ vendor.business_registration_number }}</span>
+                            </div>
+                            <div v-if="vendor.tax_id" class="dl-row">
+                                <span class="dl-label">Tax ID</span>
+                                <span class="dl-mono">{{ vendor.tax_id }}</span>
+                            </div>
+                            <div v-if="vendor.verified_at" class="dl-row">
+                                <span class="dl-label">Verified At</span>
+                                <span class="dl-value">{{ formatDate(vendor.verified_at) }}</span>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Danger Zone -->
-                        <div class="bg-white rounded-lg shadow-sm border border-red-100 p-5">
-                            <h3 class="text-sm font-semibold text-red-700 mb-3">Danger Zone</h3>
-                            <button @click="showDeleteModal = true"
-                                class="inline-flex items-center px-4 py-2 bg-red-50 text-red-700 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors w-full justify-center border border-red-200">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
+                    <!-- Danger Zone -->
+                    <div class="ep-card danger-card">
+                        <div class="card-head" style="background:rgba(192,23,15,.05);border-bottom-color:rgba(192,23,15,.15)">
+                            <span class="card-icon" style="background:rgba(192,23,15,.1)">⚠️</span>
+                            <div><div class="card-title" style="color:#C0170F">Danger Zone</div></div>
+                        </div>
+                        <div style="padding:14px 16px">
+                            <button @click="showDeleteModal = true" class="btn-danger-full">
+                                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                                 Delete Vendor
                             </button>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Delete Confirmation Modal -->
-        <div v-if="showDeleteModal" class="fixed inset-0 z-50 overflow-y-auto">
-            <div class="flex items-center justify-center min-h-screen px-4">
-                <div class="fixed inset-0 bg-black opacity-40" @click="showDeleteModal = false"></div>
-                <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-                    <div class="flex items-center gap-4 mb-4">
-                        <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900">Delete Vendor</h3>
-                            <p class="text-sm text-gray-500">This action cannot be undone.</p>
-                        </div>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-6">
-                        Are you sure you want to delete <strong>{{ vendor.business_name }}</strong>? All associated
-                        data will be permanently removed.
-                    </p>
-                    <div class="flex justify-end gap-3">
-                        <button @click="showDeleteModal = false"
-                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                            Cancel
-                        </button>
-                        <button @click="deleteVendor"
-                            class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors">
-                            Delete Vendor
-                        </button>
-                    </div>
                 </div>
             </div>
+
+            <!-- ── Delete Modal ── -->
+            <Teleport to="body">
+                <div v-if="showDeleteModal" class="modal-backdrop" @click.self="showDeleteModal = false">
+                    <div class="modal-box">
+                        <div class="modal-head">
+                            <div class="modal-icon-wrap" style="background:rgba(192,23,15,.1)">
+                                <svg width="20" height="20" fill="none" stroke="#C0170F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                            </div>
+                            <div>
+                                <div class="modal-title">Delete Vendor</div>
+                                <div class="modal-sub">This action cannot be undone.</div>
+                            </div>
+                        </div>
+                        <p class="modal-body">Are you sure you want to delete <strong style="color:#1A1410">{{ vendor.business_name }}</strong>? All associated data will be permanently removed.</p>
+                        <div class="modal-actions">
+                            <button @click="showDeleteModal = false" class="btn-ghost">Cancel</button>
+                            <button @click="deleteVendor" class="btn-danger">Delete Vendor</button>
+                        </div>
+                    </div>
+                </div>
+            </Teleport>
+
         </div>
     </AuthenticatedLayout>
 </template>
@@ -374,23 +334,21 @@ import { Link, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
 const props = defineProps({ vendor: Object })
-
 const showDeleteModal = ref(false)
 
-const getVerificationClass = (status) => ({
-    pending:  'bg-yellow-100 text-yellow-800',
-    verified: 'bg-green-100 text-green-800',
-    rejected: 'bg-red-100 text-red-800',
-}[status] || 'bg-gray-100 text-gray-800')
+const VERIF_STYLE = {
+    pending:  { background:'rgba(249,178,51,.12)', color:'#b45309', border:'1px solid rgba(249,178,51,.4)'  },
+    verified: { background:'rgba(22,163,74,.1)',   color:'#16a34a', border:'1px solid rgba(22,163,74,.25)'  },
+    rejected: { background:'rgba(192,23,15,.08)',  color:'#C0170F', border:'1px solid rgba(192,23,15,.2)'   },
+    default:  { background:'rgba(158,152,144,.12)',color:'#6B6560', border:'1px solid rgba(158,152,144,.3)' },
+}
+const VERIF_DOT  = { pending:'#b45309', verified:'#16a34a', rejected:'#C0170F' }
+const ACTIVE_ON  = { background:'rgba(22,163,74,.1)',   color:'#16a34a', border:'1px solid rgba(22,163,74,.25)'  }
+const ACTIVE_OFF = { background:'rgba(158,152,144,.12)',color:'#6B6560', border:'1px solid rgba(158,152,144,.3)' }
 
-const formatVerification = (status) =>
-    status ? status.charAt(0).toUpperCase() + status.slice(1) : ''
-
-const formatPrice = (price) =>
-    price ? Number(price).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '0'
-
-const formatDate = (date) =>
-    date ? new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : ''
+const formatVerification = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : ''
+const formatPrice = n => n ? Number(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}) : '0'
+const formatDate  = d => d ? new Date(d).toLocaleDateString('en-GB',{year:'numeric',month:'short',day:'numeric'}) : ''
 
 const deleteVendor = () => {
     router.delete(route('vendors.destroy', props.vendor.id), {
@@ -398,3 +356,102 @@ const deleteVendor = () => {
     })
 }
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box}
+.page-wrap{background:#F7F5F2;min-height:100vh;padding:28px 24px 72px;font-family:'DM Sans',sans-serif;color:#1A1410}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.breadcrumb{display:flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;margin-bottom:6px}
+.bc-link{color:#9E9890;text-decoration:none;transition:color .15s}.bc-link:hover{color:#C0170F}
+.bc-sep{color:#C8C0B8}.bc-cur{color:#6B6560}
+.name-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:5px}
+.page-title{font-family:'Playfair Display',serif;font-size:clamp(20px,3vw,28px);font-weight:900;color:#1A1410;line-height:1.15}
+.page-sub{font-size:12px;color:#9E9890;font-family:'DM Mono',monospace}
+.verif-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-family:'DM Mono',monospace;font-size:9px;font-weight:700}
+.feat-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;background:rgba(249,178,51,.12);color:#b45309;border:1px solid rgba(249,178,51,.4);font-family:'DM Mono',monospace;font-size:9px;font-weight:700}
+.status-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.layout{display:grid;grid-template-columns:1fr 280px;gap:18px;align-items:start}
+@media(max-width:1024px){.layout{grid-template-columns:1fr}}
+.main-col{display:flex;flex-direction:column;gap:16px}
+.sidebar-col{display:flex;flex-direction:column;gap:14px}
+.ep-card{background:#fff;border:1px solid #E8E2DA;border-radius:18px;overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,.04)}
+.card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#F0EDE8;border-bottom:1px solid #E8E2DA}
+.card-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.card-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:900;color:#1A1410;line-height:1.2}
+.card-sub{font-family:'DM Mono',monospace;font-size:10px;color:#9E9890;margin-top:1px}
+.card-body{padding:18px}
+.card-head-inline{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:600px){.grid-2{grid-template-columns:1fr}}
+.cover-wrap{position:relative;height:200px;background:linear-gradient(135deg,rgba(192,23,15,.08),rgba(29,92,150,.08))}
+.cover-img{width:100%;height:100%;object-fit:cover}
+.cover-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.logo-badge{position:absolute;bottom:-18px;left:20px;width:52px;height:52px;border-radius:12px;border:3px solid #fff;overflow:hidden;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.12)}
+.logo-badge-img{width:100%;height:100%;object-fit:cover}
+.about-body{padding:18px}
+.about-with-logo{padding-top:30px}
+.about-text{font-size:13px;color:#6B6560;line-height:1.7}
+.about-empty{font-size:12px;color:#C8C0B8;font-style:italic}
+.section-lbl{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:#9E9890;font-weight:700;margin-bottom:8px}
+.tag-cloud{display:flex;flex-wrap:wrap;gap:5px}
+.tag-navy{padding:4px 10px;border-radius:20px;background:rgba(29,92,150,.1);color:#1D5C96;border:1px solid rgba(29,92,150,.25);font-family:'DM Mono',monospace;font-size:9px;font-weight:700}
+.tag-amber{padding:4px 10px;border-radius:20px;background:rgba(249,178,51,.12);color:#b45309;border:1px solid rgba(249,178,51,.3);font-family:'DM Mono',monospace;font-size:9px;font-weight:700}
+.services-list{padding:0 18px;display:flex;flex-direction:column}
+.service-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #F7F5F2}
+.service-row:last-child{border-bottom:none}
+.service-name{font-size:13px;font-weight:700;color:#1A1410}
+.service-desc{font-family:'DM Mono',monospace;font-size:10px;color:#9E9890;margin-top:2px}
+.service-price{font-family:'DM Mono',monospace;font-size:11px;font-weight:800;color:#C0170F;white-space:nowrap;flex-shrink:0}
+.portfolio-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.portfolio-item{aspect-ratio:1;border-radius:10px;overflow:hidden;background:#F7F5F2;border:1px solid #E8E2DA}
+.portfolio-img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.portfolio-item:hover .portfolio-img{transform:scale(1.05)}
+.portfolio-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.reviews-list{padding:0 18px;display:flex;flex-direction:column}
+.review-row{padding:12px 0;border-bottom:1px solid #F7F5F2}
+.review-row:last-child{border-bottom:none}
+.review-top{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.review-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#C0170F,#F05A00);color:#fff;font-family:'DM Mono',monospace;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.review-author{font-size:12px;font-weight:700;color:#1A1410;flex:1}
+.stars{display:flex;gap:2px}
+.review-text{font-size:12px;color:#6B6560;line-height:1.5;padding-left:34px}
+.dl-list{padding:0 16px;display:flex;flex-direction:column}
+.dl-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid #F7F5F2}
+.dl-row:last-child{border-bottom:none}
+.dl-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#9E9890;font-weight:700;flex-shrink:0}
+.dl-value{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:#1A1410}
+.dl-mono{font-family:'DM Mono',monospace;font-size:11px;color:#1A1410}
+.dl-muted{font-family:'DM Mono',monospace;font-size:10px;color:#9E9890}
+.rating-row{display:flex;align-items:center;gap:4px}
+.status-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-family:'DM Mono',monospace;font-size:9px;font-weight:700}
+.contact-list{padding:0 16px 6px;display:flex;flex-direction:column;gap:10px}
+.contact-row{display:flex;align-items:center;gap:10px;padding:6px 0}
+.contact-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.contact-lbl{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#9E9890;font-weight:700}
+.contact-val{font-size:12px;font-weight:700;color:#1A1410;margin-top:1px}
+.contact-link{font-size:12px;font-weight:700;color:#C0170F;text-decoration:none;transition:opacity .15s;display:block;margin-top:1px}
+.contact-link:hover{opacity:.75}
+.truncate-link{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.address-block{font-size:12px;color:#6B6560;line-height:1.8;font-style:normal;font-family:'DM Mono',monospace;margin-bottom:10px}
+.map-link{display:inline-flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:10px;font-weight:700;color:#1D5C96;text-decoration:none;transition:opacity .15s}
+.map-link:hover{opacity:.75}
+.danger-card{border-color:rgba(192,23,15,.2)}
+.btn-danger-full{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:10px 16px;border-radius:11px;border:1.5px solid rgba(192,23,15,.3);background:rgba(192,23,15,.06);color:#C0170F;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s}
+.btn-danger-full:hover{background:rgba(192,23,15,.12);border-color:rgba(192,23,15,.5)}
+.btn-cta{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:12px;border:none;cursor:pointer;background-image:linear-gradient(135deg,#C0170F 0%,#F05A00 50%,#F9B233 100%);background-size:200% auto;color:#fff;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif;text-decoration:none;box-shadow:0 4px 14px rgba(192,23,15,.28);animation:shine 3s linear infinite;transition:transform .2s,box-shadow .2s}
+.btn-cta:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(192,23,15,.38)}
+@keyframes shine{0%{background-position:0% center}100%{background-position:200% center}}
+.btn-ghost{padding:9px 18px;border-radius:11px;border:1.5px solid #E8E2DA;background:#fff;color:#6B6560;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .18s}
+.btn-ghost:hover{border-color:#9E9890;color:#1A1410}
+.btn-danger{padding:9px 18px;border-radius:11px;border:none;background:#C0170F;color:#fff;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .15s}
+.btn-danger:hover{background:#a01209}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal-box{background:#fff;border-radius:20px;padding:24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-head{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.modal-icon-wrap{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.modal-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:900;color:#1A1410}
+.modal-sub{font-family:'DM Mono',monospace;font-size:10px;color:#9E9890;margin-top:2px}
+.modal-body{font-size:13px;color:#6B6560;line-height:1.6;margin-bottom:20px}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px}
+</style>

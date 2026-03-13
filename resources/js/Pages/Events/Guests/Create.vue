@@ -1,609 +1,386 @@
 <template>
     <AuthenticatedLayout>
-        <template #header>
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-                <div class="flex-1">
-                    <div class="flex items-center gap-3 mb-3">
-                        <Link :href="route('events.guests.index', event.id)" 
-                              class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors group">
-                            <svg class="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                            </svg>
-                            Back to Guests
-                        </Link>
-                        <div class="h-4 w-px bg-gray-300"></div>
-                        <Link :href="route('events.show', event.id)" 
-                              class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                            {{ event.title }}
-                        </Link>
+
+        <div class="confetti" aria-hidden="true">
+            <div class="cdot" v-for="n in 14" :key="n" :style="{
+                width:(3+(n*3)%9)+'px',height:(3+(n*3)%9)+'px',left:(n*7.1%100)+'%',
+                background:['#C0170F','#F05A00','#F9B233','#1D5C96','#C0170F','#F9B233'][n%6],
+                animationDuration:(10+n*1.1)+'s',animationDelay:(n*.6)+'s',
+                borderRadius:n%3===0?'2px':'50%',
+            }"></div>
+        </div>
+
+        <div class="page-wrap">
+
+            <!-- header -->
+            <div class="page-header">
+                <div>
+                    <div class="breadcrumb">
+                        <Link :href="route('events.guests.index',event.id)" class="bc-link">Guests</Link>
+                        <span class="bc-sep">›</span>
+                        <span class="bc-cur">Add Guests</span>
                     </div>
-                    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                        <div>
-                            <h1 class="font-bold text-3xl text-gray-900 leading-tight mb-2">Add Guests</h1>
-                            <p class="text-gray-600">Quickly add multiple guests to <span class="font-semibold">{{ event.title }}</span></p>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="px-3 py-1.5 bg-indigo-100 text-indigo-800 text-sm font-semibold rounded-full">
-                                {{ form.guests.length }} guest{{ form.guests.length !== 1 ? 's' : '' }}
-                            </span>
-                        </div>
+                    <div class="page-eyebrow"><span class="eyebrow-dot"></span>Add Guests</div>
+                    <h1 class="page-title">{{ event.title }}</h1>
+                </div>
+                <div class="header-right">
+                    <div v-if="form.guests.length" class="guest-count-pill">
+                        {{ form.guests.length }} guest{{ form.guests.length!==1?'s':'' }} ready
                     </div>
+                    <Link :href="route('events.guests.index',event.id)" class="btn-ghost">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                        Back
+                    </Link>
                 </div>
             </div>
-        </template>
 
-        <div class="py-6">
-            <div class="max-w-12xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- tab bar -->
+            <div class="tab-bar">
+                <button @click="activeTab='manual'" :class="['tab-btn', activeTab==='manual'?'active':'']">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    Manual Entry
+                </button>
+                <button @click="activeTab='excel'" :class="['tab-btn', activeTab==='excel'?'active':'']">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Import Excel / CSV
+                </button>
+            </div>
 
-                <!-- ══════════════════════════════════════════════════
-                     IMPORT METHOD TABS
-                ══════════════════════════════════════════════════ -->
-                <div class="flex gap-1 mb-6 bg-gray-100 p-1 rounded-xl w-fit">
-                    <button @click="activeTab = 'manual'"
-                            :class="activeTab === 'manual'
-                                ? 'bg-white shadow-sm text-indigo-700 font-semibold'
-                                : 'text-gray-500 hover:text-gray-700'"
-                            class="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                        </svg>
-                        Manual Entry
-                    </button>
-                    <button @click="activeTab = 'excel'"
-                            :class="activeTab === 'excel'
-                                ? 'bg-white shadow-sm text-indigo-700 font-semibold'
-                                : 'text-gray-500 hover:text-gray-700'"
-                            class="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        Import from Excel / CSV
-                    </button>
+            <!-- ── MANUAL TAB ── -->
+            <template v-if="activeTab==='manual'">
+                <div class="form-card">
+                    <div class="form-card-head">
+                        <div class="card-icon-wrap" style="background:rgba(192,23,15,.1)">⚙️</div>
+                        <div>
+                            <div class="card-title">Bulk Settings</div>
+                            <div class="card-sub">These settings apply to all guests you add below</div>
+                        </div>
+                    </div>
+                    <div class="fields">
+                        <div class="field-row-3">
+                            <div class="field">
+                                <label class="field-label">Category</label>
+                                <select v-model="bulkSettings.category" class="field-input">
+                                    <option value="family">Family</option><option value="friends">Friends</option>
+                                    <option value="colleagues">Colleagues</option><option value="business">Business</option>
+                                    <option value="vip">VIP</option><option value="sponsors">Sponsors</option>
+                                    <option value="media">Media</option><option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label class="field-label">Guest Type</label>
+                                <select v-model="bulkSettings.guest_type" class="field-input">
+                                    <option value="primary">Primary Guest</option><option value="plus_one">Plus One</option>
+                                    <option value="child">Child</option><option value="vendor">Vendor</option>
+                                    <option value="staff">Staff</option><option value="speaker">Speaker</option>
+                                    <option value="performer">Performer</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label class="field-label">RSVP Status</label>
+                                <select v-model="bulkSettings.rsvp_status" class="field-input">
+                                    <option value="pending">Pending</option><option value="attending">Attending</option>
+                                    <option value="not_attending">Not Attending</option><option value="maybe">Maybe</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field-row-4">
+                            <div class="toggle-row">
+                                <span class="toggle-lbl">Mark as VIP</span>
+                                <div @click="bulkSettings.is_vip=!bulkSettings.is_vip" class="toggle-wrap">
+                                    <div :class="['toggle', bulkSettings.is_vip?'on':'']"><div class="toggle-knob"></div></div>
+                                </div>
+                            </div>
+                            <div class="toggle-row">
+                                <span class="toggle-lbl">Allow Plus One</span>
+                                <div @click="bulkSettings.plus_one_allowed=!bulkSettings.plus_one_allowed" class="toggle-wrap">
+                                    <div :class="['toggle', bulkSettings.plus_one_allowed?'on':'']"><div class="toggle-knob"></div></div>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label class="field-label">Language</label>
+                                <select v-model="bulkSettings.language_preference" class="field-input">
+                                    <option value="en">English</option><option value="es">Spanish</option>
+                                    <option value="fr">French</option><option value="de">German</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label class="field-label">Plus Ones</label>
+                                <input type="number" v-model="bulkSettings.plus_ones" min="0" max="10" class="field-input">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- ══════════════════════════════════════════════════
-                     MANUAL ENTRY TAB
-                ══════════════════════════════════════════════════ -->
-                <template v-if="activeTab === 'manual'">
-                    <!-- Quick Add Section -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
-                        <div class="p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Add Multiple Guests</h3>
-                            <p class="text-sm text-gray-600 mb-6">Add the same type of guests with shared settings</p>
-                            
-                            <!-- Guest Type Selection -->
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Guest Category</label>
-                                    <select v-model="bulkSettings.category" 
-                                            class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
-                                        <option value="family">Family</option>
-                                        <option value="friends">Friends</option>
-                                        <option value="colleagues">Colleagues</option>
-                                        <option value="business">Business</option>
-                                        <option value="vip">VIP</option>
-                                        <option value="sponsors">Sponsors</option>
-                                        <option value="media">Media</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Guest Type</label>
-                                    <select v-model="bulkSettings.guest_type" 
-                                            class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
-                                        <option value="primary">Primary Guest</option>
-                                        <option value="plus_one">Plus One</option>
-                                        <option value="child">Child</option>
-                                        <option value="vendor">Vendor</option>
-                                        <option value="staff">Staff</option>
-                                        <option value="speaker">Speaker</option>
-                                        <option value="performer">Performer</option>
-                                    </select>
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">RSVP Status</label>
-                                    <select v-model="bulkSettings.rsvp_status" 
-                                            class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
-                                        <option value="pending">Pending</option>
-                                        <option value="attending">Attending</option>
-                                        <option value="not_attending">Not Attending</option>
-                                        <option value="maybe">Maybe</option>
-                                    </select>
-                                </div>
+                <div class="form-card">
+                    <div class="form-card-head">
+                        <div class="card-icon-wrap" style="background:rgba(29,92,150,.1)">👤</div>
+                        <div>
+                            <div class="card-title">Guest Names</div>
+                            <div class="card-sub">Add first name, last name and optionally email &amp; phone</div>
+                        </div>
+                    </div>
+                    <div class="fields">
+                        <div class="guest-rows">
+                            <div v-for="(guest,idx) in tempGuests" :key="idx" class="guest-row">
+                                <div class="row-num">{{ idx+1 }}</div>
+                                <input type="text" v-model="guest.first_name" placeholder="First name" class="field-input">
+                                <input type="text" v-model="guest.last_name"  placeholder="Last name"  class="field-input">
+                                <input type="email" v-model="guest.email"    placeholder="Email (optional)" class="field-input">
+                                <input type="text" v-model="guest.phone"     placeholder="Phone (optional)" class="field-input">
+                                <button v-if="idx>0" @click="removeTempGuest(idx)" type="button" class="row-remove">
+                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                </button>
+                                <div v-else style="width:28px"></div>
                             </div>
-                            
-                            <!-- Bulk Options -->
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                                <div class="flex items-center">
-                                    <input type="checkbox" id="bulk_is_vip" v-model="bulkSettings.is_vip"
-                                           class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                                    <label for="bulk_is_vip" class="ml-2 block text-sm text-gray-700">Mark as VIP</label>
-                                </div>
-                                
-                                <div class="flex items-center">
-                                    <input type="checkbox" id="bulk_plus_one_allowed" v-model="bulkSettings.plus_one_allowed"
-                                           class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                                    <label for="bulk_plus_one_allowed" class="ml-2 block text-sm text-gray-700">Allow Plus One</label>
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Language</label>
-                                    <select v-model="bulkSettings.language_preference" 
-                                            class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
-                                        <option value="en">English</option>
-                                        <option value="es">Spanish</option>
-                                        <option value="fr">French</option>
-                                        <option value="de">German</option>
-                                    </select>
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Plus Ones Count</label>
-                                    <input type="number" v-model="bulkSettings.plus_ones" min="0" max="10"
-                                           class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
-                                </div>
-                            </div>
-                            
-                            <!-- Add Multiple Form -->
-                            <div class="bg-gray-50 rounded-lg p-4 mb-6">
-                                <h4 class="text-sm font-semibold text-gray-900 mb-3">Add Guest(s)</h4>
-                                <div class="space-y-3">
-                                    <div v-for="(guest, index) in tempGuests" :key="index" 
-                                         class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                                        <div>
-                                            <input type="text" v-model="guest.first_name" placeholder="First name"
-                                                   class="w-full rounded-lg border border-gray-300 py-2 px-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm">
-                                        </div>
-                                        <div>
-                                            <input type="text" v-model="guest.last_name" placeholder="Last name"
-                                                   class="w-full rounded-lg border border-gray-300 py-2 px-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm">
-                                        </div>
-                                        <div>
-                                            <input type="email" v-model="guest.email" placeholder="Email (optional)"
-                                                   class="w-full rounded-lg border border-gray-300 py-2 px-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm">
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <input type="text" v-model="guest.phone" placeholder="Phone (optional)"
-                                                   class="flex-1 rounded-lg border border-gray-300 py-2 px-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm">
-                                            <button v-if="index > 0" @click="removeTempGuest(index)" type="button"
-                                                    class="p-2 text-red-600 hover:text-red-800">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <button @click="addTempGuest" type="button"
-                                            class="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                        </svg>
-                                        Add another guest
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <button @click="addGuestsToList" type="button"
-                                    class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                </svg>
+                        </div>
+                        <div class="row-actions">
+                            <button @click="addTempGuest" type="button" class="btn-add-row">
+                                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                                Add another row
+                            </button>
+                            <button @click="addGuestsToList" type="button" class="btn-cta">
+                                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                                 Add to Guest List
                             </button>
                         </div>
                     </div>
-                </template>
+                </div>
+            </template>
 
-                <!-- ══════════════════════════════════════════════════
-                     EXCEL / CSV IMPORT TAB
-                ══════════════════════════════════════════════════ -->
-                <template v-if="activeTab === 'excel'">
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
-                        <div class="p-6">
-                            <div class="flex items-start justify-between mb-6">
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-1">Import from Excel or CSV</h3>
-                                    <p class="text-sm text-gray-500">Upload a spreadsheet with your guest list. Supports <strong>.xlsx</strong>, <strong>.xls</strong>, and <strong>.csv</strong> formats.</p>
-                                </div>
-                                <!-- Download template buttons -->
-                                <div class="flex gap-2 shrink-0 ml-4">
-                                    <a :href="`/events/${event.id}/guests/import-template?format=xlsx`"
-                                       class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                        </svg>
-                                        Download .xlsx Template
-                                    </a>
-                                    <a :href="`/events/${event.id}/guests/import-template?format=csv`"
-                                       class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                        </svg>
-                                        Download .csv Template
-                                    </a>
-                                </div>
-                            </div>
-
-                            <!-- Column reference card -->
-                            <div class="bg-indigo-50 rounded-lg p-4 mb-6 border border-indigo-100">
-                                <p class="text-xs font-semibold text-indigo-700 uppercase tracking-wider mb-2">Expected Columns</p>
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-indigo-900">
-                                    <div><span class="font-semibold text-red-600">first_name *</span></div>
-                                    <div><span class="font-semibold text-red-600">last_name *</span></div>
-                                    <div>email</div>
-                                    <div>phone</div>
-                                    <div>category</div>
-                                    <div>guest_type</div>
-                                    <div>rsvp_status</div>
-                                    <div>is_vip</div>
-                                    <div>plus_one_allowed</div>
-                                    <div>plus_ones</div>
-                                    <div>language_preference</div>
-                                    <div>notes</div>
-                                </div>
-                                <p class="text-xs text-indigo-500 mt-2">* Required &nbsp;·&nbsp; All other columns are optional and will use defaults if omitted.</p>
-                            </div>
-
-                            <!-- Drop zone -->
-                            <div @dragover.prevent="isDragging = true"
-                                 @dragleave.prevent="isDragging = false"
-                                 @drop.prevent="handleFileDrop"
-                                 :class="isDragging
-                                     ? 'border-indigo-500 bg-indigo-50'
-                                     : excelFile
-                                         ? 'border-emerald-400 bg-emerald-50'
-                                         : 'border-gray-300 bg-gray-50 hover:border-indigo-400 hover:bg-indigo-50'"
-                                 class="border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer mb-4"
-                                 @click="$refs.fileInput.click()">
-
-                                <input ref="fileInput" type="file"
-                                       accept=".xlsx,.xls,.csv"
-                                       class="hidden"
-                                       @change="handleFileSelect">
-
-                                <!-- No file yet -->
-                                <template v-if="!excelFile">
-                                    <div class="flex justify-center mb-3">
-                                        <div class="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center">
-                                            <svg class="w-7 h-7 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <p class="text-sm font-medium text-gray-700">Drop your file here, or <span class="text-indigo-600">browse</span></p>
-                                    <p class="text-xs text-gray-400 mt-1">Supports .xlsx, .xls, .csv · Max 5 MB</p>
-                                </template>
-
-                                <!-- File selected -->
-                                <template v-else>
-                                    <div class="flex items-center justify-center gap-3">
-                                        <div class="w-10 h-10 rounded-lg flex items-center justify-center"
-                                             :class="excelFile.name.endsWith('.csv') ? 'bg-blue-100' : 'bg-emerald-100'">
-                                            <svg class="w-5 h-5"
-                                                 :class="excelFile.name.endsWith('.csv') ? 'text-blue-600' : 'text-emerald-600'"
-                                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                      d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                            </svg>
-                                        </div>
-                                        <div class="text-left">
-                                            <p class="text-sm font-semibold text-gray-800">{{ excelFile.name }}</p>
-                                            <p class="text-xs text-gray-500">{{ formatFileSize(excelFile.size) }}</p>
-                                        </div>
-                                        <button @click.stop="clearExcelFile"
-                                                class="ml-2 p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </template>
-                            </div>
-
-                            <!-- Parse errors -->
-                            <div v-if="importErrors.length" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                                <p class="text-sm font-semibold text-red-700 mb-2">Import issues found:</p>
-                                <ul class="text-sm text-red-600 space-y-1">
-                                    <li v-for="(err, i) in importErrors" :key="i" class="flex items-start gap-2">
-                                        <svg class="w-4 h-4 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ err }}
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <!-- Preview table -->
-                            <div v-if="importPreview.length" class="mb-5">
-                                <div class="flex items-center justify-between mb-3">
-                                    <p class="text-sm font-semibold text-gray-800">
-                                        Preview — {{ importPreview.length }} guest{{ importPreview.length !== 1 ? 's' : '' }} ready to import
-                                        <span v-if="importSkipped" class="ml-2 text-yellow-600">({{ importSkipped }} row{{ importSkipped !== 1 ? 's' : '' }} skipped — missing name)</span>
-                                    </p>
-                                    <span class="text-xs text-gray-400">Showing first 10</span>
-                                </div>
-                                <div class="overflow-x-auto rounded-lg border border-gray-200">
-                                    <table class="min-w-full divide-y divide-gray-200 text-xs">
-                                        <thead class="bg-gray-50">
-                                            <tr>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">RSVP</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">VIP</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="bg-white divide-y divide-gray-100">
-                                            <tr v-for="(g, i) in importPreview.slice(0, 10)" :key="i" class="hover:bg-gray-50">
-                                                <td class="px-3 py-2 font-medium text-gray-900 whitespace-nowrap">{{ g.first_name }} {{ g.last_name }}</td>
-                                                <td class="px-3 py-2 text-gray-500 whitespace-nowrap">{{ g.email || '—' }}</td>
-                                                <td class="px-3 py-2 whitespace-nowrap">
-                                                    <span class="px-1.5 py-0.5 rounded-full text-xs font-semibold capitalize"
-                                                          :class="getCategoryClass(g.category)">{{ g.category }}</span>
-                                                </td>
-                                                <td class="px-3 py-2 whitespace-nowrap">
-                                                    <span class="px-1.5 py-0.5 rounded-full text-xs font-semibold capitalize"
-                                                          :class="getRsvpStatusClass(g.rsvp_status)">{{ g.rsvp_status }}</span>
-                                                </td>
-                                                <td class="px-3 py-2 whitespace-nowrap">
-                                                    <span v-if="g.is_vip" class="px-1.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">VIP</span>
-                                                    <span v-else class="text-gray-400">—</span>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <p v-if="importPreview.length > 10" class="text-xs text-gray-400 mt-1 text-right">
-                                    + {{ importPreview.length - 10 }} more not shown
-                                </p>
-                            </div>
-
-                            <!-- Import action -->
-                            <div class="flex items-center gap-3">
-                                <button @click="parseExcelFile"
-                                        :disabled="!excelFile || isParsing"
-                                        class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-indigo-300 text-indigo-700 text-sm font-medium rounded-lg hover:bg-indigo-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                                    <svg v-if="isParsing" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                    </svg>
-                                    {{ isParsing ? 'Parsing…' : 'Preview File' }}
-                                </button>
-
-                                <button v-if="importPreview.length"
-                                        @click="addImportedGuestsToList"
-                                        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                    </svg>
-                                    Add {{ importPreview.length }} Guest{{ importPreview.length !== 1 ? 's' : '' }} to List
-                                </button>
-                            </div>
+            <!-- ── EXCEL TAB ── -->
+            <template v-if="activeTab==='excel'">
+                <div class="form-card">
+                    <div class="form-card-head">
+                        <div class="card-icon-wrap" style="background:rgba(22,163,74,.1)">📊</div>
+                        <div>
+                            <div class="card-title">Import from Excel or CSV</div>
+                            <div class="card-sub">Upload .xlsx, .xls, or .csv · Max 5 MB</div>
+                        </div>
+                        <div style="margin-left:auto;display:flex;gap:8px;flex-shrink:0">
+                            <a :href="`/events/${event.id}/guests/import-template?format=xlsx`" class="btn-template green">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                .xlsx Template
+                            </a>
+                            <a :href="`/events/${event.id}/guests/import-template?format=csv`" class="btn-template blue">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                .csv Template
+                            </a>
                         </div>
                     </div>
-                </template>
-
-                <!-- ══════════════════════════════════════════════════
-                     GUEST LIST PREVIEW (shared between tabs)
-                ══════════════════════════════════════════════════ -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6" v-if="form.guests.length > 0">
-                    <div class="p-6">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-semibold text-gray-900">Guest List Preview</h3>
-                            <span class="px-3 py-1.5 bg-indigo-100 text-indigo-800 text-sm font-semibold rounded-full">
-                                {{ form.guests.length }} guest{{ form.guests.length !== 1 ? 's' : '' }} ready
-                            </span>
+                    <div class="fields">
+                        <!-- column reference -->
+                        <div class="col-ref">
+                            <div class="col-ref-title">Expected Columns</div>
+                            <div class="col-ref-grid">
+                                <span><strong class="required">first_name *</strong></span>
+                                <span><strong class="required">last_name *</strong></span>
+                                <span>email</span><span>phone</span><span>category</span>
+                                <span>guest_type</span><span>rsvp_status</span><span>is_vip</span>
+                                <span>plus_one_allowed</span><span>plus_ones</span>
+                                <span>language_preference</span><span>notes</span>
+                            </div>
+                            <div class="col-ref-note">* Required · All others optional</div>
                         </div>
-                        
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RSVP</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">VIP</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="(guest, index) in form.guests" :key="index" class="hover:bg-gray-50">
-                                        <td class="px-4 py-3 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900">{{ guest.first_name }} {{ guest.last_name }}</div>
-                                            <div v-if="guest.phone" class="text-xs text-gray-500">{{ guest.phone }}</div>
-                                        </td>
-                                        <td class="px-4 py-3 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ guest.email || 'No email' }}</div>
-                                        </td>
-                                        <td class="px-4 py-3 whitespace-nowrap">
-                                            <span class="px-2 py-1 text-xs font-semibold rounded-full capitalize"
-                                                  :class="getCategoryClass(guest.category)">{{ guest.category }}</span>
-                                        </td>
-                                        <td class="px-4 py-3 whitespace-nowrap">
-                                            <span class="px-2 py-1 text-xs font-semibold rounded-full capitalize"
-                                                  :class="getRsvpStatusClass(guest.rsvp_status)">{{ guest.rsvp_status }}</span>
-                                        </td>
-                                        <td class="px-4 py-3 whitespace-nowrap">
-                                            <span v-if="guest.is_vip" class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">VIP</span>
-                                            <span v-else class="text-xs text-gray-500">-</span>
-                                        </td>
-                                        <td class="px-4 py-3 whitespace-nowrap">
-                                            <button @click="editGuest(index)" class="text-indigo-600 hover:text-indigo-900 text-sm mr-3">Edit</button>
-                                            <button @click="removeGuest(index)" class="text-red-600 hover:text-red-900 text-sm">Remove</button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+
+                        <!-- drop zone -->
+                        <div @dragover.prevent="isDragging=true" @dragleave.prevent="isDragging=false"
+                             @drop.prevent="handleFileDrop" @click="$refs.fileInput.click()"
+                             :class="['drop-zone', isDragging?'dragging':excelFile?'has-file':'']">
+                            <input ref="fileInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" @change="handleFileSelect">
+                            <template v-if="!excelFile">
+                                <div class="drop-icon">📁</div>
+                                <div class="drop-title">Drop your file here, or <span class="drop-link">browse</span></div>
+                                <div class="drop-sub">Supports .xlsx, .xls, .csv · Max 5 MB</div>
+                            </template>
+                            <template v-else>
+                                <div class="file-preview">
+                                    <div class="file-icon">{{ excelFile.name.endsWith('.csv')?'📄':'📊' }}</div>
+                                    <div>
+                                        <div class="file-name">{{ excelFile.name }}</div>
+                                        <div class="file-size">{{ fmtSize(excelFile.size) }}</div>
+                                    </div>
+                                    <button @click.stop="clearExcelFile" class="file-clear">
+                                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- errors -->
+                        <div v-if="importErrors.length" class="import-errors">
+                            <div class="ie-title">⚠️ Import issues:</div>
+                            <div v-for="(e,i) in importErrors" :key="i" class="ie-row">• {{ e }}</div>
+                        </div>
+
+                        <!-- preview table -->
+                        <div v-if="importPreview.length">
+                            <div class="preview-header">
+                                <span class="preview-title">{{ importPreview.length }} guest{{ importPreview.length!==1?'s':'' }} ready
+                                    <span v-if="importSkipped" class="skip-note">({{ importSkipped }} skipped – missing name)</span>
+                                </span>
+                                <span class="preview-sub">Showing first 10</span>
+                            </div>
+                            <div class="preview-table-wrap">
+                                <table class="preview-table">
+                                    <thead><tr><th>Name</th><th>Email</th><th>Category</th><th>RSVP</th><th>VIP</th></tr></thead>
+                                    <tbody>
+                                        <tr v-for="(g,i) in importPreview.slice(0,10)" :key="i">
+                                            <td class="font-semibold">{{ g.first_name }} {{ g.last_name }}</td>
+                                            <td>{{ g.email||'—' }}</td>
+                                            <td><span class="cat-chip capitalize" :style="CAT_STYLE[g.category]||CAT_STYLE.other">{{ g.category }}</span></td>
+                                            <td><span class="cat-chip capitalize" :style="RSVP_STYLE[g.rsvp_status]||RSVP_STYLE.pending">{{ g.rsvp_status }}</span></td>
+                                            <td><span v-if="g.is_vip" class="vip-chip">VIP</span><span v-else style="color:#C8C2BA">—</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div v-if="importPreview.length>10" class="preview-more">+ {{ importPreview.length-10 }} more not shown</div>
+                        </div>
+
+                        <div class="import-actions">
+                            <button @click="parseExcelFile" :disabled="!excelFile||isParsing" class="btn-secondary">
+                                <svg v-if="isParsing" class="spin-icon" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                                <svg v-else width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                {{ isParsing?'Parsing…':'Preview File' }}
+                            </button>
+                            <button v-if="importPreview.length" @click="addImportedGuestsToList" class="btn-cta">
+                                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                                Add {{ importPreview.length }} Guest{{ importPreview.length!==1?'s':'' }} to List
+                            </button>
                         </div>
                     </div>
                 </div>
+            </template>
 
-                <!-- ══════════════════════════════════════════════════
-                     EDIT MODAL
-                ══════════════════════════════════════════════════ -->
-                <Modal :show="showEditModal" @close="showEditModal = false" max-width="lg">
-                    <div class="p-6" v-if="editingGuest !== null">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-xl font-bold text-gray-900">Edit Guest</h2>
-                            <button @click="showEditModal = false" class="text-gray-400 hover:text-gray-500">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                </svg>
-                            </button>
+            <!-- ── GUEST LIST PREVIEW ── -->
+            <div v-if="form.guests.length" class="form-card">
+                <div class="form-card-head">
+                    <div class="card-icon-wrap" style="background:rgba(249,178,51,.15)">📋</div>
+                    <div>
+                        <div class="card-title">Guest List Preview</div>
+                        <div class="card-sub">Review before saving</div>
+                    </div>
+                    <span class="guest-count-pill ml-auto">{{ form.guests.length }} guest{{ form.guests.length!==1?'s':'' }} ready</span>
+                </div>
+                <div class="table-scroll">
+                    <table class="ep-table">
+                        <thead><tr>
+                            <th>Name</th><th>Email</th><th>Category</th><th>RSVP</th><th>VIP</th><th class="th-actions">Actions</th>
+                        </tr></thead>
+                        <tbody>
+                            <tr v-for="(g,idx) in form.guests" :key="idx" class="tr-row">
+                                <td>
+                                    <div class="font-semibold" style="font-size:13px;color:#1A1410">{{ g.first_name }} {{ g.last_name }}</div>
+                                    <div v-if="g.phone" style="font-size:11px;color:#9E9890;font-family:'DM Mono',monospace">{{ g.phone }}</div>
+                                </td>
+                                <td style="font-size:13px;color:#6B6560">{{ g.email||'No email' }}</td>
+                                <td><span class="cat-chip capitalize" :style="CAT_STYLE[g.category]||CAT_STYLE.other">{{ g.category }}</span></td>
+                                <td><span class="cat-chip capitalize" :style="RSVP_STYLE[g.rsvp_status]||RSVP_STYLE.pending">{{ g.rsvp_status }}</span></td>
+                                <td>
+                                    <span v-if="g.is_vip" class="vip-chip">VIP</span>
+                                    <span v-else style="color:#C8C2BA;font-size:12px">—</span>
+                                </td>
+                                <td class="td-actions">
+                                    <button @click="editGuest(idx)" class="action-btn edit">Edit</button>
+                                    <button @click="removeGuest(idx)" class="action-btn del">Remove</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- edit modal -->
+            <Modal :show="showEditModal" @close="showEditModal=false" max-width="lg">
+                <div class="modal-wrap" v-if="editingGuest!==null">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Edit Guest</h2>
+                        <button @click="showEditModal=false" class="modal-close">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    <div class="fields">
+                        <div class="field-row">
+                            <div class="field"><label class="field-label">First Name</label><input type="text" v-model="editingGuest.first_name" class="field-input"></div>
+                            <div class="field"><label class="field-label">Last Name</label><input type="text" v-model="editingGuest.last_name" class="field-input"></div>
                         </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                                <input type="text" v-model="editingGuest.first_name"
-                                       class="w-full rounded-lg border border-gray-300 py-2 px-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                                <input type="text" v-model="editingGuest.last_name"
-                                       class="w-full rounded-lg border border-gray-300 py-2 px-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                                <input type="email" v-model="editingGuest.email"
-                                       class="w-full rounded-lg border border-gray-300 py-2 px-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                                <input type="tel" v-model="editingGuest.phone"
-                                       class="w-full rounded-lg border border-gray-300 py-2 px-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                                <select v-model="editingGuest.category"
-                                        class="w-full rounded-lg border border-gray-300 py-2 px-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm">
-                                    <option value="family">Family</option>
-                                    <option value="friends">Friends</option>
-                                    <option value="colleagues">Colleagues</option>
-                                    <option value="business">Business</option>
-                                    <option value="vip">VIP</option>
-                                    <option value="sponsors">Sponsors</option>
-                                    <option value="media">Media</option>
-                                    <option value="other">Other</option>
+                        <div class="field-row">
+                            <div class="field"><label class="field-label">Email</label><input type="email" v-model="editingGuest.email" class="field-input"></div>
+                            <div class="field"><label class="field-label">Phone</label><input type="tel" v-model="editingGuest.phone" class="field-input"></div>
+                        </div>
+                        <div class="field-row">
+                            <div class="field">
+                                <label class="field-label">Category</label>
+                                <select v-model="editingGuest.category" class="field-input">
+                                    <option value="family">Family</option><option value="friends">Friends</option>
+                                    <option value="colleagues">Colleagues</option><option value="business">Business</option>
+                                    <option value="vip">VIP</option><option value="sponsors">Sponsors</option>
+                                    <option value="media">Media</option><option value="other">Other</option>
                                 </select>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">RSVP Status</label>
-                                <select v-model="editingGuest.rsvp_status"
-                                        class="w-full rounded-lg border border-gray-300 py-2 px-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm">
-                                    <option value="pending">Pending</option>
-                                    <option value="attending">Attending</option>
-                                    <option value="not_attending">Not Attending</option>
-                                    <option value="maybe">Maybe</option>
+                            <div class="field">
+                                <label class="field-label">RSVP Status</label>
+                                <select v-model="editingGuest.rsvp_status" class="field-input">
+                                    <option value="pending">Pending</option><option value="attending">Attending</option>
+                                    <option value="not_attending">Not Attending</option><option value="maybe">Maybe</option>
                                 </select>
                             </div>
-                            <div class="md:col-span-2">
-                                <div class="flex items-center gap-4">
-                                    <div class="flex items-center">
-                                        <input type="checkbox" id="edit_is_vip" v-model="editingGuest.is_vip"
-                                               class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                                        <label for="edit_is_vip" class="ml-2 block text-sm text-gray-700">VIP Guest</label>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <input type="checkbox" id="edit_plus_one_allowed" v-model="editingGuest.plus_one_allowed"
-                                               class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                                        <label for="edit_plus_one_allowed" class="ml-2 block text-sm text-gray-700">Allow Plus One</label>
-                                    </div>
-                                    <div v-if="editingGuest.plus_one_allowed" class="flex items-center">
-                                        <label class="text-sm text-gray-700 mr-2">Count:</label>
-                                        <input type="number" v-model="editingGuest.plus_ones" min="0" max="10"
-                                               class="w-20 rounded-lg border border-gray-300 py-1 px-2 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm">
-                                    </div>
-                                </div>
-                            </div>
                         </div>
-                        
-                        <div class="flex justify-end gap-3">
-                            <button @click="showEditModal = false"
-                                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-                                Cancel
-                            </button>
-                            <button @click="saveGuestEdit"
-                                    class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
-                                Save Changes
-                            </button>
+                        <div class="modal-footer" style="margin-top:8px">
+                            <button @click="showEditModal=false" class="btn-ghost">Cancel</button>
+                            <button @click="saveGuestEdit" class="btn-cta">Save Changes</button>
                         </div>
                     </div>
-                </Modal>
+                </div>
+            </Modal>
 
-                <!-- ══════════════════════════════════════════════════
-                     FINALIZE
-                ══════════════════════════════════════════════════ -->
-                <div v-if="form.guests.length > 0" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Finalize Guest List</h3>
-                    <div class="space-y-4">
+            <!-- ── FINALIZE ── -->
+            <div v-if="form.guests.length" class="form-card">
+                <div class="form-card-head">
+                    <div class="card-icon-wrap" style="background:rgba(192,23,15,.08)">🚀</div>
+                    <div>
+                        <div class="card-title">Finalize &amp; Save</div>
+                        <div class="card-sub">Configure options then save all {{ form.guests.length }} guests</div>
+                    </div>
+                </div>
+                <div class="fields">
+                    <div class="toggle-row full">
                         <div>
-                            <div class="flex items-center mb-4">
-                                <input type="checkbox" id="send_invitations" v-model="form.send_invitations"
-                                       class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                                <label for="send_invitations" class="ml-2 block text-sm font-medium text-gray-900">
-                                    Send invitations to all guests with email addresses
-                                </label>
-                            </div>
-                            
-                            <div v-if="form.send_invitations" class="ml-6 p-4 bg-gray-50 rounded-lg">
-                                <p class="text-sm text-gray-600 mb-3">
-                                    Invitations will be sent to {{ guestsWithEmail }} guest{{ guestsWithEmail !== 1 ? 's' : '' }} with email addresses.
-                                </p>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Invitation Method</label>
-                                        <select v-model="form.invitation_method"
-                                                class="w-full rounded-lg border border-gray-300 py-2 px-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm">
-                                            <option value="email">Email</option>
-                                            <option value="sms">SMS</option>
-                                            <option value="whatsapp">WhatsApp</option>
-                                        </select>
-                                    </div>
-                                </div>
+                            <div style="font-size:13px;font-weight:600;color:#1A1410">Send invitations immediately</div>
+                            <div style="font-size:11px;color:#9E9890;font-family:'DM Mono',monospace">
+                                Will send to {{ guestsWithEmail }} guest{{ guestsWithEmail!==1?'s':'' }} with email addresses
                             </div>
                         </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Additional Notes (Optional)</label>
-                            <textarea v-model="form.notes" rows="3"
-                                      class="w-full rounded-lg border border-gray-300 py-2 px-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm"
-                                      placeholder="Any notes that apply to all guests..."></textarea>
+                        <div @click="form.send_invitations=!form.send_invitations" class="toggle-wrap">
+                            <div :class="['toggle', form.send_invitations?'on':'']"><div class="toggle-knob"></div></div>
                         </div>
-                        
-                        <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                            <button @click="clearAllGuests" type="button"
-                                    class="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50">
-                                Clear All Guests
-                            </button>
-                            <button @click="submit" :disabled="form.processing || isSubmitting"
-                                    class="inline-flex items-center px-4 py-2.5 bg-indigo-600 border border-transparent text-sm font-medium rounded-lg text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                                <svg v-if="form.processing || isSubmitting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                {{ (form.processing || isSubmitting) ? 'Saving...' : `Save ${form.guests.length} Guest${form.guests.length !== 1 ? 's' : ''}` }}
-                            </button>
-                        </div>
+                    </div>
+                    <div v-if="form.send_invitations" class="field" style="max-width:260px">
+                        <label class="field-label">Invitation Method</label>
+                        <select v-model="form.invitation_method" class="field-input">
+                            <option value="email">Email</option>
+                            <option value="sms">SMS</option>
+                            <option value="whatsapp">WhatsApp</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Notes (applies to all guests)</label>
+                        <textarea v-model="form.notes" rows="2" class="field-input" placeholder="Any shared notes…"></textarea>
+                    </div>
+                    <div class="finalize-actions">
+                        <button @click="clearAllGuests" type="button" class="btn-danger-outline">
+                            🗑️ Clear All Guests
+                        </button>
+                        <button @click="submit" :disabled="isSubmitting" class="btn-cta">
+                            <svg v-if="isSubmitting" class="spin-icon" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                            <svg v-else width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+                            {{ isSubmitting?'Saving…':`Save ${form.guests.length} Guest${form.guests.length!==1?'s':''}` }}
+                        </button>
                     </div>
                 </div>
             </div>
+
         </div>
     </AuthenticatedLayout>
 </template>
@@ -614,19 +391,16 @@ import Modal from '@/Components/Modal.vue'
 import { Link, usePage } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
 import Swal from 'sweetalert2'
-import * as XLSX from 'xlsx'   // npm install xlsx
+import * as XLSX from 'xlsx'
 
 const props = defineProps({ event: Object })
-const page = usePage()
+const page  = usePage()
 
-// ── UI state ──────────────────────────────────────────────────────────────────
-const activeTab       = ref('manual')
-const showEditModal   = ref(false)
-const editingIndex    = ref(null)
-const editingGuest    = ref(null)
-const isSubmitting    = ref(false)
-
-// ── Excel import state ────────────────────────────────────────────────────────
+const activeTab      = ref('manual')
+const showEditModal  = ref(false)
+const editingIndex   = ref(null)
+const editingGuest   = ref(null)
+const isSubmitting   = ref(false)
 const fileInput      = ref(null)
 const excelFile      = ref(null)
 const isDragging     = ref(false)
@@ -635,329 +409,307 @@ const importPreview  = ref([])
 const importErrors   = ref([])
 const importSkipped  = ref(0)
 
-// ── Manual entry state ────────────────────────────────────────────────────────
 const bulkSettings = ref({
-    category: 'friends',
-    guest_type: 'primary',
-    rsvp_status: 'pending',
-    is_vip: false,
-    plus_one_allowed: false,
-    plus_ones: 0,
-    language_preference: 'en'
+    category:'friends', guest_type:'primary', rsvp_status:'pending',
+    is_vip:false, plus_one_allowed:false, plus_ones:0, language_preference:'en'
+})
+const tempGuests = ref([{ first_name:'', last_name:'', email:'', phone:'' }])
+const form = ref({ guests:[], send_invitations:false, invitation_method:'email', notes:'' })
+
+const guestsWithEmail = computed(() => form.value.guests.filter(g=>g.email?.trim()).length)
+
+const CAT_STYLE = {
+    vip:{background:'rgba(249,178,51,.15)',color:'#b45309',border:'1px solid rgba(249,178,51,.4)'},
+    family:{background:'rgba(124,58,237,.1)',color:'#7c3aed',border:'1px solid rgba(124,58,237,.25)'},
+    friends:{background:'rgba(29,92,150,.1)',color:'#1D5C96',border:'1px solid rgba(29,92,150,.25)'},
+    colleagues:{background:'rgba(22,163,74,.1)',color:'#16a34a',border:'1px solid rgba(22,163,74,.25)'},
+    business:{background:'rgba(29,92,150,.1)',color:'#1D5C96',border:'1px solid rgba(29,92,150,.25)'},
+    media:{background:'rgba(219,39,119,.1)',color:'#db2777',border:'1px solid rgba(219,39,119,.25)'},
+    sponsors:{background:'rgba(192,23,15,.08)',color:'#C0170F',border:'1px solid rgba(192,23,15,.2)'},
+    other:{background:'rgba(158,152,144,.12)',color:'#6B6560',border:'1px solid rgba(158,152,144,.3)'},
+}
+const RSVP_STYLE = {
+    pending:{background:'rgba(249,178,51,.12)',color:'#b45309',border:'1px solid rgba(249,178,51,.3)'},
+    attending:{background:'rgba(22,163,74,.1)',color:'#16a34a',border:'1px solid rgba(22,163,74,.25)'},
+    not_attending:{background:'rgba(192,23,15,.08)',color:'#C0170F',border:'1px solid rgba(192,23,15,.2)'},
+    maybe:{background:'rgba(29,92,150,.1)',color:'#1D5C96',border:'1px solid rgba(29,92,150,.2)'},
+}
+
+const VALID_CATEGORIES  = ['family','friends','colleagues','business','vip','sponsors','media','other']
+const VALID_GUEST_TYPES = ['primary','plus_one','child','vendor','staff','speaker','performer']
+const VALID_RSVP        = ['pending','attending','not_attending','maybe']
+const VALID_LANGUAGES   = ['en','es','fr','de']
+
+const normalizeBoolean = v => v===true||String(v).toLowerCase()==='true'||v===1
+const normalizeRow = row => ({
+    first_name: String(row.first_name||row['first_name *']||'').trim(),
+    last_name:  String(row.last_name ||row['last_name *'] ||'').trim(),
+    email:      String(row.email||'').trim(), phone: String(row.phone||'').trim(),
+    category:   VALID_CATEGORIES.includes(String(row.category||'').toLowerCase())?String(row.category).toLowerCase():'friends',
+    guest_type: VALID_GUEST_TYPES.includes(String(row.guest_type||'').toLowerCase())?String(row.guest_type).toLowerCase():'primary',
+    rsvp_status:VALID_RSVP.includes(String(row.rsvp_status||'').toLowerCase())?String(row.rsvp_status).toLowerCase():'pending',
+    is_vip:     normalizeBoolean(row.is_vip), plus_one_allowed: normalizeBoolean(row.plus_one_allowed),
+    plus_ones:  Math.min(10,Math.max(0,parseInt(row.plus_ones)||0)),
+    language_preference: VALID_LANGUAGES.includes(String(row.language_preference||'').toLowerCase())?String(row.language_preference).toLowerCase():'en',
+    notes: String(row.notes||'').trim(),
 })
 
-const tempGuests = ref([{ first_name: '', last_name: '', email: '', phone: '' }])
-
-const form = ref({
-    guests: [],
-    send_invitations: false,
-    invitation_method: 'email',
-    notes: ''
-})
-
-// ── Computed ──────────────────────────────────────────────────────────────────
-const guestsWithEmail = computed(() =>
-    form.value.guests.filter(g => g.email && g.email.trim()).length
-)
-
-// ── Excel helpers ─────────────────────────────────────────────────────────────
-const VALID_CATEGORIES   = ['family','friends','colleagues','business','vip','sponsors','media','other']
-const VALID_GUEST_TYPES  = ['primary','plus_one','child','vendor','staff','speaker','performer']
-const VALID_RSVP         = ['pending','attending','not_attending','maybe']
-const VALID_LANGUAGES    = ['en','es','fr','de']
-
-const normalizeBoolean = (val) => {
-    if (val === true || String(val).toLowerCase() === 'true' || val === 1) return true
-    return false
+const handleFileDrop = e => { isDragging.value=false; const f=e.dataTransfer.files[0]; if(f)setExcelFile(f) }
+const handleFileSelect = e => { const f=e.target.files[0]; if(f)setExcelFile(f) }
+const setExcelFile = f => {
+    const ext=f.name.split('.').pop().toLowerCase()
+    if(!['xlsx','xls','csv'].includes(ext)){ Swal.fire({title:'Unsupported',text:'Upload .xlsx, .xls or .csv',icon:'warning',confirmButtonColor:'#C0170F'}); return }
+    if(f.size>5*1024*1024){ Swal.fire({title:'Too Large',text:'Max 5 MB',icon:'warning',confirmButtonColor:'#C0170F'}); return }
+    excelFile.value=f; importPreview.value=[]; importErrors.value=[]; importSkipped.value=0
 }
-
-const normalizeRow = (row) => ({
-    first_name:          String(row.first_name || row['first_name *'] || '').trim(),
-    last_name:           String(row.last_name  || row['last_name *']  || '').trim(),
-    email:               String(row.email       || '').trim(),
-    phone:               String(row.phone       || '').trim(),
-    category:            VALID_CATEGORIES.includes(String(row.category || '').toLowerCase())
-                            ? String(row.category).toLowerCase() : 'friends',
-    guest_type:          VALID_GUEST_TYPES.includes(String(row.guest_type || '').toLowerCase())
-                            ? String(row.guest_type).toLowerCase() : 'primary',
-    rsvp_status:         VALID_RSVP.includes(String(row.rsvp_status || '').toLowerCase())
-                            ? String(row.rsvp_status).toLowerCase() : 'pending',
-    is_vip:              normalizeBoolean(row.is_vip),
-    plus_one_allowed:    normalizeBoolean(row.plus_one_allowed),
-    plus_ones:           Math.min(10, Math.max(0, parseInt(row.plus_ones) || 0)),
-    language_preference: VALID_LANGUAGES.includes(String(row.language_preference || '').toLowerCase())
-                            ? String(row.language_preference).toLowerCase() : 'en',
-    dietary_preference:  String(row.dietary_preference || '').trim(),
-    allergies:           String(row.allergies || '').trim(),
-    special_requirements: String(row.special_requirements || '').trim(),
-    accessibility_needs: String(row.accessibility_needs || '').trim(),
-    accommodation_needs: String(row.accommodation_needs || '').trim(),
-    transportation_needs: String(row.transportation_needs || '').trim(),
-    notes:               String(row.notes || '').trim(),
-})
-
-const handleFileDrop = (e) => {
-    isDragging.value = false
-    const file = e.dataTransfer.files[0]
-    if (file) setExcelFile(file)
-}
-
-const handleFileSelect = (e) => {
-    const file = e.target.files[0]
-    if (file) setExcelFile(file)
-}
-
-const setExcelFile = (file) => {
-    const ext = file.name.split('.').pop().toLowerCase()
-    if (!['xlsx','xls','csv'].includes(ext)) {
-        Swal.fire({ title: 'Unsupported File', text: 'Please upload an .xlsx, .xls, or .csv file.', icon: 'warning', confirmButtonColor: '#4f46e5' })
-        return
-    }
-    if (file.size > 5 * 1024 * 1024) {
-        Swal.fire({ title: 'File Too Large', text: 'Maximum file size is 5 MB.', icon: 'warning', confirmButtonColor: '#4f46e5' })
-        return
-    }
-    excelFile.value = file
-    importPreview.value = []
-    importErrors.value  = []
-    importSkipped.value = 0
-}
-
-const clearExcelFile = () => {
-    excelFile.value = null
-    importPreview.value = []
-    importErrors.value  = []
-    importSkipped.value = 0
-    if (fileInput.value) fileInput.value.value = ''
-}
-
-const formatFileSize = (bytes) => {
-    if (bytes < 1024)       return bytes + ' B'
-    if (bytes < 1024*1024)  return (bytes/1024).toFixed(1) + ' KB'
-    return (bytes/1024/1024).toFixed(1) + ' MB'
-}
+const clearExcelFile = () => { excelFile.value=null; importPreview.value=[]; importErrors.value=[]; importSkipped.value=0; if(fileInput.value)fileInput.value.value='' }
+const fmtSize = b => b<1024?b+' B':b<1024*1024?(b/1024).toFixed(1)+' KB':(b/1024/1024).toFixed(1)+' MB'
 
 const parseExcelFile = async () => {
-    if (!excelFile.value) return
-    isParsing.value    = true
-    importErrors.value = []
-
+    if(!excelFile.value) return
+    isParsing.value=true; importErrors.value=[]
     try {
-        const buffer = await excelFile.value.arrayBuffer()
-        const wb     = XLSX.read(buffer, { type: 'array' })
-        const ws     = wb.Sheets[wb.SheetNames[0]]
-        const rows   = XLSX.utils.sheet_to_json(ws, { defval: '' })
-
-        if (!rows.length) {
-            importErrors.value.push('The file appears to be empty.')
-            return
-        }
-
-        // Check for required columns
-        const firstRow = rows[0]
-        const keys = Object.keys(firstRow).map(k => k.toLowerCase().replace(' *','').trim())
-        if (!keys.includes('first_name') && !keys.includes('first_name *')) {
-            importErrors.value.push('Missing required column: first_name')
-        }
-        if (!keys.includes('last_name') && !keys.includes('last_name *')) {
-            importErrors.value.push('Missing required column: last_name')
-        }
-        if (importErrors.value.length) return
-
-        // Filter out hint row (row 2 with "Required" / "Optional" text)
-        const dataRows = rows.filter(r => {
-            const fn = String(r.first_name || r['first_name *'] || '').trim().toLowerCase()
-            return fn !== 'required' && fn !== ''
-        })
-
-        let skipped = 0
-        const parsed = []
-        for (const row of dataRows) {
-            const fn = String(row.first_name || row['first_name *'] || '').trim()
-            const ln = String(row.last_name  || row['last_name *']  || '').trim()
-            if (!fn || !ln) { skipped++; continue }
+        const buf=await excelFile.value.arrayBuffer()
+        const wb=XLSX.read(buf,{type:'array'})
+        const ws=wb.Sheets[wb.SheetNames[0]]
+        const rows=XLSX.utils.sheet_to_json(ws,{defval:''})
+        if(!rows.length){ importErrors.value.push('File appears empty.'); return }
+        const keys=Object.keys(rows[0]).map(k=>k.toLowerCase().replace(' *','').trim())
+        if(!keys.includes('first_name'))importErrors.value.push('Missing: first_name')
+        if(!keys.includes('last_name'))importErrors.value.push('Missing: last_name')
+        if(importErrors.value.length) return
+        const dataRows=rows.filter(r=>{ const fn=String(r.first_name||r['first_name *']||'').trim().toLowerCase(); return fn!=='required'&&fn!=='' })
+        let skipped=0; const parsed=[]
+        for(const row of dataRows){
+            const fn=String(row.first_name||row['first_name *']||'').trim()
+            const ln=String(row.last_name ||row['last_name *'] ||'').trim()
+            if(!fn||!ln){ skipped++; continue }
             parsed.push(normalizeRow(row))
         }
-
-        if (!parsed.length) {
-            importErrors.value.push('No valid guests found. Make sure first_name and last_name are filled in.')
-            return
-        }
-
-        importPreview.value = parsed
-        importSkipped.value = skipped
-
-    } catch (err) {
-        importErrors.value.push('Could not read file: ' + err.message)
-    } finally {
-        isParsing.value = false
-    }
+        if(!parsed.length){ importErrors.value.push('No valid guests found.'); return }
+        importPreview.value=parsed; importSkipped.value=skipped
+    } catch(e){ importErrors.value.push('Could not read file: '+e.message) }
+    finally{ isParsing.value=false }
 }
 
 const addImportedGuestsToList = () => {
-    if (!importPreview.value.length) return
-    importPreview.value.forEach(g => form.value.guests.push(g))
-
-    Swal.fire({
-        title: 'Imported!',
-        text: `${importPreview.value.length} guest(s) added to the list.`,
-        icon: 'success', timer: 2000, showConfirmButton: false
-    })
-
-    clearExcelFile()
-    activeTab.value = 'manual'  // switch to preview tab
+    importPreview.value.forEach(g=>form.value.guests.push(g))
+    Swal.fire({title:'Imported!',text:`${importPreview.value.length} guest(s) added.`,icon:'success',timer:2000,showConfirmButton:false})
+    clearExcelFile(); activeTab.value='manual'
 }
 
-// ── Manual entry helpers ──────────────────────────────────────────────────────
-const addTempGuest = () => {
-    tempGuests.value.push({ first_name: '', last_name: '', email: '', phone: '' })
-}
+const addTempGuest = () => tempGuests.value.push({first_name:'',last_name:'',email:'',phone:''})
 
-const removeTempGuest = async (index) => {
-    if (tempGuests.value.length <= 1) {
-        Swal.fire({ title: 'Cannot Remove', text: 'You must have at least one guest entry.', icon: 'warning', confirmButtonColor: '#4f46e5' })
-        return
-    }
-    const result = await Swal.fire({
-        title: 'Remove Guest Entry?', text: 'Are you sure?', icon: 'question',
-        showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Yes, remove it!'
-    })
-    if (result.isConfirmed) {
-        tempGuests.value.splice(index, 1)
-        Swal.fire({ title: 'Removed!', icon: 'success', timer: 1500, showConfirmButton: false })
-    }
+const removeTempGuest = async idx => {
+    if(tempGuests.value.length<=1) return
+    const r=await Swal.fire({title:'Remove?',icon:'question',showCancelButton:true,confirmButtonColor:'#C0170F',cancelButtonColor:'#9E9890',confirmButtonText:'Remove'})
+    if(r.isConfirmed) tempGuests.value.splice(idx,1)
 }
 
 const addGuestsToList = async () => {
-    const valid = tempGuests.value.filter(g => g.first_name.trim() && g.last_name.trim())
-    if (!valid.length) {
-        Swal.fire({ title: 'No Guests Added', text: 'Please add at least one guest with first and last name.', icon: 'warning', confirmButtonColor: '#4f46e5' })
-        return
+    const valid=tempGuests.value.filter(g=>g.first_name.trim()&&g.last_name.trim())
+    if(!valid.length){ Swal.fire({title:'No Valid Guests',text:'Add at least one guest with first and last name.',icon:'warning',confirmButtonColor:'#C0170F'}); return }
+    const missing=tempGuests.value.length-valid.length
+    if(missing>0){
+        const r=await Swal.fire({title:'Incomplete Guests',text:`${missing} guest(s) missing names will be skipped. Continue?`,icon:'warning',showCancelButton:true,confirmButtonColor:'#C0170F',cancelButtonColor:'#9E9890',confirmButtonText:'Add Valid Guests'})
+        if(!r.isConfirmed) return
     }
-    const missing = tempGuests.value.length - valid.length
-    if (missing > 0) {
-        const r = await Swal.fire({
-            title: 'Incomplete Guests',
-            text: `${missing} guest(s) are missing names. Only complete guests will be added. Continue?`,
-            icon: 'warning', showCancelButton: true, confirmButtonColor: '#4f46e5', cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Add Complete Guests'
-        })
-        if (!r.isConfirmed) return
-    }
-    valid.forEach(g => form.value.guests.push({
-        first_name: g.first_name.trim(), last_name: g.last_name.trim(),
-        email: g.email?.trim() || '', phone: g.phone?.trim() || '',
-        category: bulkSettings.value.category, guest_type: bulkSettings.value.guest_type,
-        rsvp_status: bulkSettings.value.rsvp_status, is_vip: bulkSettings.value.is_vip,
-        plus_one_allowed: bulkSettings.value.plus_one_allowed,
-        plus_ones: bulkSettings.value.plus_one_allowed ? bulkSettings.value.plus_ones : 0,
-        language_preference: bulkSettings.value.language_preference,
-        dietary_preference: '', allergies: '', special_requirements: '',
-        accessibility_needs: '', accommodation_needs: '', transportation_needs: '', notes: ''
+    valid.forEach(g=>form.value.guests.push({
+        first_name:g.first_name.trim(), last_name:g.last_name.trim(),
+        email:g.email?.trim()||'', phone:g.phone?.trim()||'',
+        ...bulkSettings.value, notes:''
     }))
-    Swal.fire({ title: 'Guests Added!', text: `${valid.length} guest(s) added.`, icon: 'success', timer: 2000, showConfirmButton: false })
-    tempGuests.value = [{ first_name: '', last_name: '', email: '', phone: '' }]
+    Swal.fire({title:'Added!',text:`${valid.length} guest(s) added.`,icon:'success',timer:2000,showConfirmButton:false})
+    tempGuests.value=[{first_name:'',last_name:'',email:'',phone:''}]
 }
 
-const removeGuest = async (index) => {
-    const name = `${form.value.guests[index].first_name} ${form.value.guests[index].last_name}`
-    const r = await Swal.fire({
-        title: 'Remove Guest?', html: `Remove <strong>${name}</strong> from the list?`, icon: 'warning',
-        showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#6b7280', confirmButtonText: 'Yes, remove it!'
-    })
-    if (r.isConfirmed) {
-        form.value.guests.splice(index, 1)
-        Swal.fire({ title: 'Removed!', text: `${name} removed.`, icon: 'success', timer: 1500, showConfirmButton: false })
+const removeGuest = async idx => {
+    const name=`${form.value.guests[idx].first_name} ${form.value.guests[idx].last_name}`
+    const r=await Swal.fire({title:'Remove?',html:`Remove <strong>${name}</strong>?`,icon:'warning',showCancelButton:true,confirmButtonColor:'#C0170F',cancelButtonColor:'#9E9890'})
+    if(r.isConfirmed) form.value.guests.splice(idx,1)
+}
+
+const editGuest = idx => { editingIndex.value=idx; editingGuest.value={...form.value.guests[idx]}; showEditModal.value=true }
+
+const saveGuestEdit = () => {
+    if(!editingGuest.value.first_name.trim()||!editingGuest.value.last_name.trim()){
+        Swal.fire({title:'Missing Name',text:'Please enter first and last name.',icon:'warning',confirmButtonColor:'#C0170F'}); return
     }
-}
-
-const editGuest = (index) => {
-    editingIndex.value = index
-    editingGuest.value = { ...form.value.guests[index] }
-    showEditModal.value = true
-}
-
-const saveGuestEdit = async () => {
-    if (!editingGuest.value.first_name.trim() || !editingGuest.value.last_name.trim()) {
-        Swal.fire({ title: 'Missing Information', text: 'Please enter both first and last name.', icon: 'warning', confirmButtonColor: '#4f46e5' })
-        return
-    }
-    form.value.guests[editingIndex.value] = editingGuest.value
-    showEditModal.value = false; editingIndex.value = null; editingGuest.value = null
-    Swal.fire({ title: 'Updated!', text: 'Guest information updated.', icon: 'success', timer: 1500, showConfirmButton: false })
+    form.value.guests[editingIndex.value]=editingGuest.value
+    showEditModal.value=false; editingIndex.value=null; editingGuest.value=null
 }
 
 const clearAllGuests = async () => {
-    if (!form.value.guests.length) return
-    const r = await Swal.fire({
-        title: 'Clear All Guests?',
-        html: `Remove all <strong>${form.value.guests.length}</strong> guests?<br><span class="text-sm text-gray-500">This cannot be undone.</span>`,
-        icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Yes, clear all!', reverseButtons: true
-    })
-    if (r.isConfirmed) {
-        form.value.guests = []
-        Swal.fire({ title: 'Cleared!', text: 'All guests removed.', icon: 'success', timer: 2000, showConfirmButton: false })
-    }
+    if(!form.value.guests.length) return
+    const r=await Swal.fire({title:'Clear All?',html:`Remove all <strong>${form.value.guests.length}</strong> guests?`,icon:'warning',showCancelButton:true,confirmButtonColor:'#C0170F',cancelButtonColor:'#9E9890',confirmButtonText:'Clear All'})
+    if(r.isConfirmed){ form.value.guests=[]; Swal.fire({title:'Cleared!',icon:'success',timer:1500,showConfirmButton:false}) }
 }
 
 const submit = async () => {
-    if (!form.value.guests.length) {
-        Swal.fire({ title: 'No Guests', text: 'Please add at least one guest before saving.', icon: 'warning', confirmButtonColor: '#4f46e5' })
-        return
-    }
-    const r = await Swal.fire({
-        title: 'Ready to Save?',
-        html: `<div class="text-left"><p>You are about to add <strong>${form.value.guests.length} guest(s)</strong> to the event.</p></div>`,
-        icon: 'question', showCancelButton: true, confirmButtonColor: '#4f46e5', cancelButtonColor: '#6b7280',
-        confirmButtonText: `Yes, save ${form.value.guests.length} guest(s)`
-    })
-    if (!r.isConfirmed) return
-
-    isSubmitting.value = true
+    if(!form.value.guests.length){ Swal.fire({title:'No Guests',text:'Add at least one guest first.',icon:'warning',confirmButtonColor:'#C0170F'}); return }
+    const r=await Swal.fire({title:'Save Guests?',html:`Add <strong>${form.value.guests.length} guest(s)</strong> to this event?`,icon:'question',showCancelButton:true,confirmButtonColor:'#C0170F',cancelButtonColor:'#9E9890',confirmButtonText:`Save ${form.value.guests.length} Guests`})
+    if(!r.isConfirmed) return
+    isSubmitting.value=true
     try {
-        const csrfToken = page.props.csrf_token ?? document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-        const response = await fetch(route('events.guests.bulk-store', props.event.id), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-            body: JSON.stringify({
-                guests: form.value.guests,
-                send_invitations: form.value.send_invitations || false,
-                invitation_method: form.value.invitation_method || 'email',
-                notes: form.value.notes || ''
-            })
+        const csrf=page.props.csrf_token??document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+        const res=await fetch(route('events.guests.bulk-store',props.event.id),{
+            method:'POST',
+            headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest','Accept':'application/json','X-CSRF-TOKEN':csrf},
+            body:JSON.stringify({ guests:form.value.guests, send_invitations:form.value.send_invitations||false, invitation_method:form.value.invitation_method||'email', notes:form.value.notes||'' })
         })
-        const data = await response.json()
-        if (response.ok && data.success) {
-            await Swal.fire({
-                title: 'Success!',
-                html: `<div class="text-left"><p class="text-green-600 font-semibold">${data.created_count} guest(s) created successfully</p>${data.skipped_count ? `<p class="text-yellow-600">${data.skipped_count} skipped (duplicate)</p>` : ''}${data.invitations_sent ? `<p class="text-blue-600">${data.invitations_sent} invitation(s) sent</p>` : ''}</div>`,
-                icon: 'success', confirmButtonColor: '#4f46e5', confirmButtonText: 'View Guests'
-            }).then(res => { if (res.isConfirmed) window.location.href = route('events.guests.index', props.event.id) })
-            form.value = { guests: [], send_invitations: false, invitation_method: 'email', notes: '' }
+        const data=await res.json()
+        if(res.ok&&data.success){
+            await Swal.fire({title:'Success!',html:`<p style="color:#16a34a;font-weight:600">${data.created_count} guest(s) created</p>${data.skipped_count?`<p style="color:#b45309">${data.skipped_count} skipped (duplicate)</p>`:''}`,icon:'success',confirmButtonColor:'#C0170F',confirmButtonText:'View Guests'})
+            window.location.href=route('events.guests.index',props.event.id)
         } else {
-            let msg = 'Failed to save guests.'
-            if (data.message) msg += `<br><span class="text-sm text-gray-600">${data.message}</span>`
-            await Swal.fire({ title: 'Error!', html: msg, icon: 'error', confirmButtonColor: '#ef4444' })
+            Swal.fire({title:'Error',text:data.message||'Failed to save guests.',icon:'error',confirmButtonColor:'#C0170F'})
         }
-    } catch (err) {
-        await Swal.fire({ title: 'Network Error!', text: 'Could not connect to the server.', icon: 'error', confirmButtonColor: '#ef4444' })
-    } finally {
-        isSubmitting.value = false
-    }
+    } catch(e){ Swal.fire({title:'Network Error',text:'Could not connect to server.',icon:'error',confirmButtonColor:'#C0170F'}) }
+    finally{ isSubmitting.value=false }
 }
-
-// ── Style helpers ─────────────────────────────────────────────────────────────
-const getCategoryClass = (c) => ({
-    vip: 'bg-yellow-100 text-yellow-800', family: 'bg-purple-100 text-purple-800',
-    friends: 'bg-blue-100 text-blue-800', colleagues: 'bg-green-100 text-green-800',
-    business: 'bg-indigo-100 text-indigo-800', media: 'bg-pink-100 text-pink-800',
-    sponsors: 'bg-red-100 text-red-800', other: 'bg-gray-100 text-gray-800'
-})[c] || 'bg-gray-100 text-gray-800'
-
-const getRsvpStatusClass = (s) => ({
-    pending: 'bg-yellow-100 text-yellow-800', attending: 'bg-green-100 text-green-800',
-    not_attending: 'bg-red-100 text-red-800', maybe: 'bg-blue-100 text-blue-800'
-})[s] || 'bg-gray-100 text-gray-800'
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.cdot{position:absolute;opacity:0;animation:rise linear infinite}
+@keyframes rise{0%{transform:translateY(110vh) rotate(0deg);opacity:0}5%{opacity:.35}95%{opacity:.15}100%{transform:translateY(-80px) rotate(540deg);opacity:0}}
+.page-wrap{position:relative;z-index:1;background:#F7F5F2;min-height:100vh;padding:28px 24px 64px;font-family:'DM Sans',sans-serif;color:#1A1410}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:11px;margin-bottom:6px}
+.bc-link{color:#9E9890;text-decoration:none;transition:color .15s}.bc-link:hover{color:#C0170F}
+.bc-sep{color:#C8C2BA}.bc-cur{color:#6B6560;font-weight:500}
+.page-eyebrow{display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;color:#9E9890;text-transform:uppercase;margin-bottom:5px}
+.eyebrow-dot{width:6px;height:6px;border-radius:50%;background:#C0170F;animation:blink .9s ease-in-out infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.page-title{font-family:'Playfair Display',serif;font-size:clamp(20px,3vw,26px);font-weight:900;color:#1A1410;line-height:1.15}
+.header-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.guest-count-pill{padding:6px 14px;background:rgba(192,23,15,.1);color:#C0170F;border:1px solid rgba(192,23,15,.2);border-radius:20px;font-size:12px;font-weight:700;font-family:'DM Mono',monospace;white-space:nowrap}
+.ml-auto{margin-left:auto}
+/* tabs */
+.tab-bar{display:flex;gap:4px;background:#fff;border:1px solid #E8E2DA;border-radius:14px;padding:5px;width:fit-content;margin-bottom:18px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.tab-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:10px;border:none;background:transparent;color:#9E9890;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .18s}
+.tab-btn:hover{color:#1A1410}
+.tab-btn.active{background:linear-gradient(135deg,#C0170F,#F05A00);color:#fff;box-shadow:0 3px 10px rgba(192,23,15,.25)}
+/* cards */
+.form-card{background:#fff;border:1px solid #E8E2DA;border-radius:20px;box-shadow:0 2px 14px rgba(0,0,0,.05);overflow:hidden;margin-bottom:16px}
+.form-card-head{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid #E8E2DA;background:#F0EDE8}
+.card-icon-wrap{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.card-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#1A1410}
+.card-sub{font-size:11px;color:#9E9890;font-family:'DM Mono',monospace;margin-top:1px}
+.fields{padding:16px 20px;display:flex;flex-direction:column;gap:14px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.field-row{grid-template-columns:1fr}}
+.field-row-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:900px){.field-row-3{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.field-row-3{grid-template-columns:1fr}}
+.field-row-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;align-items:end}
+@media(max-width:900px){.field-row-4{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.field-row-4{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:5px}
+.field-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#6B6560;font-weight:500}
+.field-input{padding:10px 13px;border:1.5px solid #E8E2DA;border-radius:11px;font-size:13px;font-family:'DM Sans',sans-serif;color:#1A1410;background:#fff;outline:none;transition:border-color .18s,box-shadow .18s;width:100%}
+.field-input:focus{border-color:#C0170F;box-shadow:0 0 0 3px rgba(192,23,15,.1)}
+textarea.field-input{resize:vertical;min-height:60px}
+.required{color:#C0170F}
+/* toggle */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#F7F5F2;padding:10px 14px;border-radius:11px;border:1px solid #E8E2DA}
+.toggle-row.full{padding:14px 0;background:none;border:none;border-top:1px solid #F0EDE8}
+.toggle-lbl{font-size:13px;font-weight:600;color:#1A1410}
+.toggle-wrap{cursor:pointer;flex-shrink:0}
+.toggle{width:40px;height:22px;border-radius:11px;background:#E8E2DA;position:relative;transition:background .2s}
+.toggle.on{background:linear-gradient(135deg,#C0170F,#F05A00)}
+.toggle-knob{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:transform .2s}
+.toggle.on .toggle-knob{transform:translateX(18px)}
+/* guest rows */
+.guest-rows{display:flex;flex-direction:column;gap:8px}
+.guest-row{display:grid;grid-template-columns:24px 1fr 1fr 1fr 1fr 28px;gap:8px;align-items:center}
+@media(max-width:900px){.guest-row{grid-template-columns:24px 1fr 1fr;gap:8px}}
+.row-num{font-family:'DM Mono',monospace;font-size:11px;color:#9E9890;text-align:right;flex-shrink:0}
+.row-remove{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;border:1.5px solid rgba(192,23,15,.2);background:rgba(192,23,15,.04);color:#C0170F;cursor:pointer;transition:all .15s;flex-shrink:0}
+.row-remove:hover{background:rgba(192,23,15,.12);border-color:#C0170F}
+.row-actions{display:flex;align-items:center;justify-content:space-between;padding-top:6px;border-top:1px solid #F0EDE8}
+.btn-add-row{display:inline-flex;align-items:center;gap:6px;color:#C0170F;font-size:13px;font-weight:600;font-family:'DM Mono',monospace;background:none;border:none;cursor:pointer;padding:0;transition:opacity .15s}
+.btn-add-row:hover{opacity:.7}
+/* col ref */
+.col-ref{background:rgba(29,92,150,.06);border:1px solid rgba(29,92,150,.15);border-radius:12px;padding:14px}
+.col-ref-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#1D5C96;font-weight:700;margin-bottom:8px}
+.col-ref-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px 12px}
+.col-ref-grid span{font-size:12px;color:#1D5C96;font-family:'DM Mono',monospace}
+.col-ref-note{font-size:11px;color:#6B7C9E;margin-top:8px;font-family:'DM Mono',monospace}
+/* drop zone */
+.drop-zone{border:2px dashed #E8E2DA;border-radius:16px;padding:40px;text-align:center;cursor:pointer;transition:all .2s;background:#F7F5F2}
+.drop-zone:hover,.drop-zone.dragging{border-color:#C0170F;background:rgba(192,23,15,.04)}
+.drop-zone.has-file{border-color:#16a34a;background:rgba(22,163,74,.04);border-style:solid}
+.drop-icon{font-size:40px;margin-bottom:10px;opacity:.6}
+.drop-title{font-size:14px;font-weight:600;color:#1A1410;margin-bottom:4px}
+.drop-link{color:#C0170F;text-decoration:underline}
+.drop-sub{font-size:12px;color:#9E9890;font-family:'DM Mono',monospace}
+.file-preview{display:inline-flex;align-items:center;gap:12px}
+.file-icon{font-size:32px}
+.file-name{font-size:14px;font-weight:700;color:#1A1410;text-align:left}
+.file-size{font-size:11px;color:#9E9890;font-family:'DM Mono',monospace}
+.file-clear{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;border:1px solid #E8E2DA;background:#fff;color:#9E9890;cursor:pointer;transition:all .15s}
+.file-clear:hover{border-color:#C0170F;color:#C0170F}
+/* import errors */
+.import-errors{background:rgba(192,23,15,.06);border:1px solid rgba(192,23,15,.2);border-radius:11px;padding:12px 16px}
+.ie-title{font-size:12px;font-weight:700;color:#C0170F;margin-bottom:6px}
+.ie-row{font-size:12px;color:#8B0000;font-family:'DM Mono',monospace;margin-bottom:2px}
+/* preview */
+.preview-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.preview-title{font-size:13px;font-weight:700;color:#1A1410}
+.skip-note{font-size:11px;color:#b45309;font-family:'DM Mono',monospace;margin-left:6px}
+.preview-sub{font-size:11px;color:#9E9890;font-family:'DM Mono',monospace}
+.preview-table-wrap{overflow-x:auto;border-radius:12px;border:1px solid #E8E2DA}
+.preview-table{width:100%;border-collapse:collapse;font-size:12px}
+.preview-table thead tr{background:#F0EDE8}
+.preview-table th{padding:8px 12px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#6B6560;text-align:left}
+.preview-table tbody tr{border-top:1px solid #F0EDE8;transition:background .1s}
+.preview-table tbody tr:hover{background:#FAFAF8}
+.preview-table td{padding:8px 12px;color:#1A1410}
+.preview-more{font-size:11px;color:#9E9890;font-family:'DM Mono',monospace;margin-top:4px;text-align:right}
+.import-actions{display:flex;align-items:center;gap:10px}
+/* chips */
+.cat-chip,.vip-chip{display:inline-flex;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace}
+.vip-chip{background:rgba(249,178,51,.18);color:#b45309;border:1px solid rgba(249,178,51,.4)}
+/* table (reused) */
+.table-scroll{overflow-x:auto}
+.ep-table{width:100%;border-collapse:collapse}
+.ep-table thead tr{background:#F0EDE8;border-bottom:2px solid #E8E2DA}
+.ep-table th{padding:11px 16px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:#6B6560;text-align:left}
+.th-actions{text-align:right}
+.ep-table tbody tr{border-bottom:1px solid #F0EDE8}
+.tr-row:hover{background:#FAFAF8}
+.ep-table td{padding:12px 16px;vertical-align:middle}
+.td-actions{text-align:right;display:flex;justify-content:flex-end;align-items:center;gap:6px}
+.action-btn{padding:5px 12px;border-radius:8px;border:1.5px solid;font-size:12px;font-weight:700;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s}
+.action-btn.edit{border-color:rgba(29,92,150,.3);color:#1D5C96;background:rgba(29,92,150,.06)}.action-btn.edit:hover{background:rgba(29,92,150,.12)}
+.action-btn.del{border-color:rgba(192,23,15,.2);color:#C0170F;background:rgba(192,23,15,.05)}.action-btn.del:hover{background:rgba(192,23,15,.1)}
+/* finalize */
+.finalize-actions{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid #F0EDE8}
+/* buttons */
+.btn-cta{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:11px;border:none;cursor:pointer;background-image:linear-gradient(135deg,#C0170F 0%,#F05A00 50%,#F9B233 100%);background-size:200% auto;color:#fff;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;text-decoration:none;box-shadow:0 4px 14px rgba(192,23,15,.28);animation:shine 3s linear infinite;transition:transform .2s,box-shadow .2s}
+@keyframes shine{0%{background-position:0% center}100%{background-position:200% center}}
+.btn-cta:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(192,23,15,.38)}
+.btn-cta:disabled{opacity:.5;cursor:not-allowed;transform:none;animation:none}
+.btn-secondary{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:11px;border:1.5px solid #E8E2DA;background:#fff;color:#6B6560;font-size:12px;font-weight:600;font-family:'DM Mono',monospace;cursor:pointer;transition:all .18s}
+.btn-secondary:hover{border-color:#9E9890;color:#1A1410}
+.btn-secondary:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:11px;border:1.5px solid #E8E2DA;background:#fff;color:#6B6560;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;text-decoration:none;cursor:pointer;transition:all .18s}
+.btn-ghost:hover{border-color:#9E9890;color:#1A1410}
+.btn-danger-outline{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:11px;border:1.5px solid rgba(192,23,15,.3);background:rgba(192,23,15,.05);color:#C0170F;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .18s}
+.btn-danger-outline:hover{background:rgba(192,23,15,.1);border-color:#C0170F}
+.btn-template{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace;text-decoration:none;transition:all .15s;border:1.5px solid}
+.btn-template.green{color:#16a34a;background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.25)}.btn-template.green:hover{background:rgba(22,163,74,.14)}
+.btn-template.blue{color:#1D5C96;background:rgba(29,92,150,.08);border-color:rgba(29,92,150,.25)}.btn-template.blue:hover{background:rgba(29,92,150,.14)}
+.spin-icon{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hidden{display:none}
+/* modal */
+.modal-wrap{padding:24px;font-family:'DM Sans',sans-serif}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.modal-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:#1A1410}
+.modal-close{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1.5px solid #E8E2DA;background:#fff;color:#9E9890;cursor:pointer;transition:all .15s}
+.modal-close:hover{border-color:#C0170F;color:#C0170F}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;padding-top:14px;border-top:1px solid #F0EDE8}
+</style>

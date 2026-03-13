@@ -1,353 +1,255 @@
 <template>
     <AuthenticatedLayout>
-        <template #header>
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+        <div class="page-wrap">
+
+            <!-- ── Header ── -->
+            <div class="page-header">
                 <div>
-                    <h2 class="font-bold text-2xl text-gray-900">Venues</h2>
-                    <p class="mt-1 text-sm text-gray-600">
-                        Manage and organize all your venues
-                    </p>
+                    <div class="page-eyebrow"><span class="eyebrow-dot"></span>Venue Management</div>
+                    <h1 class="page-title">Venues</h1>
+                    <p class="page-sub">Manage and organize all your event venues</p>
                 </div>
-                <Link :href="route('venues.create')"
-                    class="inline-flex items-center px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
+                <Link :href="route('venues.create')" class="btn-cta">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                     Add Venue
                 </Link>
             </div>
-        </template>
 
-        <div class="py-6">
-            <div class="max-w-12xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                <!-- Stats Overview -->
-                <div v-if="venues.data.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <!-- Total Venues -->
-                    <div class="bg-gradient-to-br from-blue-50 to-white rounded-xl shadow-md p-5 border border-blue-100 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                        <div class="flex items-center">
-                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-4 shadow-sm">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="text-sm font-semibold text-blue-700 uppercase tracking-wide">Total Venues</p>
-                                <p class="text-2xl font-bold text-gray-900 mt-1">{{ venues.total }}</p>
-                                <p class="text-xs text-blue-600 font-medium mt-1">All venues combined</p>
-                            </div>
-                        </div>
+            <!-- ── Stat Cards ── -->
+            <div v-if="venues.data.length > 0" class="stats-grid">
+                <div class="stat-card" style="--accent:#1D5C96">
+                    <div class="stat-icon" style="background:rgba(29,92,150,.1)">
+                        <svg width="18" height="18" fill="none" stroke="#1D5C96" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                     </div>
-
-                    <!-- Active Venues -->
-                    <div class="bg-gradient-to-br from-green-50 to-white rounded-xl shadow-md p-5 border border-green-100 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                        <div class="flex items-center">
-                            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mr-4 shadow-sm">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="text-sm font-semibold text-green-700 uppercase tracking-wide">Active</p>
-                                <p class="text-2xl font-bold text-gray-900 mt-1">{{ venues.data.filter(v => v.is_active).length }}</p>
-                                <p class="text-xs text-green-600 font-medium mt-1">Currently available</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Verified Venues -->
-                    <div class="bg-gradient-to-br from-amber-50 to-white rounded-xl shadow-md p-5 border border-amber-100 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                        <div class="flex items-center">
-                            <div class="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center mr-4 shadow-sm">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="text-sm font-semibold text-amber-700 uppercase tracking-wide">Verified</p>
-                                <p class="text-2xl font-bold text-gray-900 mt-1">{{ venues.data.filter(v => v.is_verified).length }}</p>
-                                <p class="text-xs text-amber-600 font-medium mt-1">Quality assured</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Featured Venues -->
-                    <div class="bg-gradient-to-br from-purple-50 to-white rounded-xl shadow-md p-5 border border-purple-100 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                        <div class="flex items-center">
-                            <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 shadow-sm">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="text-sm font-semibold text-purple-700 uppercase tracking-wide">Featured</p>
-                                <p class="text-2xl font-bold text-gray-900 mt-1">{{ venues.data.filter(v => v.is_featured).length }}</p>
-                                <p class="text-xs text-purple-600 font-medium mt-1">Highlighted venues</p>
-                            </div>
-                        </div>
+                    <div>
+                        <div class="stat-label">Total Venues</div>
+                        <div class="stat-value">{{ venues.total }}</div>
+                        <div class="stat-note">All venues combined</div>
                     </div>
                 </div>
 
-                <!-- Filters Section -->
-                <div class="bg-white rounded-lg shadow-sm p-4 mb-6 border border-gray-200">
-                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                        <div>
-                            <h3 class="text-sm font-semibold text-gray-900 mb-2">Filter Venues</h3>
-                            <p class="text-xs text-gray-500">Refine your search using the filters below</p>
-                        </div>
-                        <button v-if="hasActiveFilters" @click="resetFilters"
-                            class="inline-flex items-center text-sm text-red-600 hover:text-red-800 font-medium">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                            Clear Filters
-                        </button>
+                <div class="stat-card" style="--accent:#16a34a">
+                    <div class="stat-icon" style="background:rgba(22,163,74,.1)">
+                        <svg width="18" height="18" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
-                        <!-- Search -->
-                        <div class="relative lg:col-span-2">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                            </div>
-                            <input v-model="form.search" @input="search" type="text" placeholder="Search by name, description, address or city..."
-                                class="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm placeholder-gray-400">
-                        </div>
-
-                        <!-- Type -->
-                        <select v-model="form.type" @change="search"
-                            class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white text-sm">
-                            <option value="">All Types</option>
-                            <option value="indoor">Indoor</option>
-                            <option value="outdoor">Outdoor</option>
-                            <option value="banquet_hall">Banquet Hall</option>
-                            <option value="garden">Garden</option>
-                            <option value="rooftop">Rooftop</option>
-                            <option value="beach">Beach</option>
-                            <option value="hotel">Hotel</option>
-                            <option value="restaurant">Restaurant</option>
-                            <option value="other">Other</option>
-                        </select>
-
-                        <!-- City -->
-                        <input v-model="form.city" @input="search" type="text" placeholder="Filter by city..."
-                            class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm placeholder-gray-400">
-                    </div>
-
-                    <!-- Second Row: Capacity + Price + Toggles -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mt-3">
-                        <!-- Min Capacity -->
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-3 flex items-center text-xs text-gray-400 pointer-events-none">Min</span>
-                            <input v-model="form.min_capacity" @input="search" type="number" min="0" placeholder="Min guests"
-                                class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm">
-                        </div>
-
-                        <!-- Max Capacity -->
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-3 flex items-center text-xs text-gray-400 pointer-events-none">Max</span>
-                            <input v-model="form.max_capacity" @input="search" type="number" min="0" placeholder="Max guests"
-                                class="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm">
-                        </div>
-
-                        <!-- Min Price -->
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-3 flex items-center text-xs text-gray-400 pointer-events-none">TZS</span>
-                            <input v-model="form.min_price" @input="search" type="number" min="0" placeholder="Min price/day"
-                                class="w-full pl-11 pr-3 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm">
-                        </div>
-
-                        <!-- Max Price -->
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-3 flex items-center text-xs text-gray-400 pointer-events-none">TZS</span>
-                            <input v-model="form.max_price" @input="search" type="number" min="0" placeholder="Max price/day"
-                                class="w-full pl-11 pr-3 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm">
-                        </div>
-
-                        <!-- Verified + Featured -->
-                        <div class="flex gap-2">
-                            <select v-model="form.is_verified" @change="search"
-                                class="flex-1 px-3 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white text-sm">
-                                <option value="">All</option>
-                                <option value="1">Verified</option>
-                                <option value="0">Unverified</option>
-                            </select>
-                            <select v-model="form.is_featured" @change="search"
-                                class="flex-1 px-3 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white text-sm">
-                                <option value="">All</option>
-                                <option value="1">Featured</option>
-                            </select>
-                        </div>
+                    <div>
+                        <div class="stat-label">Active</div>
+                        <div class="stat-value">{{ venues.data.filter(v => v.is_active).length }}</div>
+                        <div class="stat-note" style="color:#16a34a">Currently available</div>
                     </div>
                 </div>
 
-                <!-- Results Count -->
-                <div v-if="venues.data.length > 0" class="mb-4">
-                    <p class="text-sm text-gray-600">
-                        Showing <span class="font-medium text-gray-900">{{ venues.from }}</span> to
-                        <span class="font-medium text-gray-900">{{ venues.to }}</span> of
-                        <span class="font-medium text-gray-900">{{ venues.total }}</span> venues
-                        <span class="text-gray-400">(sorted by featured &amp; rating)</span>
-                    </p>
-                </div>
-
-                <!-- Venues Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div v-for="venue in venues.data" :key="venue.id"
-                        class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all overflow-hidden group">
-
-                        <!-- Image -->
-                        <div class="relative h-44 bg-gray-100 overflow-hidden">
-                            <img v-if="venue.images && venue.images.length > 0"
-                                :src="venue.images[0]"
-                                :alt="venue.name"
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                            <div v-else class="w-full h-full flex items-center justify-center">
-                                <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                </svg>
-                            </div>
-
-                            <!-- Badges overlay -->
-                            <div class="absolute top-2 left-2 flex gap-1.5">
-                                <span v-if="venue.is_featured"
-                                    class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-amber-400 text-amber-900">
-                                    ★ Featured
-                                </span>
-                                <span v-if="venue.is_verified"
-                                    class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-green-500 text-white">
-                                    ✓ Verified
-                                </span>
-                            </div>
-
-                            <!-- Active/Inactive badge -->
-                            <div class="absolute top-2 right-2">
-                                <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full"
-                                    :class="venue.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
-                                    {{ venue.is_active ? 'Active' : 'Inactive' }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="p-4">
-                            <!-- Type Badge -->
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-800">
-                                    {{ formatType(venue.type) }}
-                                </span>
-                                <!-- Rating -->
-                                <div v-if="venue.rating" class="flex items-center text-sm text-amber-500">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                                    </svg>
-                                    <span class="font-medium text-gray-700">{{ venue.rating }}</span>
-                                    <span class="text-gray-400 ml-1">({{ venue.total_reviews }})</span>
-                                </div>
-                            </div>
-
-                            <!-- Venue Name -->
-                            <h3 class="text-lg font-semibold text-gray-900 mb-3 line-clamp-1 group-hover:text-indigo-600 transition-colors">
-                                {{ venue.name }}
-                            </h3>
-
-                            <!-- Details -->
-                            <div class="space-y-2 mb-4">
-                                <div class="flex items-center text-sm text-gray-600">
-                                    <svg class="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    <span class="truncate">{{ venue.city }}, {{ venue.country }}</span>
-                                </div>
-
-                                <div class="flex items-center text-sm text-gray-600">
-                                    <svg class="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    <span>{{ venue.capacity_min }}–{{ venue.capacity_max }} guests</span>
-                                </div>
-
-                                <div class="flex items-center text-sm text-gray-600">
-                                    <svg class="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span class="font-medium text-gray-800">TZS {{ formatPrice(venue.base_price_per_day) }}<span class="font-normal text-gray-500">/day</span></span>
-                                </div>
-                            </div>
-
-                            <!-- Actions -->
-                            <div class="flex justify-between items-center pt-3 border-t border-gray-100">
-                                <div class="flex items-center gap-2">
-                                    <Link :href="route('venues.edit', venue.id)"
-                                        class="inline-flex items-center p-1.5 text-gray-400 hover:text-indigo-600 transition-colors"
-                                        title="Edit">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                    </Link>
-                                    <Link :href="route('venues.show', venue.id)"
-                                        class="inline-flex items-center px-3 py-1.5 bg-indigo-50 text-indigo-700 text-sm font-medium rounded hover:bg-indigo-100 transition-colors">
-                                        View Details
-                                    </Link>
-                                </div>
-                                <span class="text-xs text-gray-400">{{ venue.total_bookings }} bookings</span>
-                            </div>
-                        </div>
+                <div class="stat-card" style="--accent:#b45309">
+                    <div class="stat-icon" style="background:rgba(249,178,51,.12)">
+                        <svg width="18" height="18" fill="none" stroke="#b45309" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+                    </div>
+                    <div>
+                        <div class="stat-label">Verified</div>
+                        <div class="stat-value">{{ venues.data.filter(v => v.is_verified).length }}</div>
+                        <div class="stat-note" style="color:#b45309">Quality assured</div>
                     </div>
                 </div>
 
-                <!-- Empty State -->
-                <div v-if="venues.data.length === 0"
-                    class="bg-white rounded-lg shadow-sm p-8 text-center border border-gray-200">
-                    <div class="max-w-md mx-auto">
-                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                        </div>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">No venues found</h3>
-                        <p class="text-sm text-gray-600 mb-6">
-                            {{ hasActiveFilters ? "Try adjusting your filters to find what you're looking for." : 'Get started by adding your first venue.' }}
-                        </p>
-                        <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                            <Link v-if="!hasActiveFilters" :href="route('venues.create')"
-                                class="inline-flex items-center px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                </svg>
-                                Add First Venue
-                            </Link>
-                            <button v-else @click="resetFilters"
-                                class="inline-flex items-center px-4 py-2.5 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                                Clear Filters
-                            </button>
-                        </div>
+                <div class="stat-card" style="--accent:#C0170F">
+                    <div class="stat-icon" style="background:rgba(192,23,15,.08)">
+                        <svg width="18" height="18" fill="none" stroke="#C0170F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                     </div>
-                </div>
-
-                <!-- Pagination -->
-                <div v-if="venues.data.length > 0" class="mt-6">
-                    <Pagination :links="venues.links" />
+                    <div>
+                        <div class="stat-label">Featured</div>
+                        <div class="stat-value">{{ venues.data.filter(v => v.is_featured).length }}</div>
+                        <div class="stat-note" style="color:#C0170F">Highlighted venues</div>
+                    </div>
                 </div>
             </div>
+
+            <!-- ── Filter Card ── -->
+            <div class="filter-card">
+                <div class="filter-head">
+                    <div>
+                        <div class="filter-title">Filter Venues</div>
+                        <div class="filter-sub">Refine your search using the options below</div>
+                    </div>
+                    <button v-if="hasActiveFilters" @click="resetFilters" class="clear-btn">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                        Clear Filters
+                    </button>
+                </div>
+
+                <!-- Row 1 -->
+                <div class="filter-row">
+                    <div class="search-wrap" style="grid-column:span 2">
+                        <svg class="search-ico" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        <input v-model="form.search" @input="search" type="text" placeholder="Search by name, description, address or city…" class="ep-input search-pad">
+                    </div>
+                    <select v-model="form.type" @change="search" class="ep-select">
+                        <option value="">All Types</option>
+                        <option value="indoor">Indoor</option>
+                        <option value="outdoor">Outdoor</option>
+                        <option value="banquet_hall">Banquet Hall</option>
+                        <option value="garden">Garden</option>
+                        <option value="rooftop">Rooftop</option>
+                        <option value="beach">Beach</option>
+                        <option value="hotel">Hotel</option>
+                        <option value="restaurant">Restaurant</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <input v-model="form.city" @input="search" type="text" placeholder="Filter by city…" class="ep-input">
+                </div>
+
+                <!-- Row 2 -->
+                <div class="filter-row" style="grid-template-columns:repeat(5,1fr)">
+                    <div class="input-prefix-wrap">
+                        <span class="input-prefix">Min</span>
+                        <input v-model="form.min_capacity" @input="search" type="number" min="0" placeholder="Min guests" class="ep-input prefix-pad">
+                    </div>
+                    <div class="input-prefix-wrap">
+                        <span class="input-prefix">Max</span>
+                        <input v-model="form.max_capacity" @input="search" type="number" min="0" placeholder="Max guests" class="ep-input prefix-pad">
+                    </div>
+                    <div class="input-prefix-wrap">
+                        <span class="input-prefix">TZS</span>
+                        <input v-model="form.min_price" @input="search" type="number" min="0" placeholder="Min price/day" class="ep-input prefix-pad-lg">
+                    </div>
+                    <div class="input-prefix-wrap">
+                        <span class="input-prefix">TZS</span>
+                        <input v-model="form.max_price" @input="search" type="number" min="0" placeholder="Max price/day" class="ep-input prefix-pad-lg">
+                    </div>
+                    <div style="display:flex;gap:6px">
+                        <select v-model="form.is_verified" @change="search" class="ep-select" style="flex:1">
+                            <option value="">All</option>
+                            <option value="1">Verified</option>
+                            <option value="0">Unverified</option>
+                        </select>
+                        <select v-model="form.is_featured" @change="search" class="ep-select" style="flex:1">
+                            <option value="">All</option>
+                            <option value="1">Featured</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Results count ── -->
+            <div v-if="venues.data.length > 0" class="results-bar">
+                Showing <strong>{{ venues.from }}</strong>–<strong>{{ venues.to }}</strong> of <strong>{{ venues.total }}</strong> venues
+                <span class="results-note">sorted by featured &amp; rating</span>
+            </div>
+
+            <!-- ── Venues Grid ── -->
+            <div class="venues-grid">
+                <div v-for="venue in venues.data" :key="venue.id" class="venue-card">
+
+                    <!-- Image -->
+                    <div class="venue-img-wrap">
+                        <img v-if="venue.images?.length" :src="venue.images[0]" :alt="venue.name" class="venue-img">
+                        <div v-else class="venue-img-empty">
+                            <svg width="36" height="36" fill="none" stroke="#C8C0B8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        </div>
+
+                        <!-- Top-left badges -->
+                        <div class="img-badges-left">
+                            <span v-if="venue.is_featured" class="badge-featured">★ Featured</span>
+                            <span v-if="venue.is_verified" class="badge-verified">✓ Verified</span>
+                        </div>
+
+                        <!-- Top-right status -->
+                        <div class="img-badges-right">
+                            <span class="badge-status" :style="venue.is_active ? {background:'rgba(22,163,74,.85)',color:'#fff'} : {background:'rgba(192,23,15,.8)',color:'#fff'}">
+                                {{ venue.is_active ? 'Active' : 'Inactive' }}
+                            </span>
+                        </div>
+
+                        <!-- Gradient overlay at bottom -->
+                        <div class="img-gradient"></div>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="venue-body">
+                        <!-- Type + Rating -->
+                        <div class="venue-meta-row">
+                            <span class="type-chip">{{ formatType(venue.type) }}</span>
+                            <div v-if="venue.rating" class="rating-row">
+                                <svg width="12" height="12" fill="#F9B233" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                <span class="rating-val">{{ venue.rating }}</span>
+                                <span class="rating-count">({{ venue.total_reviews }})</span>
+                            </div>
+                        </div>
+
+                        <!-- Name -->
+                        <h3 class="venue-name">{{ venue.name }}</h3>
+
+                        <!-- Details -->
+                        <div class="venue-details">
+                            <div class="detail-row">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span class="detail-txt truncate">{{ [venue.city, venue.country].filter(Boolean).join(', ') }}</span>
+                            </div>
+                            <div class="detail-row">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                <span class="detail-txt">{{ venue.capacity_min }}–{{ venue.capacity_max }} guests</span>
+                            </div>
+                            <div class="detail-row">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 2"/></svg>
+                                <span class="detail-price">TZS {{ formatPrice(venue.base_price_per_day) }}</span>
+                                <span class="detail-per">/day</span>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="venue-footer">
+                            <div class="venue-actions">
+                                <Link :href="route('venues.edit', venue.id)" class="action-icon-btn" title="Edit">
+                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                </Link>
+                                <Link :href="route('venues.show', venue.id)" class="view-btn">
+                                    View Details
+                                </Link>
+                            </div>
+                            <span class="booking-count">{{ venue.total_bookings ?? 0 }} bookings</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Empty State ── -->
+            <div v-if="venues.data.length === 0" class="empty-state">
+                <div class="empty-icon">🏛️</div>
+                <h3 class="empty-title">No venues found</h3>
+                <p class="empty-sub">
+                    {{ hasActiveFilters ? "Try adjusting your filters to find what you're looking for." : 'Get started by adding your first venue.' }}
+                </p>
+                <div class="empty-actions">
+                    <Link v-if="!hasActiveFilters" :href="route('venues.create')" class="btn-cta">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                        Add First Venue
+                    </Link>
+                    <button v-else @click="resetFilters" class="btn-ghost">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                        Clear Filters
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── Pagination ── -->
+            <div v-if="venues.data.length > 0" class="pagination-wrap">
+                <div class="pg-info">
+                    Showing <strong>{{ venues.from }}</strong>–<strong>{{ venues.to }}</strong> of <strong>{{ venues.total }}</strong>
+                </div>
+                <nav class="pg-nav">
+                    <template v-for="(link, i) in venues.links" :key="i">
+                        <button v-if="i === 0" @click="goToPage(link.url)" :disabled="!link.url" class="pg-link" :class="{disabled:!link.url}">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+                        </button>
+                        <button v-else-if="i !== venues.links.length - 1" @click="goToPage(link.url)" :disabled="link.active || !link.url"
+                            :class="['pg-link', link.active ? 'pg-active' : '', !link.url ? 'disabled' : '']"
+                            v-html="link.label">
+                        </button>
+                        <button v-else @click="goToPage(link.url)" :disabled="!link.url" class="pg-link" :class="{disabled:!link.url}">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                        </button>
+                    </template>
+                </nav>
+            </div>
+
         </div>
     </AuthenticatedLayout>
 </template>
@@ -356,59 +258,152 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { Link, router } from '@inertiajs/vue3'
 import { reactive, computed } from 'vue'
-import Pagination from '@/Components/Pagination.vue'
 
-const props = defineProps({
-    venues: Object,
-    filters: Object
-})
+const props = defineProps({ venues: Object, filters: Object })
 
 const form = reactive({
-    search: props.filters.search || '',
-    type: props.filters.type || '',
-    city: props.filters.city || '',
+    search:       props.filters.search       || '',
+    type:         props.filters.type         || '',
+    city:         props.filters.city         || '',
     min_capacity: props.filters.min_capacity || '',
     max_capacity: props.filters.max_capacity || '',
-    min_price: props.filters.min_price || '',
-    max_price: props.filters.max_price || '',
-    is_verified: props.filters.is_verified ?? '',
-    is_featured: props.filters.is_featured ?? '',
+    min_price:    props.filters.min_price    || '',
+    max_price:    props.filters.max_price    || '',
+    is_verified:  props.filters.is_verified  ?? '',
+    is_featured:  props.filters.is_featured  ?? '',
 })
 
-const hasActiveFilters = computed(() => {
-    return form.search || form.type || form.city ||
-        form.min_capacity || form.max_capacity ||
-        form.min_price || form.max_price ||
-        form.is_verified !== '' || form.is_featured !== ''
-})
+const hasActiveFilters = computed(() =>
+    form.search || form.type || form.city ||
+    form.min_capacity || form.max_capacity ||
+    form.min_price || form.max_price ||
+    form.is_verified !== '' || form.is_featured !== ''
+)
 
-const search = () => {
-    router.get(route('venues.index'), form, {
-        preserveState: true,
-        preserveScroll: true
-    })
-}
+const search = () => router.get(route('venues.index'), form, { preserveState: true, preserveScroll: true })
 
 const resetFilters = () => {
-    form.search = ''
-    form.type = ''
-    form.city = ''
-    form.min_capacity = ''
-    form.max_capacity = ''
-    form.min_price = ''
-    form.max_price = ''
-    form.is_verified = ''
-    form.is_featured = ''
+    Object.assign(form, { search:'', type:'', city:'', min_capacity:'', max_capacity:'', min_price:'', max_price:'', is_verified:'', is_featured:'' })
     search()
 }
 
-const formatType = (type) => {
-    if (!type) return ''
-    return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+const goToPage = (url) => {
+    if (!url) return
+    router.visit(url, { preserveState: true, preserveScroll: true })
 }
 
-const formatPrice = (price) => {
-    if (!price) return '0'
-    return Number(price).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-}
+const formatType  = t => t ? t.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) : ''
+const formatPrice = p => p ? Number(p).toLocaleString('en-US', { minimumFractionDigits:0, maximumFractionDigits:0 }) : '0'
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box}
+.page-wrap{background:#F7F5F2;min-height:100vh;padding:28px 24px 72px;font-family:'DM Sans',sans-serif;color:#1A1410}
+
+/* ── Header ── */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.page-eyebrow{display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;color:#9E9890;text-transform:uppercase;margin-bottom:5px}
+.eyebrow-dot{width:6px;height:6px;border-radius:50%;background:#C0170F;animation:blink .9s ease-in-out infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.page-title{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,30px);font-weight:900;color:#1A1410;line-height:1.15;margin-bottom:4px}
+.page-sub{font-size:13px;color:#9E9890;font-family:'DM Mono',monospace}
+
+/* ── Stats ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+@media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.stats-grid{grid-template-columns:1fr}}
+.stat-card{background:#fff;border:1px solid #E8E2DA;border-top:3px solid var(--accent);border-radius:16px;padding:16px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 1px 8px rgba(0,0,0,.04);transition:transform .18s,box-shadow .18s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stat-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#9E9890;margin-bottom:4px}
+.stat-value{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:#1A1410;line-height:1}
+.stat-note{font-family:'DM Mono',monospace;font-size:9px;color:#9E9890;margin-top:4px}
+
+/* ── Filters ── */
+.filter-card{background:#fff;border:1px solid #E8E2DA;border-radius:18px;overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,.04);margin-bottom:16px}
+.filter-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#F0EDE8;border-bottom:1px solid #E8E2DA}
+.filter-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:900;color:#1A1410}
+.filter-sub{font-size:11px;color:#9E9890;font-family:'DM Mono',monospace;margin-top:2px}
+.clear-btn{display:inline-flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:#C0170F;background:none;border:none;cursor:pointer;padding:5px 10px;border-radius:8px;transition:background .15s}
+.clear-btn:hover{background:rgba(192,23,15,.07)}
+.filter-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;padding:14px 20px;border-bottom:1px solid #F0EDE8}
+.filter-row:last-child{border-bottom:none}
+@media(max-width:768px){.filter-row,.filter-row[style]{grid-template-columns:1fr !important}}
+.ep-input,.ep-select{padding:9px 12px;border:1.5px solid #E8E2DA;border-radius:11px;font-size:13px;font-family:'DM Sans',sans-serif;color:#1A1410;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;width:100%}
+.ep-input:focus,.ep-select:focus{border-color:#C0170F;box-shadow:0 0 0 3px rgba(192,23,15,.09)}
+.search-wrap{position:relative}
+.search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#9E9890;pointer-events:none}
+.search-pad{padding-left:32px !important}
+.input-prefix-wrap{position:relative}
+.input-prefix{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-family:'DM Mono',monospace;font-size:9px;color:#9E9890;pointer-events:none;letter-spacing:.08em}
+.prefix-pad{padding-left:32px !important}
+.prefix-pad-lg{padding-left:38px !important}
+
+/* ── Results bar ── */
+.results-bar{font-family:'DM Mono',monospace;font-size:11px;color:#6B6560;margin-bottom:14px}
+.results-note{color:#9E9890;margin-left:6px}
+
+/* ── Venues grid ── */
+.venues-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:1024px){.venues-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.venues-grid{grid-template-columns:1fr}}
+
+/* ── Venue card ── */
+.venue-card{background:#fff;border:1px solid #E8E2DA;border-radius:18px;overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,.04);transition:transform .2s,box-shadow .2s}
+.venue-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.1)}
+.venue-img-wrap{position:relative;height:180px;background:#F0EDE8;overflow:hidden}
+.venue-img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
+.venue-card:hover .venue-img{transform:scale(1.05)}
+.venue-img-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.img-badges-left{position:absolute;top:10px;left:10px;display:flex;gap:5px;flex-wrap:wrap}
+.badge-featured{padding:3px 9px;border-radius:20px;background:rgba(249,178,51,.95);color:#7c2d12;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;backdrop-filter:blur(4px)}
+.badge-verified{padding:3px 9px;border-radius:20px;background:rgba(22,163,74,.9);color:#fff;font-size:10px;font-weight:700;font-family:'DM Mono',monospace}
+.img-badges-right{position:absolute;top:10px;right:10px}
+.badge-status{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;backdrop-filter:blur(4px)}
+.img-gradient{position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(to top,rgba(26,20,16,.35),transparent);pointer-events:none}
+
+/* Venue body */
+.venue-body{padding:14px 16px}
+.venue-meta-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.type-chip{display:inline-flex;padding:2px 10px;border-radius:20px;background:rgba(29,92,150,.1);border:1px solid rgba(29,92,150,.2);color:#1D5C96;font-family:'DM Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:capitalize}
+.rating-row{display:flex;align-items:center;gap:3px}
+.rating-val{font-size:12px;font-weight:700;color:#1A1410;font-family:'DM Mono',monospace}
+.rating-count{font-size:11px;color:#9E9890}
+.venue-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:900;color:#1A1410;margin-bottom:10px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.venue-details{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.detail-row{display:flex;align-items:center;gap:6px;color:#6B6560}
+.detail-txt{font-size:12px;font-family:'DM Mono',monospace}
+.detail-price{font-size:12px;font-weight:700;color:#1A1410;font-family:'DM Mono',monospace}
+.detail-per{font-size:11px;color:#9E9890}
+.venue-footer{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid #F0EDE8}
+.venue-actions{display:flex;align-items:center;gap:6px}
+.action-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;border:1.5px solid #E8E2DA;background:#F7F5F2;color:#6B6560;transition:all .15s;text-decoration:none}
+.action-icon-btn:hover{border-color:#C0170F;color:#C0170F;background:rgba(192,23,15,.05)}
+.view-btn{display:inline-flex;align-items:center;padding:5px 12px;border-radius:8px;background:rgba(192,23,15,.08);border:1px solid rgba(192,23,15,.2);color:#C0170F;font-size:12px;font-weight:700;text-decoration:none;transition:all .15s;font-family:'DM Sans',sans-serif}
+.view-btn:hover{background:rgba(192,23,15,.14);border-color:#C0170F}
+.booking-count{font-family:'DM Mono',monospace;font-size:10px;color:#9E9890}
+
+/* ── Empty state ── */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px 24px;text-align:center;background:#fff;border:1px solid #E8E2DA;border-radius:18px}
+.empty-icon{font-size:52px;margin-bottom:12px;opacity:.4}
+.empty-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:#1A1410;margin-bottom:8px}
+.empty-sub{font-size:13px;color:#9E9890;margin-bottom:20px;max-width:320px}
+.empty-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+
+/* ── Pagination ── */
+.pagination-wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px;flex-wrap:wrap}
+.pg-info{font-family:'DM Mono',monospace;font-size:11px;color:#6B6560}
+.pg-nav{display:flex;gap:3px;flex-wrap:wrap}
+.pg-link{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 8px;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:#6B6560;background:#fff;border:1px solid #E8E2DA;cursor:pointer;transition:all .15s}
+.pg-link:hover:not(.disabled):not(.pg-active){border-color:#C0170F;color:#C0170F}
+.pg-active{background:#C0170F;color:#fff;border-color:#C0170F}
+.pg-link.disabled{opacity:.4;cursor:not-allowed}
+
+/* ── Buttons ── */
+.btn-cta{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:12px;border:none;cursor:pointer;background-image:linear-gradient(135deg,#C0170F 0%,#F05A00 50%,#F9B233 100%);background-size:200% auto;color:#fff;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;text-decoration:none;box-shadow:0 4px 14px rgba(192,23,15,.28);animation:shine 3s linear infinite;transition:transform .2s,box-shadow .2s}
+.btn-cta:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(192,23,15,.38)}
+@keyframes shine{0%{background-position:0% center}100%{background-position:200% center}}
+.btn-ghost{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:11px;border:1.5px solid #E8E2DA;background:#fff;color:#6B6560;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .18s;text-decoration:none}
+.btn-ghost:hover{border-color:#9E9890;color:#1A1410}
+</style>

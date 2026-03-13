@@ -1,279 +1,217 @@
 <template>
-    <div class="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-6 px-4 sm:py-12 sm:px-6 lg:px-8">
-        <div class="max-w-4xl mx-auto">
-            <!-- Invitation Card -->
-            <div class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden">
-                <!-- Header Section -->
-                <div class="relative h-48 sm:h-64 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 overflow-hidden">
-                    <div class="absolute inset-0 opacity-20">
-                        <div class="absolute top-0 left-0 w-64 h-64 bg-white rounded-full -translate-x-32 -translate-y-32"></div>
-                        <div class="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-48 translate-y-48"></div>
-                    </div>
-                    
-                    <div class="relative h-full flex flex-col items-center justify-center text-white p-4 sm:p-8">
-                        <div class="w-16 h-16 sm:w-24 sm:h-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center mb-3 sm:mb-4 backdrop-blur-sm">
-                            <span class="text-3xl sm:text-5xl">🎉</span>
+    <div class="page-bg">
+
+        <!-- Confetti -->
+        <div class="confetti" aria-hidden="true">
+            <div class="cdot" v-for="n in 18" :key="n" :style="{
+                width:(4+(n*3)%9)+'px', height:(4+(n*3)%9)+'px', left:(n*5.55%100)+'%',
+                background:['#C0170F','#F05A00','#F9B233','#1D5C96','#C0170F','#F9B233'][n%6],
+                animationDuration:(10+n*1.05)+'s', animationDelay:(n*.45)+'s',
+                borderRadius:n%3===0?'3px':'50%',
+            }"></div>
+        </div>
+
+        <div class="page-inner">
+
+            <!-- ── Invitation Card ── -->
+            <div class="inv-card">
+
+                <!-- Brand accent bar -->
+                <div class="accent-bar"></div>
+
+                <!-- Hero -->
+                <div class="hero">
+                    <!-- Uploaded image sits behind gradient overlay -->
+                    <img v-if="hasImage" :src="imageUrl" class="hero-img" alt="">
+                    <div class="hero-overlay"></div>
+
+                    <!-- Hero content -->
+                    <div class="hero-content">
+                        <div class="hero-badge">🎉 You're Invited</div>
+                        <h1 class="hero-title">{{ event.title }}</h1>
+                        <div class="hero-meta-row">
+                            <div class="hero-meta">
+                                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                                {{ formatDate(event.event_date) }}
+                            </div>
+                            <div v-if="event.start_time" class="hero-meta">
+                                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                {{ formatTime(event.start_time) }}
+                                <span v-if="event.end_time"> — {{ formatTime(event.end_time) }}</span>
+                            </div>
+                            <div v-if="event.city" class="hero-meta">
+                                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                {{ event.city }}<span v-if="event.state">, {{ event.state }}</span>
+                            </div>
                         </div>
-                        <h1 class="text-2xl sm:text-4xl md:text-5xl font-bold text-center mb-1 sm:mb-2">You're Invited!</h1>
-                        <p class="text-base sm:text-xl text-center opacity-90">{{ event.title }}</p>
                     </div>
                 </div>
 
-                <!-- Content Section -->
-                <div class="p-4 sm:p-8 md:p-12">
+                <!-- Body -->
+                <div class="card-body">
+
                     <!-- Greeting -->
-                    <div class="text-center mb-6 sm:mb-8">
-                        <p class="text-xl sm:text-3xl font-semibold text-gray-800 mb-2">
-                            Dear {{ guest.first_name }} {{ guest.last_name }},
-                        </p>
-                        <p class="text-sm sm:text-lg text-gray-600">
-                            We would be honored to have you join us for this special occasion.
-                        </p>
+                    <div class="greeting">
+                        <div class="greeting-salute">Dear {{ guest.first_name }} {{ guest.last_name }},</div>
+                        <p class="greeting-text">We would be honoured to have you join us for this special occasion.</p>
                     </div>
 
-                    <!-- QR Code Section - PRIORITIZED -->
-                    <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl sm:rounded-2xl p-6 sm:p-8 text-center border-2 border-indigo-300 mb-6 sm:mb-8 shadow-lg">
-                        <div class="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-indigo-600 rounded-full mb-3 sm:mb-4">
-                            <svg class="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                            </svg>
+                    <!-- QR Section -->
+                    <div class="qr-section">
+                        <div class="qr-icon-wrap">
+                            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h.01M18 14h.01M14 18h.01M18 18h.01M14 14v4M18 14v4"/></svg>
                         </div>
-                        <h3 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-4">Your Digital Pass</h3>
-                        <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 px-2">Show this QR code at the event entrance for quick check-in</p>
-                        
-                        <!-- QR Code Display - Handle both SVG and Base64 -->
-                        <div class="inline-block bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-xl mx-auto">
-                            <!-- If QR code is base64 data URI -->
-                            <img 
-                                v-if="qrCode.startsWith('data:image')" 
-                                :src="qrCode" 
-                                alt="Event QR Code" 
-                                class="w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 mx-auto"
-                            />
-                            <!-- If QR code is raw SVG -->
-                            <div 
-                                v-else 
-                                v-html="qrCode" 
-                                class="w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 mx-auto flex items-center justify-center"
-                            ></div>
+                        <div class="qr-text">
+                            <div class="qr-title">Your Digital Pass</div>
+                            <div class="qr-sub">Show this code at the entrance for quick check-in</div>
                         </div>
-                        
-                        <p class="text-xs sm:text-sm text-gray-500 mt-4 sm:mt-6">
-                            Guest ID: <span class="font-mono font-semibold text-sm sm:text-base">#{{ guest.id }}</span>
-                        </p>
-                        
-                        <!-- Download Button -->
-                        <button
-                            @click="downloadQrCode"
-                            class="mt-4 sm:mt-6 w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
-                        >
-                            <svg class="w-5 h-5 sm:w-6 sm:h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
+
+                        <div class="qr-code-wrap">
+                            <img v-if="qrCode && qrCode.startsWith('data:image')" :src="qrCode" alt="QR Code" class="qr-code-img">
+                            <div v-else-if="qrCode" v-html="qrCode" class="qr-code-svg"></div>
+                            <div v-else class="qr-placeholder">
+                                <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" opacity=".35"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h.01M18 14h.01M14 18h.01M18 18h.01M14 14v4M18 14v4"/></svg>
+                            </div>
+                        </div>
+
+                        <div class="qr-guest-id">Guest ID: <span class="mono">#{{ guest.id }}</span></div>
+
+                        <button @click="downloadQr" class="btn-download">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                             Download QR Code
                         </button>
                     </div>
 
-                    <div class="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8">
-                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 text-center">Will you be attending?</h2>
-                        
-                        <div v-if="!rsvpSubmitted" class="space-y-4">
-                            <!-- RSVP Status Selection - Stacked on mobile -->
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                                <button
-                                    @click="selectedRsvpStatus = 'attending'"
-                                    :class="[
-                                        'p-4 sm:p-6 rounded-xl border-2 transition-all duration-200 flex flex-row sm:flex-col items-center justify-center',
-                                        selectedRsvpStatus === 'attending'
-                                            ? 'border-green-500 bg-green-50 shadow-lg transform scale-105'
-                                            : 'border-gray-300 hover:border-green-300 hover:bg-green-50'
-                                    ]"
-                                >
-                                    <svg class="w-10 h-10 sm:w-12 sm:h-12 mb-0 sm:mb-2 mr-3 sm:mr-0" :class="selectedRsvpStatus === 'attending' ? 'text-green-600' : 'text-gray-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span class="font-semibold text-base sm:text-lg" :class="selectedRsvpStatus === 'attending' ? 'text-green-700' : 'text-gray-700'">
-                                        Yes, I'll be there!
-                                    </span>
-                                </button>
+                    <!-- RSVP Section -->
+                    <div class="rsvp-section">
+                        <div class="section-head">
+                            <div class="section-title">Will you be attending?</div>
+                        </div>
 
-                                <button
-                                    @click="selectedRsvpStatus = 'not_attending'"
-                                    :class="[
-                                        'p-4 sm:p-6 rounded-xl border-2 transition-all duration-200 flex flex-row sm:flex-col items-center justify-center',
-                                        selectedRsvpStatus === 'not_attending'
-                                            ? 'border-red-500 bg-red-50 shadow-lg transform scale-105'
-                                            : 'border-gray-300 hover:border-red-300 hover:bg-red-50'
-                                    ]"
-                                >
-                                    <svg class="w-10 h-10 sm:w-12 sm:h-12 mb-0 sm:mb-2 mr-3 sm:mr-0" :class="selectedRsvpStatus === 'not_attending' ? 'text-red-600' : 'text-gray-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span class="font-semibold text-base sm:text-lg" :class="selectedRsvpStatus === 'not_attending' ? 'text-red-700' : 'text-gray-700'">
-                                        Can't make it
-                                    </span>
-                                </button>
-
-                                <button
-                                    @click="selectedRsvpStatus = 'maybe'"
-                                    :class="[
-                                        'p-4 sm:p-6 rounded-xl border-2 transition-all duration-200 flex flex-row sm:flex-col items-center justify-center',
-                                        selectedRsvpStatus === 'maybe'
-                                            ? 'border-blue-500 bg-blue-50 shadow-lg transform scale-105'
-                                            : 'border-gray-300 hover:border-blue-300 hover:bg-blue-50'
-                                    ]"
-                                >
-                                    <svg class="w-10 h-10 sm:w-12 sm:h-12 mb-0 sm:mb-2 mr-3 sm:mr-0" :class="selectedRsvpStatus === 'maybe' ? 'text-blue-600' : 'text-gray-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span class="font-semibold text-base sm:text-lg" :class="selectedRsvpStatus === 'maybe' ? 'text-blue-700' : 'text-gray-700'">
-                                        Maybe
-                                    </span>
-                                </button>
+                        <div v-if="!rsvpSubmitted">
+                            <!-- RSVP chips -->
+                            <div class="rsvp-chips">
+                                <div @click="selectedRsvp='attending'"
+                                     :class="['rsvp-chip chip-yes', selectedRsvp==='attending'?'chip-yes-on':'']">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span>Yes, I'll be there!</span>
+                                </div>
+                                <div @click="selectedRsvp='not_attending'"
+                                     :class="['rsvp-chip chip-no', selectedRsvp==='not_attending'?'chip-no-on':'']">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span>Can't make it</span>
+                                </div>
+                                <div @click="selectedRsvp='maybe'"
+                                     :class="['rsvp-chip chip-maybe', selectedRsvp==='maybe'?'chip-maybe-on':'']">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span>Maybe</span>
+                                </div>
                             </div>
 
-                            <!-- Plus Ones Input -->
-                            <div v-if="guest.plus_ones > 0 && selectedRsvpStatus === 'attending'" class="mt-4 sm:mt-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    How many guests will you bring? (Maximum: {{ guest.plus_ones }})
-                                </label>
-                                <input
-                                    v-model.number="numberOfPlusOnes"
-                                    type="number"
-                                    :min="0"
-                                    :max="guest.plus_ones"
-                                    class="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                />
+                            <!-- Plus ones -->
+                            <div v-if="guest.plus_ones > 0 && selectedRsvp==='attending'" class="plus-ones-field">
+                                <label class="field-label">How many additional guests will you bring? <span class="max-label">(max {{ guest.plus_ones }})</span></label>
+                                <input v-model.number="plusOnesCount" type="number" :min="0" :max="guest.plus_ones" class="ep-input" style="max-width:120px">
                             </div>
 
-                            <!-- Submit Button -->
-                            <button
-                                @click="submitRsvp"
-                                :disabled="!selectedRsvpStatus || submitting"
-                                :class="[
-                                    'w-full py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200',
-                                    selectedRsvpStatus && !submitting
-                                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1'
-                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                ]"
-                            >
-                                <span v-if="submitting" class="flex items-center justify-center">
-                                    <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Submitting...
-                                </span>
-                                <span v-else>Confirm RSVP</span>
+                            <button @click="submitRsvp" :disabled="!selectedRsvp||submitting" class="btn-rsvp">
+                                <svg v-if="submitting" class="spin-ico" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                                {{ submitting ? 'Submitting…' : 'Confirm RSVP' }}
                             </button>
                         </div>
 
-                        <!-- RSVP Confirmation -->
-                        <div v-else class="text-center py-6 sm:py-8">
-                            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                                <svg class="w-8 h-8 sm:w-10 sm:h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
+                        <!-- Confirmed state -->
+                        <div v-else class="rsvp-confirmed">
+                            <div class="confirmed-icon">
+                                <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
                             </div>
-                            <h3 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Thank You!</h3>
-                            <p class="text-base sm:text-lg text-gray-600">Your RSVP has been recorded.</p>
-                            <p v-if="guest.rsvp_status === 'attending'" class="text-sm sm:text-md text-gray-500 mt-2">
-                                We look forward to seeing you at the event!
-                            </p>
+                            <div class="confirmed-title">Thank You!</div>
+                            <div class="confirmed-sub">
+                                {{ guest.rsvp_status==='attending'
+                                    ? 'We look forward to seeing you at the event!'
+                                    : 'Thank you for letting us know.' }}
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Event Details Card - Collapsed by default on mobile -->
-                    <details class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl sm:rounded-2xl border border-gray-200 mb-6 sm:mb-8" open>
-                        <summary class="p-4 sm:p-6 cursor-pointer font-semibold text-lg sm:text-xl text-gray-800 flex items-center justify-between">
-                            <span class="flex items-center">
-                                <svg class="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                    <!-- Event Details accordion -->
+                    <details class="details-block" open>
+                        <summary class="details-summary">
+                            <span class="ds-label">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
                                 Event Details
                             </span>
-                            <svg class="w-5 h-5 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                            </svg>
+                            <svg class="ds-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
                         </summary>
-                        
-                        <div class="px-4 pb-4 sm:px-6 sm:pb-6 space-y-3 sm:space-y-4">
-                            <!-- Date & Time -->
-                            <div class="flex items-start">
-                                <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 rounded-lg flex items-center justify-center mr-3 sm:mr-4">
-                                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
+                        <div class="details-body">
+
+                            <div class="detail-row">
+                                <div class="detail-icon" style="background:rgba(29,92,150,.1);color:#1D5C96">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                                 </div>
-                                <div class="flex-1">
-                                    <p class="text-xs sm:text-sm font-medium text-gray-500">Date & Time</p>
-                                    <p class="text-base sm:text-lg font-semibold text-gray-800">
-                                        {{ formatDate(event.event_date) }}
-                                    </p>
-                                    <p class="text-sm sm:text-md text-gray-600">
+                                <div>
+                                    <div class="detail-lbl">Date &amp; Time</div>
+                                    <div class="detail-val">{{ formatDate(event.event_date) }}</div>
+                                    <div class="detail-sub">
                                         {{ formatTime(event.start_time) }}
-                                        <span v-if="event.end_time"> - {{ formatTime(event.end_time) }}</span>
-                                    </p>
+                                        <span v-if="event.end_time"> — {{ formatTime(event.end_time) }}</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Venue -->
-                            <div v-if="event.venue_name" class="flex items-start">
-                                <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-3 sm:mr-4">
-                                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
+                            <div v-if="event.venue_name" class="detail-row">
+                                <div class="detail-icon" style="background:rgba(192,23,15,.08);color:#C0170F">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                                 </div>
-                                <div class="flex-1">
-                                    <p class="text-xs sm:text-sm font-medium text-gray-500">Venue</p>
-                                    <p class="text-base sm:text-lg font-semibold text-gray-800">{{ event.venue_name }}</p>
-                                    <p v-if="event.venue_address" class="text-sm text-gray-600">{{ event.venue_address }}</p>
-                                    <p v-if="event.city || event.state" class="text-sm text-gray-600">
-                                        {{ event.city }}<span v-if="event.city && event.state">, </span>{{ event.state }}
-                                    </p>
+                                <div>
+                                    <div class="detail-lbl">Venue</div>
+                                    <div class="detail-val">{{ event.venue_name }}</div>
+                                    <div v-if="event.venue_address" class="detail-sub">{{ event.venue_address }}</div>
+                                    <div v-if="event.city" class="detail-sub">{{ event.city }}<span v-if="event.state">, {{ event.state }}</span></div>
                                 </div>
                             </div>
 
-                            <!-- Description -->
-                            <div v-if="event.description" class="flex items-start">
-                                <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-pink-100 rounded-lg flex items-center justify-center mr-3 sm:mr-4">
-                                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
+                            <div v-if="event.description" class="detail-row">
+                                <div class="detail-icon" style="background:rgba(249,178,51,.15);color:#b45309">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 </div>
-                                <div class="flex-1">
-                                    <p class="text-xs sm:text-sm font-medium text-gray-500">About This Event</p>
-                                    <p class="text-sm sm:text-md text-gray-700 leading-relaxed">{{ event.description }}</p>
+                                <div>
+                                    <div class="detail-lbl">About This Event</div>
+                                    <div class="detail-desc">{{ event.description }}</div>
                                 </div>
                             </div>
 
-                            <!-- Plus Ones -->
-                            <div v-if="guest.plus_ones > 0" class="flex items-start">
-                                <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center mr-3 sm:mr-4">
-                                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                                    </svg>
+                            <div v-if="guest.plus_ones > 0" class="detail-row">
+                                <div class="detail-icon" style="background:rgba(22,163,74,.1);color:#16a34a">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                                 </div>
-                                <div class="flex-1">
-                                    <p class="text-xs sm:text-sm font-medium text-gray-500">Plus Ones</p>
-                                    <p class="text-base sm:text-lg font-semibold text-gray-800">
-                                        You may bring {{ guest.plus_ones }} guest{{ guest.plus_ones > 1 ? 's' : '' }}
-                                    </p>
+                                <div>
+                                    <div class="detail-lbl">Plus Ones</div>
+                                    <div class="detail-val">You may bring {{ guest.plus_ones }} additional guest{{ guest.plus_ones!==1?'s':'' }}</div>
                                 </div>
                             </div>
+
                         </div>
                     </details>
-                    <!-- Rest of the component remains the same... -->
-                    <!-- RSVP Section, Event Details, Footer -->
+
+                    <!-- Footer -->
+                    <div class="inv-footer">
+                        <div class="footer-accent-bar"></div>
+                        <div class="footer-brand">
+                            <span class="footer-ep">Event Portal</span>
+                            <span class="footer-tagline">Invite. Inform. Remind. Track.</span>
+                        </div>
+                    </div>
+
                 </div>
             </div>
+
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import Swal from 'sweetalert2'
 
@@ -283,97 +221,172 @@ const props = defineProps({
     qrCode: String,
 })
 
-const selectedRsvpStatus = ref(props.guest.rsvp_status || null)
-const numberOfPlusOnes = ref(props.guest.plus_ones || 0)
-const submitting = ref(false)
+const selectedRsvp  = ref(props.guest.rsvp_status || null)
+const plusOnesCount = ref(props.guest.plus_ones || 0)
+const submitting    = ref(false)
 const rsvpSubmitted = ref(props.guest.rsvp_status !== 'pending')
 
-const formatDate = (date) => {
-    if (!date) return ''
-    return new Date(date).toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    })
+// Image: check for a real hosted image on the event
+const hasImage  = computed(() => !!(props.event.image_url || props.event.cover_image))
+const imageUrl  = computed(() => props.event.image_url || props.event.cover_image || '')
+
+const formatDate = d => {
+    if (!d) return ''
+    return new Date(d).toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
+}
+const formatTime = t => {
+    if (!t) return ''
+    const [h, m] = t.split(':').map(Number)
+    const period = h >= 12 ? 'PM' : 'AM'
+    return `${h%12||12}:${String(m).padStart(2,'0')} ${period}`
 }
 
-const formatTime = (time) => {
-    if (!time) return ''
-    const timeParts = time.split(':')
-    if (timeParts.length >= 2) {
-        const hours = parseInt(timeParts[0])
-        const minutes = timeParts[1]
-        const period = hours >= 12 ? 'PM' : 'AM'
-        const displayHours = hours % 12 || 12
-        return `${displayHours}:${minutes} ${period}`
-    }
-    return time
-}
-
-const submitRsvp = async () => {
-    if (!selectedRsvpStatus.value) {
-        Swal.fire({
-            title: 'Please select an option',
-            text: 'Please let us know if you will be attending',
-            icon: 'info',
-            confirmButtonColor: '#4F46E5'
-        })
+const submitRsvp = () => {
+    if (!selectedRsvp.value) {
+        Swal.fire({ title:'Please choose an option', icon:'info', confirmButtonColor:'#C0170F' })
         return
     }
-
     submitting.value = true
-
     router.post(route('events.rsvp.update', [props.event.id, props.guest.id]), {
-        rsvp_status: selectedRsvpStatus.value,
-        plus_ones: selectedRsvpStatus.value === 'attending' ? numberOfPlusOnes.value : 0
+        rsvp_status: selectedRsvp.value,
+        plus_ones: selectedRsvp.value === 'attending' ? plusOnesCount.value : 0,
     }, {
         onSuccess: () => {
-            rsvpSubmitted.value = true
             submitting.value = false
-            
-            const message = selectedRsvpStatus.value === 'attending' 
-                ? 'We look forward to seeing you!'
-                : 'Thank you for letting us know.'
-
+            rsvpSubmitted.value = true
             Swal.fire({
-                title: 'RSVP Confirmed!',
-                text: message,
+                title: 'RSVP Confirmed! 🎉',
+                text: selectedRsvp.value === 'attending' ? 'We look forward to seeing you!' : 'Thank you for letting us know.',
                 icon: 'success',
-                confirmButtonColor: '#4F46E5',
-                timer: 3000
+                confirmButtonColor: '#C0170F',
+                timer: 3000,
             })
         },
         onError: () => {
             submitting.value = false
-            Swal.fire({
-                title: 'Error',
-                text: 'Failed to submit RSVP. Please try again.',
-                icon: 'error',
-                confirmButtonColor: '#DC2626'
-            })
-        }
+            Swal.fire({ title:'Error', text:'Failed to submit RSVP. Please try again.', icon:'error', confirmButtonColor:'#C0170F' })
+        },
     })
 }
 
-const downloadQrCode = () => {
-    // Check if it's a data URI
+const downloadQr = () => {
+    if (!props.qrCode) return
     if (props.qrCode.startsWith('data:image')) {
-        const link = document.createElement('a')
-        link.href = props.qrCode
-        link.download = `event-qr-code-${props.guest.id}.svg`
-        link.click()
+        const a = document.createElement('a')
+        a.href = props.qrCode
+        a.download = `qr-guest-${props.guest.id}.png`
+        a.click()
     } else {
-        // Raw SVG string
-        const svgBlob = new Blob([props.qrCode], { type: 'image/svg+xml;charset=utf-8' })
-        const url = URL.createObjectURL(svgBlob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `event-qr-code-${props.guest.id}.svg`
-        link.click()
+        const blob = new Blob([props.qrCode], { type:'image/svg+xml;charset=utf-8' })
+        const url  = URL.createObjectURL(blob)
+        const a    = document.createElement('a')
+        a.href = url; a.download = `qr-guest-${props.guest.id}.svg`; a.click()
         URL.revokeObjectURL(url)
     }
 }
-
-
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+/* ── Page bg ── */
+.page-bg{min-height:100vh;background:#F7F5F2;position:relative;overflow:hidden;padding:32px 16px 64px;display:flex;align-items:flex-start;justify-content:center}
+
+/* ── Confetti ── */
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.cdot{position:absolute;opacity:0;animation:rise linear infinite}
+@keyframes rise{0%{transform:translateY(110vh) rotate(0deg);opacity:0}5%{opacity:.3}95%{opacity:.1}100%{transform:translateY(-80px) rotate(540deg);opacity:0}}
+
+.page-inner{position:relative;z-index:1;width:100%;max-width:640px}
+
+/* ── Card ── */
+.inv-card{background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 8px 48px rgba(0,0,0,.12);border:1px solid #E8E2DA}
+.accent-bar{height:4px;background:linear-gradient(90deg,#C0170F,#F05A00,#F9B233,#1D5C96)}
+
+/* ── Hero ── */
+.hero{position:relative;background:#0a0504;display:flex;flex-direction:column}
+.hero-img{width:100%;max-height:640px;object-fit:contain;display:block}
+.hero-overlay{position:absolute;bottom:0;left:0;right:0;height:160px;background:linear-gradient(to top,rgba(10,4,2,.95) 0%,transparent 100%);pointer-events:none}
+.hero-content{position:relative;z-index:1;padding:16px 24px 22px;background:rgba(10,4,2,.82)}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 12px;background:rgba(249,178,51,.2);border:1px solid rgba(249,178,51,.45);border-radius:20px;font-family:'DM Mono',monospace;font-size:10px;font-weight:700;color:#F9B233;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(18px,4vw,26px);font-weight:900;color:#fff;line-height:1.15;margin-bottom:10px;text-shadow:0 2px 16px rgba(0,0,0,.5)}
+.hero-meta-row{display:flex;flex-wrap:wrap;gap:8px}
+.hero-meta{display:inline-flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,.8);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:4px 11px}
+
+/* ── Body ── */
+.card-body{padding:20px 24px;display:flex;flex-direction:column;gap:20px;font-family:'DM Sans',sans-serif;color:#1A1410}
+
+/* ── Greeting ── */
+.greeting{border-left:3px solid #C0170F;padding-left:16px}
+.greeting-salute{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#1A1410;margin-bottom:6px}
+.greeting-text{font-size:14px;color:#6B6560;line-height:1.7}
+
+/* ── QR Section ── */
+.qr-section{background:linear-gradient(135deg,rgba(192,23,15,.05) 0%,rgba(29,92,150,.05) 100%);border:2px solid rgba(192,23,15,.15);border-radius:18px;padding:24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.qr-icon-wrap{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#C0170F,#F05A00);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 4px 14px rgba(192,23,15,.3)}
+.qr-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:#1A1410}
+.qr-sub{font-size:13px;color:#6B6560;font-family:'DM Mono',monospace;max-width:280px;line-height:1.5}
+.qr-code-wrap{background:#fff;padding:16px;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.1);border:1px solid #E8E2DA}
+.qr-code-img{width:200px;height:200px;object-fit:contain;display:block}
+.qr-code-svg{width:200px;height:200px;display:flex;align-items:center;justify-content:center}
+.qr-placeholder{width:200px;height:200px;display:flex;align-items:center;justify-content:center;background:#F7F5F2;border-radius:8px}
+.qr-guest-id{font-family:'DM Mono',monospace;font-size:12px;color:#9E9890}.mono{font-weight:700;color:#6B6560}
+.btn-download{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:11px;border:none;cursor:pointer;background:#1A1410;color:#fff;font-size:12px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.05em;transition:all .2s;box-shadow:0 3px 10px rgba(0,0,0,.18)}
+.btn-download:hover{background:#C0170F;transform:translateY(-1px);box-shadow:0 5px 16px rgba(192,23,15,.3)}
+
+/* ── RSVP ── */
+.rsvp-section{background:#F7F5F2;border-radius:18px;padding:22px;border:1px solid #E8E2DA}
+.section-head{margin-bottom:16px}
+.section-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:#1A1410;text-align:center}
+.rsvp-chips{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+@media(max-width:480px){.rsvp-chips{grid-template-columns:1fr}}
+.rsvp-chip{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:16px 10px;border:2px solid #E8E2DA;border-radius:14px;cursor:pointer;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;color:#6B6560;background:#fff;transition:all .2s;text-align:center;user-select:none}
+.rsvp-chip:hover{transform:translateY(-2px)}
+.chip-yes:hover{border-color:#16a34a;background:rgba(22,163,74,.05)}
+.chip-yes-on{border-color:#16a34a;background:rgba(22,163,74,.08);color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.15);transform:translateY(-2px) scale(1.02)}
+.chip-no:hover{border-color:#C0170F;background:rgba(192,23,15,.04)}
+.chip-no-on{border-color:#C0170F;background:rgba(192,23,15,.06);color:#C0170F;box-shadow:0 0 0 3px rgba(192,23,15,.12);transform:translateY(-2px) scale(1.02)}
+.chip-maybe:hover{border-color:#1D5C96;background:rgba(29,92,150,.04)}
+.chip-maybe-on{border-color:#1D5C96;background:rgba(29,92,150,.07);color:#1D5C96;box-shadow:0 0 0 3px rgba(29,92,150,.15);transform:translateY(-2px) scale(1.02)}
+
+.plus-ones-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field-label{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#6B6560;font-weight:500}
+.max-label{text-transform:none;letter-spacing:0;font-size:10px;color:#9E9890}
+.ep-input{padding:9px 13px;border:1.5px solid #E8E2DA;border-radius:11px;font-size:13px;font-family:'DM Sans',sans-serif;color:#1A1410;background:#fff;outline:none;transition:border-color .15s}
+.ep-input:focus{border-color:#C0170F;box-shadow:0 0 0 3px rgba(192,23,15,.09)}
+
+.btn-rsvp{width:100%;padding:13px;border-radius:13px;border:none;cursor:pointer;background-image:linear-gradient(135deg,#C0170F 0%,#F05A00 50%,#F9B233 100%);background-size:200% auto;color:#fff;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;box-shadow:0 4px 16px rgba(192,23,15,.3);animation:shine 3s linear infinite;transition:transform .2s,box-shadow .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+@keyframes shine{0%{background-position:0% center}100%{background-position:200% center}}
+.btn-rsvp:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(192,23,15,.4)}
+.btn-rsvp:disabled{opacity:.5;cursor:not-allowed;transform:none;animation:none}
+
+.rsvp-confirmed{text-align:center;padding:24px 0}
+.confirmed-icon{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#16a34a,#14532d);display:flex;align-items:center;justify-content:center;color:#fff;margin:0 auto 12px;box-shadow:0 4px 16px rgba(22,163,74,.35)}
+.confirmed-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:#1A1410;margin-bottom:6px}
+.confirmed-sub{font-size:14px;color:#6B6560}
+
+/* ── Event Details ── */
+.details-block{background:#F7F5F2;border:1px solid #E8E2DA;border-radius:18px;overflow:hidden}
+.details-summary{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;list-style:none;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:#1A1410;background:#F0EDE8;border-bottom:1px solid #E8E2DA;user-select:none}
+.details-summary::-webkit-details-marker{display:none}
+.ds-label{display:flex;align-items:center;gap:7px}
+.ds-chevron{transition:transform .25s}
+.details-block[open] .ds-chevron{transform:rotate(180deg)}
+.details-body{padding:16px;display:flex;flex-direction:column;gap:14px}
+.detail-row{display:flex;align-items:flex-start;gap:12px}
+.detail-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.detail-lbl{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#9E9890;margin-bottom:2px}
+.detail-val{font-size:14px;font-weight:700;color:#1A1410}
+.detail-sub{font-size:13px;color:#6B6560;margin-top:1px}
+.detail-desc{font-size:13px;color:#6B6560;line-height:1.7}
+
+/* ── Footer ── */
+.inv-footer{text-align:center;padding-top:8px}
+.footer-accent-bar{height:3px;background:linear-gradient(90deg,#C0170F,#F05A00,#F9B233,#1D5C96);border-radius:2px;margin-bottom:16px}
+.footer-brand{display:flex;flex-direction:column;align-items:center;gap:3px}
+.footer-ep{font-family:'Playfair Display',serif;font-size:16px;font-weight:900;color:#1A1410}
+.footer-tagline{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#9E9890}
+
+.spin-ico{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>

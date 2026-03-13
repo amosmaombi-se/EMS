@@ -1,760 +1,329 @@
 <template>
     <AuthenticatedLayout>
-        <template #header>
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-                <div class="flex-1">
-                    <div class="flex items-center gap-3 mb-2">
-                        <Link :href="route('events.guests.index', event.id)"
-                            class="inline-flex items-center text-sm text-gray-500 hover:text-indigo-600 transition-colors group">
-                            <svg class="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                            </svg>
-                            Back to Guest List
+
+        <!-- Confetti -->
+        <div class="confetti" aria-hidden="true">
+            <div class="cdot" v-for="n in 16" :key="n" :style="{
+                width:(4+(n*3)%8)+'px', height:(4+(n*3)%8)+'px', left:(n*6.25%100)+'%',
+                background:['#C0170F','#F05A00','#F9B233','#1D5C96','#C0170F','#F9B233'][n%6],
+                animationDuration:(9+n*1.1)+'s', animationDelay:(n*.5)+'s',
+                borderRadius:n%3===0?'3px':'50%',
+            }"></div>
+        </div>
+
+        <div class="page-wrap">
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <div class="breadcrumb">
+                        <Link :href="route('events.guests.index', event.id)" class="bc-link">
+                            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                            Guest List
                         </Link>
+                        <span class="bc-sep">›</span>
+                        <span class="bc-cur">Create Invitation</span>
                     </div>
-                    <h1 class="font-bold text-2xl text-gray-900">Create Invitation</h1>
-                    <p class="text-sm text-gray-600 mt-1">{{ event.title }}</p>
+                    <div class="page-eyebrow"><span class="eyebrow-dot"></span>Invitation Composer</div>
+                    <h1 class="page-title">{{ event.title }}</h1>
                 </div>
             </div>
-        </template>
 
-        <div class="py-6">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <!-- Progress Steps -->
-                <div class="mb-8">
-                    <div class="flex items-center justify-center max-w-2xl mx-auto">
-                        <!-- Step 1 -->
-                        <div class="flex items-center">
-                            <div :class="[
-                                'w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm transition-all',
-                                currentStep >= 1 ? 'bg-indigo-600 shadow-md' : 'bg-gray-300'
-                            ]">
-                                <span v-if="currentStep > 1">✓</span>
-                                <span v-else>1</span>
-                            </div>
-                            <span class="ml-1.5 sm:ml-2 text-xs sm:text-sm font-medium"
-                                :class="currentStep >= 1 ? 'text-indigo-600' : 'text-gray-500'">
-                                Recipients
-                            </span>
+            <!-- Stepper -->
+            <div class="stepper">
+                <template v-for="(step, idx) in STEPS" :key="idx">
+                    <div class="step-item">
+                        <div :class="['step-circle', currentStep > idx+1 ? 'done' : currentStep===idx+1 ? 'active' : '']">
+                            <svg v-if="currentStep > idx+1" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+                            <span v-else>{{ idx+1 }}</span>
                         </div>
+                        <span :class="['step-label', currentStep >= idx+1 ? 'step-label-active' : '']">{{ step }}</span>
+                    </div>
+                    <div v-if="idx < STEPS.length-1" :class="['step-line', currentStep > idx+1 ? 'step-line-filled' : '']"></div>
+                </template>
+            </div>
 
-                        <div
-                            :class="['flex-1 h-0.5 sm:h-1 mx-1.5 sm:mx-3 transition-all', currentStep > 1 ? 'bg-indigo-600' : 'bg-gray-300']">
-                        </div>
-
-                        <!-- Step 2 -->
-                        <div class="flex items-center">
-                            <div :class="[
-                                'w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm transition-all',
-                                currentStep >= 2 ? 'bg-indigo-600 shadow-md' : 'bg-gray-300'
-                            ]">
-                                <span v-if="currentStep > 2">✓</span>
-                                <span v-else>2</span>
-                            </div>
-                            <span class="ml-1.5 sm:ml-2 text-xs sm:text-sm font-medium"
-                                :class="currentStep >= 2 ? 'text-indigo-600' : 'text-gray-500'">
-                                Message
-                            </span>
-                        </div>
-
-                        <div
-                            :class="['flex-1 h-0.5 sm:h-1 mx-1.5 sm:mx-3 transition-all', currentStep > 2 ? 'bg-indigo-600' : 'bg-gray-300']">
-                        </div>
-
-                        <!-- Step 3 -->
-                        <div class="flex items-center">
-                            <div :class="[
-                                'w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm transition-all',
-                                currentStep >= 3 ? 'bg-indigo-600 shadow-md' : 'bg-gray-300'
-                            ]">
-                                <span v-if="currentStep > 3">✓</span>
-                                <span v-else>3</span>
-                            </div>
-                            <span class="ml-1.5 sm:ml-2 text-xs sm:text-sm font-medium"
-                                :class="currentStep >= 3 ? 'text-indigo-600' : 'text-gray-500'">
-                                Send
-                            </span>
-                        </div>
+            <!-- ── STEP 1: Select Recipients ── -->
+            <div v-if="currentStep === 1" class="card">
+                <div class="card-head" style="background:linear-gradient(135deg,#C0170F 0%,#F05A00 55%,#F9B233 100%)">
+                    <div>
+                        <div class="ch-title">Select Recipients</div>
+                        <div class="ch-sub">Choose which guests will receive this invitation</div>
+                    </div>
+                    <div v-if="selectedGuests.length" class="sel-badge">
+                        {{ selectedGuests.length }} selected
+                        <button @click="selectedGuests=[]" class="sel-clear">✕</button>
                     </div>
                 </div>
+                <div class="card-body">
 
-                <!-- Step 1: Select Recipients -->
-                <div v-if="currentStep === 1"
-                    class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                    <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 sm:px-6 py-4">
-                        <h2 class="text-lg sm:text-xl font-bold text-white">Select Recipients</h2>
-                        <p class="text-indigo-100 text-xs sm:text-sm mt-1">Choose guests to invite to your event</p>
+                    <!-- Search + filter -->
+                    <div class="search-row">
+                        <div class="search-wrap">
+                            <svg class="search-ico" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                            <input v-model="recipientSearch" type="search" placeholder="Search guests…" class="ep-input search-input">
+                        </div>
+                        <select v-model="recipientFilter" class="ep-select">
+                            <option value="all">All Guests</option>
+                            <option value="vip">VIP Only</option>
+                            <option value="pending">RSVP Pending</option>
+                            <option value="attending">Attending</option>
+                        </select>
                     </div>
 
-                    <div class="p-4 sm:p-6">
-                        <!-- Selected Banner -->
-                        <div v-if="selectedGuests.length > 0"
-                            class="mb-4 p-3 sm:p-4 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path
-                                        d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                                </svg>
-                                <span class="text-sm font-semibold text-gray-900">{{ selectedGuests.length }} Guest{{
-                                    selectedGuests.length !== 1 ? 's' : '' }} Selected</span>
+                    <!-- Selection banner -->
+                    <div v-if="selectedGuests.length" class="sel-banner">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <strong>{{ selectedGuests.length }}</strong> guest{{ selectedGuests.length!==1?'s':'' }} selected
+                        <button @click="selectedGuests=[]" class="sel-banner-clear">Clear All</button>
+                    </div>
+
+                    <!-- Guest grid -->
+                    <div class="guest-grid">
+                        <div v-for="guest in filteredGuests" :key="guest.id"
+                             @click="toggleGuest(guest.id)"
+                             :class="['guest-tile', selectedGuests.includes(guest.id)?'guest-tile-sel':'']">
+                            <div :class="['tile-check', selectedGuests.includes(guest.id)?'tile-check-on':'']">
+                                <svg v-if="selectedGuests.includes(guest.id)" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
                             </div>
-                            <button @click="selectedGuests = []"
-                                class="text-xs font-medium text-red-600 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50 transition-colors">
-                                Clear All
-                            </button>
-                        </div>
-
-                        <!-- Search and Filter (if needed) -->
-                        <div class="mb-4 flex flex-col sm:flex-row gap-3">
-                            <div class="relative flex-1">
-                                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                                <input type="text" placeholder="Search guests..."
-                                    class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                            <div class="tile-avatar" :style="{background:AVATAR_COLORS[guest.category]||'#9E9890'}">
+                                {{ initials(guest) }}
                             </div>
-                            <select
-                                class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
-                                <option value="all">All Guests</option>
-                                <option value="vip">VIP Only</option>
-                                <option value="pending">Pending</option>
-                                <option value="attending">Attending</option>
-                            </select>
-                        </div>
-
-                        <!-- Guest Grid -->
-                        <div
-                            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6 max-h-96 overflow-y-auto p-1">
-                            <div v-for="guest in guests" :key="guest.id" @click="toggleGuest(guest.id)" :class="[
-                                'relative p-3 sm:p-4 rounded-lg border-2 cursor-pointer transition-all duration-200',
-                                selectedGuests.includes(guest.id)
-                                    ? 'border-indigo-500 bg-indigo-50/50 shadow-md'
-                                    : 'border-gray-200 hover:border-indigo-300 hover:shadow-md hover:bg-gray-50/50'
-                            ]">
-                                <div class="flex items-center gap-3">
-                                    <!-- Custom Checkbox -->
-                                    <div :class="[
-                                        'w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all',
-                                        selectedGuests.includes(guest.id)
-                                            ? 'bg-indigo-600 border-indigo-600 ring-2 ring-indigo-200'
-                                            : 'border-gray-300 bg-white'
-                                    ]">
-                                        <svg v-if="selectedGuests.includes(guest.id)" class="w-3 h-3 text-white"
-                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                                d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-
-                                    <!-- Guest Avatar/Initials -->
-                                    <div
-                                        class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold flex-shrink-0">
-                                        {{ getGuestInitials(guest.id) }}
-                                    </div>
-
-                                    <!-- Guest Info -->
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-1 mb-0.5">
-                                            <h3 class="text-sm font-semibold text-gray-900 truncate">
-                                                {{ guest.first_name }} {{ guest.last_name }}
-                                            </h3>
-                                            <span v-if="guest.is_vip"
-                                                class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-200">
-                                                VIP
-                                            </span>
-                                        </div>
-                                        <p class="text-xs text-gray-500 truncate">{{ guest.email }}</p>
-                                    </div>
+                            <div class="tile-info">
+                                <div class="tile-name">
+                                    {{ guest.first_name }} {{ guest.last_name }}
+                                    <span v-if="guest.is_vip" class="vip-badge">VIP</span>
                                 </div>
+                                <div class="tile-email">{{ guest.email||'No email' }}</div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Empty State -->
-                        <div v-if="guests.length === 0"
-                            class="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                            <svg class="w-16 h-16 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                            <h3 class="text-sm font-semibold text-gray-900 mb-1">No Guests Available</h3>
-                            <p class="text-xs text-gray-600 mb-3">Add guests to your event first.</p>
-                            <Link :href="route('events.guests.create', event.id)"
-                                class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 4v16m8-8H4" />
-                                </svg>
-                                Add Guest
-                            </Link>
-                        </div>
+                    <!-- Empty state -->
+                    <div v-if="!filteredGuests.length" class="empty-state">
+                        <div class="empty-icon">👥</div>
+                        <div class="empty-title">No guests found</div>
+                        <Link :href="route('events.guests.create', event.id)" class="btn-sm">Add Guests</Link>
+                    </div>
 
-                        <!-- Action Buttons -->
-                        <div class="flex justify-between items-center pt-4 border-t border-gray-200">
-                            <Link :href="route('events.guests.index', event.id)"
-                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all">
-                                Cancel
-                            </Link>
-                            <button @click="nextStep" :disabled="selectedGuests.length === 0" :class="[
-                                'inline-flex items-center px-5 sm:px-6 py-2.5 text-sm font-bold rounded-lg transition-all duration-200',
-                                selectedGuests.length > 0
-                                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white hover:from-indigo-700 hover:to-indigo-800 shadow-md hover:shadow-lg'
-                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            ]">
-                                Continue
-                                <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 5l7 7-7 7" />
-                                </svg>
-                            </button>
-                        </div>
+                    <div class="step-footer">
+                        <Link :href="route('events.guests.index', event.id)" class="btn-ghost">Cancel</Link>
+                        <button @click="nextStep" :disabled="!selectedGuests.length" class="btn-cta">
+                            Continue
+                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                        </button>
                     </div>
                 </div>
+            </div>
 
+            <!-- ── STEP 2: Design Message ── -->
+            <div v-if="currentStep === 2" class="two-col">
 
-                <!-- Step 2: Design Message (Generic for All Events) -->
-                <div v-if="currentStep === 2" class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                    <!-- Left: Form (3 columns) -->
-                    <div class="lg:col-span-3 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                        <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4">
-                            <h2 class="text-xl font-bold text-white">Design Message</h2>
-                            <p class="text-purple-100 text-sm mt-1">Customize your invitation</p>
+                <!-- Left: form -->
+                <div class="card" style="overflow:visible">
+                    <div class="card-head" style="background:linear-gradient(135deg,#1D5C96 0%,#C0170F 100%)">
+                        <div>
+                            <div class="ch-title">Design Message</div>
+                            <div class="ch-sub">Craft a personalised invitation</div>
+                        </div>
+                    </div>
+                    <div class="card-body" style="max-height:calc(100vh - 240px);overflow-y:auto">
+
+                        <div class="field">
+                            <label class="field-label">Delivery Method <span class="req">*</span></label>
+                            <div class="method-row">
+                                <div v-for="m in METHODS" :key="m.val"
+                                     @click="form.invitation_method=m.val"
+                                     :class="['method-chip', form.invitation_method===m.val?'method-chip-on':'']">
+                                    {{ m.icon }} {{ m.label }}
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="p-6 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
-                            <!-- Compact Delivery Method -->
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-2">
-                                    DELIVERY METHOD <span class="text-red-500">*</span>
-                                </label>
-                                <div class="flex gap-2">
-                                    <button @click="form.invitation_method = 'email'" type="button" :class="[
-                                        'flex-1 px-3 py-2 rounded-lg border-2 transition-all text-xs font-semibold',
-                                        form.invitation_method === 'email'
-                                            ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                                            : 'border-gray-200 hover:border-indigo-300 text-gray-600'
-                                    ]">
-                                        📧 Email
-                                    </button>
+                        <div v-if="form.invitation_method==='email'" class="field">
+                            <label class="field-label">Email Subject <span class="req">*</span></label>
+                            <input v-model="form.subject" type="text" class="ep-input" placeholder="You're Invited!">
+                        </div>
 
-                                    <button @click="form.invitation_method = 'sms'" type="button" :class="[
-                                        'flex-1 px-3 py-2 rounded-lg border-2 transition-all text-xs font-semibold',
-                                        form.invitation_method === 'sms'
-                                            ? 'border-green-500 bg-green-50 text-green-700'
-                                            : 'border-gray-200 hover:border-green-300 text-gray-600'
-                                    ]">
-                                        💬 SMS
-                                    </button>
-
-                                    <button @click="form.invitation_method = 'whatsapp'" type="button" :class="[
-                                        'flex-1 px-3 py-2 rounded-lg border-2 transition-all text-xs font-semibold',
-                                        form.invitation_method === 'whatsapp'
-                                            ? 'border-green-500 bg-green-50 text-green-700'
-                                            : 'border-gray-200 hover:border-green-300 text-gray-600'
-                                    ]">
-                                        📱 WhatsApp
-                                    </button>
-                                </div>
+                        <div class="field">
+                            <label class="field-label">Invitation Message <span class="req">*</span></label>
+                            <textarea v-model="form.message" rows="11" class="ep-input" style="resize:vertical" placeholder="Write your invitation…"></textarea>
+                            <div class="var-strip">
+                                <span class="var-label">Insert:</span>
+                                <button v-for="v in VARS" :key="v" @click="form.message+=v" type="button" class="var-chip">{{ v }}</button>
                             </div>
+                        </div>
 
-                            <!-- Subject (Email Only) -->
-                            <div v-if="form.invitation_method === 'email'">
-                                <label class="block text-xs font-bold text-gray-700 mb-2">
-                                    EMAIL SUBJECT <span class="text-red-500">*</span>
-                                </label>
-                                <input v-model="form.subject" type="text" placeholder="You're Invited!"
-                                    class="w-full px-3 py-2 text-sm rounded-lg border-2 border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all">
-                            </div>
-
-                            <!-- Message (Larger - Main Focus) -->
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-2">
-                                    INVITATION MESSAGE <span class="text-red-500">*</span>
-                                </label>
-                                <textarea v-model="form.message" rows="12" placeholder="Write your invitation message...
-
-                    Example:
-                    Dear [Guest Name],
-
-                    You are cordially invited to [Event Name] on [Event Date].
-
-                    We look forward to celebrating with you!
-
-                    Warm regards"
-                                    class="w-full px-3 py-2 text-sm rounded-lg border-2 border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"></textarea>
-                                <div class="mt-2 flex flex-wrap gap-2 text-xs">
-                                    <span
-                                        class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-medium">
-                                        [Guest Name]
-                                    </span>
-                                    <span
-                                        class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-medium">
-                                        [Event Name]
-                                    </span>
-                                    <span
-                                        class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-medium">
-                                        [Event Date]
-                                    </span>
-                                    <span
-                                        class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-medium">
-                                        [Event Location]
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Image Upload -->
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-2">
-                                    INVITATION CARD IMAGE (Optional)
-                                </label>
-                                <div
-                                    class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-indigo-400 transition-all">
-                                    <input type="file" @change="handleImageUpload" accept="image/*" class="hidden"
-                                        ref="fileInput">
-                                    <div v-if="!imagePreview" @click="$refs.fileInput.click()" class="cursor-pointer">
-                                        <svg class="w-10 h-10 text-gray-400 mx-auto mb-2" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                        <p class="text-xs font-medium text-gray-900 mb-1">Click to upload invitation
-                                            card</p>
-                                        <p class="text-xs text-gray-500">PNG, JPG up to 5MB</p>
-                                    </div>
-                                    <div v-else class="relative inline-block">
-                                        <img :src="imagePreview" class="max-h-40 mx-auto rounded-lg shadow-lg">
-                                        <button @click="removeImage" type="button"
-                                            class="absolute -top-2 -right-2 p-1.5 bg-red-600 text-white rounded-full hover:bg-red-700 shadow-lg transition-all">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
+                        <div class="field">
+                            <label class="field-label">Invitation Card Image <span class="field-opt">(Optional)</span></label>
+                            <div class="dropzone" @click="$refs.fileInput.click()">
+                                <input ref="fileInput" type="file" accept="image/*" class="hidden-input" @change="handleImg">
+                                <template v-if="!imagePreview">
+                                    <div class="dz-icon">🖼️</div>
+                                    <div class="dz-title">Click to upload</div>
+                                    <div class="dz-sub">PNG · JPG · up to 5 MB</div>
+                                </template>
+                                <template v-else>
+                                    <div class="img-wrap">
+                                        <img :src="imagePreview" class="preview-img">
+                                        <button @click.stop="clearImg" class="img-remove">
+                                            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
                                         </button>
                                     </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-footer card-footer">
+                        <button @click="previousStep" class="btn-ghost">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+                            Back
+                        </button>
+                        <button @click="nextStep" class="btn-cta">
+                            Preview &amp; Continue
+                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: live preview -->
+                <div class="preview-panel">
+                    <div class="preview-head">👁 Live Preview</div>
+                    <div class="preview-body">
+                        <div class="inv-card">
+                            <div v-if="imagePreview" class="inv-img-wrap">
+                                <img :src="imagePreview" class="inv-img">
+                            </div>
+                            <div v-else class="inv-placeholder">
+                                <span style="font-size:38px;opacity:.35">🖼️</span>
+                                <div class="inv-placeholder-txt">Upload invitation image</div>
+                            </div>
+                            <div class="inv-content">
+                                <div class="inv-event-name">{{ event.title }}</div>
+                                <div class="inv-meta">
+                                    <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                                    {{ fmtDate(event.event_date) }}
+                                </div>
+                                <div v-if="event.city" class="inv-meta">
+                                    <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                    {{ event.city }}, {{ event.country }}
+                                </div>
+                                <div class="inv-divider"></div>
+                                <div class="inv-message">{{ form.message || 'Your message will appear here…' }}</div>
+                            </div>
+                        </div>
+                        <div class="preview-note">This is how your invitation will appear to guests</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── STEP 3: Review & Send ── -->
+            <div v-if="currentStep === 3" class="two-col two-col-3">
+
+                <!-- Left: summary -->
+                <div class="card">
+                    <div class="card-head" style="background:linear-gradient(135deg,#16a34a 0%,#1D5C96 100%)">
+                        <div>
+                            <div class="ch-title">Review &amp; Send</div>
+                            <div class="ch-sub">Final check before sending</div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+
+                        <div class="summary-stats">
+                            <div class="ss-card" style="--c:#C0170F">
+                                <div class="ss-num">{{ selectedGuests.length }}</div>
+                                <div class="ss-lbl">Recipients</div>
+                            </div>
+                            <div class="ss-card" style="--c:#1D5C96">
+                                <div class="ss-num" style="font-size:15px;text-transform:uppercase;letter-spacing:.06em">{{ form.invitation_method }}</div>
+                                <div class="ss-lbl">Method</div>
+                            </div>
+                            <div class="ss-card" style="--c:#16a34a">
+                                <div class="ss-num">✓</div>
+                                <div class="ss-lbl">Ready</div>
+                            </div>
+                        </div>
+
+                        <div class="review-sec">
+                            <div class="review-sec-head">
+                                <div class="rsec-title">👥 Recipients ({{ selectedGuests.length }})</div>
+                                <button @click="currentStep=1" class="rsec-edit">Edit</button>
+                            </div>
+                            <div class="rec-grid">
+                                <div v-for="gid in selectedGuests" :key="gid" class="rec-row">
+                                    <div class="rec-av" :style="{background:guestColor(gid)}">{{ guestInitials(gid) }}</div>
+                                    <div class="rec-info">
+                                        <div class="rec-name">{{ guestName(gid) }}</div>
+                                        <div class="rec-email">{{ guestEmail(gid) }}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Navigation -->
-                        <div class="flex justify-between items-center px-6 py-4 border-t border-gray-200 bg-gray-50">
-                            <button @click="previousStep"
-                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 rounded-lg hover:bg-white hover:border-gray-400 transition-all">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 19l-7-7 7-7" />
-                                </svg>
+                        <div class="review-sec">
+                            <div class="review-sec-head">
+                                <div class="rsec-title">✉️ Message Details</div>
+                                <button @click="currentStep=2" class="rsec-edit">Edit</button>
+                            </div>
+                            <div class="msg-detail">
+                                <div v-if="form.invitation_method==='email'" class="msg-row">
+                                    <span class="mr-lbl">Subject</span>
+                                    <span class="mr-val">{{ form.subject }}</span>
+                                </div>
+                                <div class="msg-row">
+                                    <span class="mr-lbl">Method</span>
+                                    <span class="mr-val" style="text-transform:capitalize">{{ form.invitation_method }}</span>
+                                </div>
+                                <div class="msg-row" style="align-items:flex-start">
+                                    <span class="mr-lbl" style="margin-top:2px">Message</span>
+                                    <div class="mr-msg">{{ form.message }}</div>
+                                </div>
+                                <div v-if="imagePreview" class="msg-row" style="align-items:flex-start">
+                                    <span class="mr-lbl" style="margin-top:4px">Image</span>
+                                    <img :src="imagePreview" class="mr-img">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-footer" style="border-top:none;padding-top:0">
+                            <button @click="previousStep" class="btn-ghost">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
                                 Back
                             </button>
-                            <button @click="nextStep"
-                                class="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-sm font-bold rounded-lg hover:from-indigo-700 hover:to-indigo-800 transition-all shadow-md hover:shadow-lg">
-                                Preview & Continue
-                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 5l7 7-7 7" />
-                                </svg>
+                            <button @click="sendInvitations" :disabled="sending" class="btn-send">
+                                <svg v-if="sending" class="spin-ico" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                                <svg v-else width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                                {{ sending ? 'Sending…' : `Send to ${selectedGuests.length} Guest${selectedGuests.length!==1?'s':''}` }}
                             </button>
                         </div>
                     </div>
-
-                    <!-- Right: Simple Preview (2 columns) -->
-                    <div
-                        class="lg:col-span-2 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden sticky top-6">
-                        <div class="bg-gradient-to-r from-pink-600 to-purple-600 px-6 py-4">
-                            <h2 class="text-xl font-bold text-white">Live Preview</h2>
-                            <p class="text-pink-100 text-sm mt-1">How your invitation will look</p>
-                        </div>
-
-                        <div
-                            class="p-6 bg-gradient-to-br from-gray-50 to-gray-100 max-h-[calc(100vh-200px)] overflow-y-auto">
-                            <!-- Simple Invitation Card Preview -->
-                            <div
-                                class="bg-white rounded-xl shadow-2xl overflow-hidden border-2 border-gray-200 max-w-md mx-auto flex flex-col">
-
-                                <!-- Image Section - Takes 70% of the height -->
-                                <div v-if="imagePreview" class="relative" style="flex: 7;">
-                                    <img :src="imagePreview" class="w-full h-full object-cover">
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-
-                                    <!-- QR Code positioned at bottom right of image -->
-                                    <div v-if="qrCodeUrl" class="absolute bottom-4 right-4 z-10">
-                                        <div class="bg-white p-1">
-                                            <img v-if="qrCodeBase64.startsWith('data:image')" :src="qrCodeBase64"
-                                                alt="Event QR Code" class="w-20 h-20 object-cover" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div v-else
-                                    class="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center"
-                                    style="flex: 7; min-height: 350px;">
-                                    <div class="text-center text-white px-6">
-                                        <svg class="w-20 h-20 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                        <p class="text-sm font-medium opacity-90">Upload your invitation card image</p>
-                                        <p class="text-xs opacity-75 mt-1">Image will appear here</p>
-                                    </div>
-
-                                    <!-- QR Code in placeholder (for preview) -->
-                                    <div v-if="qrCodeUrl" class="absolute bottom-4 right-4 z-10">
-                                        <div class="bg-white p-2">
-                                            <img v-if="qrCodeBase64.startsWith('data:image')" :src="qrCodeBase64"
-                                                alt="Event QR Code" class="w-20 h-20 object-cover" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Message Section (Bottom) - Takes 30% of the height -->
-                                <div class="bg-white overflow-y-auto" style="flex: 3;">
-                                    <div class="p-6">
-                                        <div class="text-center mb-4">
-                                            <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ event.title }}</h3>
-                                            <div class="flex items-center justify-center gap-2 text-sm text-gray-600">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
-                                                <span>{{ formatEventDate(event.event_date) }}</span>
-                                            </div>
-                                            <div v-if="event.city"
-                                                class="flex items-center justify-center gap-2 text-sm text-gray-500 mt-1">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                </svg>
-                                                <span>{{ event.city }}, {{ event.country }}</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Divider -->
-                                        <div class="border-t-1 border-gray-100 my-2"></div>
-
-                                        <!-- Message Content -->
-                                        <div class="prose prose-sm max-w-none">
-                                            <div class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                                                {{ form.message || 'Your invitation message will appearhere...\n\nWritea personalized message to your guests using the form on the left.' }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Preview Helper Text -->
-                            <p class="text-xs text-center text-gray-500 mt-4 italic">
-                                This is how your invitation will appear to guests
-                            </p>
-                        </div>
-                    </div>
                 </div>
 
-                <div v-if="currentStep === 3" class="max-w-6xl mx-auto">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Left: Summary and Actions (2 columns) -->
-                        <div class="lg:col-span-2 space-y-6">
-                            <!-- Header Card -->
-                            <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                                <div class="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
-                                    <h2 class="text-xl font-bold text-white">Review & Send</h2>
-                                    <p class="text-green-100 text-sm mt-1">Final check before sending</p>
+                <!-- Right: final preview -->
+                <div class="preview-panel">
+                    <div class="preview-head">📨 Final Preview</div>
+                    <div class="preview-body">
+                        <div class="inv-card">
+                            <div v-if="imagePreview" class="inv-img-wrap"><img :src="imagePreview" class="inv-img"></div>
+                            <div v-else class="inv-placeholder" style="height:220px">
+                                <span style="font-size:28px;opacity:.35">🖼️</span>
+                            </div>
+                            <div class="inv-content">
+                                <div class="inv-event-name">{{ event.title }}</div>
+                                <div class="inv-meta">
+                                    <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                                    {{ fmtDate(event.event_date) }}
                                 </div>
-
-                                <div class="p-6">
-                                    <!-- Summary Stats -->
-                                    <div class="grid grid-cols-3 gap-4 mb-6">
-                                        <div
-                                            class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-4 border-2 border-indigo-200 text-center">
-                                            <div
-                                                class="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-2">
-                                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path
-                                                        d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                                                </svg>
-                                            </div>
-                                            <div class="text-3xl font-black text-indigo-600">{{ selectedGuests.length }}
-                                            </div>
-                                            <div class="text-xs font-medium text-gray-600 mt-1">Recipients</div>
-                                        </div>
-
-                                        <div
-                                            class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border-2 border-purple-200 text-center">
-                                            <div
-                                                class="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-2">
-                                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                </svg>
-                                            </div>
-                                            <div class="text-2xl font-black text-purple-600 uppercase">{{
-                                                form.invitation_method
-                                            }}</div>
-                                            <div class="text-xs font-medium text-gray-600 mt-1">Method</div>
-                                        </div>
-
-                                        <div
-                                            class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border-2 border-green-200 text-center">
-                                            <div
-                                                class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-2">
-                                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                            </div>
-                                            <div class="text-2xl font-black text-green-600">Ready</div>
-                                            <div class="text-xs font-medium text-gray-600 mt-1">Status</div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Recipients Section -->
-                                    <div class="mb-6">
-                                        <div class="flex items-center justify-between mb-3">
-                                            <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
-                                                <svg class="w-4 h-4 text-indigo-600" fill="currentColor"
-                                                    viewBox="0 0 20 20">
-                                                    <path
-                                                        d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                                                </svg>
-                                                Recipients ({{ selectedGuests.length }})
-                                            </h3>
-                                            <button @click="currentStep = 1"
-                                                class="text-xs font-medium text-indigo-600 hover:text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-all flex items-center gap-1">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                                Edit
-                                            </button>
-                                        </div>
-                                        <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                                                <div v-for="guestId in selectedGuests" :key="guestId"
-                                                    class="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                                                    <div
-                                                        class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                                                        {{ getGuestInitials(guestId) }}
-                                                    </div>
-                                                    <div class="flex-1 min-w-0">
-                                                        <p class="text-sm font-semibold text-gray-900 truncate">{{
-                                                            getGuestName(guestId) }}</p>
-                                                        <p class="text-xs text-gray-500 truncate">{{
-                                                            getGuestEmail(guestId) }}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Message Details -->
-                                    <div class="mb-6">
-                                        <div class="flex items-center justify-between mb-3">
-                                            <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
-                                                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                                                </svg>
-                                                Message Details
-                                            </h3>
-                                            <button @click="currentStep = 2"
-                                                class="text-xs font-medium text-indigo-600 hover:text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-all flex items-center gap-1">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                                Edit
-                                            </button>
-                                        </div>
-                                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-3">
-                                            <div v-if="form.invitation_method === 'email'">
-                                                <div class="flex items-start gap-2 mb-2">
-                                                    <svg class="w-4 h-4 text-gray-500 mt-0.5" fill="none"
-                                                        stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                                                    </svg>
-                                                    <div class="flex-1">
-                                                        <p class="text-xs font-medium text-gray-500 mb-1">Subject:</p>
-                                                        <p class="text-sm font-semibold text-gray-900">{{ form.subject
-                                                        }}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-start gap-2">
-                                                <svg class="w-4 h-4 text-gray-500 mt-0.5" fill="none"
-                                                    stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                                <div class="flex-1">
-                                                    <p class="text-xs font-medium text-gray-500 mb-2">Message:</p>
-                                                    <div
-                                                        class="text-sm text-gray-700 bg-white p-3 rounded-lg border border-gray-200 max-h-32 overflow-y-auto whitespace-pre-wrap">
-                                                        {{ form.message }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div v-if="imagePreview"
-                                                class="flex items-start gap-2 pt-3 border-t border-gray-200">
-                                                <svg class="w-4 h-4 text-gray-500 mt-0.5" fill="none"
-                                                    stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
-                                                <div class="flex-1">
-                                                    <p class="text-xs font-medium text-gray-500 mb-2">Attached Image:
-                                                    </p>
-                                                    <img :src="imagePreview"
-                                                        class="h-20 rounded-lg shadow-md border border-gray-200">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Action Buttons -->
-                                    <div
-                                        class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-6 border-t-2 border-gray-200">
-                                        <button @click="previousStep"
-                                            class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 border-2 border-gray-300 text-sm font-semibold text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M15 19l-7-7 7-7" />
-                                            </svg>
-                                            Back to Edit
-                                        </button>
-                                        <button @click="sendEmailInvitations" :disabled="sending" :class="[
-                                            'w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 text-sm font-bold rounded-lg transition-all duration-200 shadow-xl',
-                                            sending
-                                                ? 'bg-gray-400 cursor-not-allowed'
-                                                : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 shadow-green-500/40 hover:shadow-2xl hover:scale-105'
-                                        ]">
-                                            <svg v-if="sending" class="animate-spin w-5 h-5 mr-2" fill="none"
-                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                            </svg>
-                                            <svg v-else class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                            </svg>
-                                            {{ sending ? 'Sending Invitations...' : 'Send Invitations Now' }}
-                                        </button>
-                                    </div>
-                                </div>
+                                <div class="inv-divider"></div>
+                                <div class="inv-message" style="max-height:100px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 60%,transparent)">{{ form.message }}</div>
                             </div>
                         </div>
-
-                        <!-- Right: Visual Preview Card (1 column) -->
-                        <div class="lg:col-span-1">
-                            <div
-                                class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden sticky top-6">
-                                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
-                                    <h2 class="text-lg font-bold text-white">Final Preview</h2>
-                                    <p class="text-indigo-100 text-xs mt-1">How guests will see it</p>
-                                </div>
-
-                                <div class="p-4 bg-gradient-to-br from-gray-50 to-gray-100">
-                                    <!-- Invitation Card Preview -->
-                                    <div
-                                        class="bg-white rounded-lg shadow-2xl overflow-hidden border-2 border-gray-200">
-
-                                        <!-- Image Section -->
-                                        <div v-if="imagePreview" class="relative">
-                                            <img :src="imagePreview" class="w-full h-48 object-cover">
-                                            <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent">
-                                            </div>
-                                        </div>
-                                        <div v-else
-                                            class="h-48 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
-                                            <div class="text-center text-white px-4">
-                                                <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none"
-                                                    stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
-                                                <p class="text-xs opacity-90">No image</p>
-                                            </div>
-                                        </div>
-
-                                        <!-- Content Section -->
-                                        <div class="p-5">
-                                            <!-- Event Header -->
-                                            <div class="text-center mb-4">
-                                                <h3 class="text-lg font-bold text-gray-900 mb-1">{{ event.title }}</h3>
-                                                <div
-                                                    class="flex items-center justify-center gap-1.5 text-xs text-gray-600">
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                    </svg>
-                                                    <span>{{ formatEventDate(event.event_date) }}</span>
-                                                </div>
-                                                <div v-if="event.city"
-                                                    class="flex items-center justify-center gap-1.5 text-xs text-gray-500 mt-1">
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    </svg>
-                                                    <span>{{ event.city }}, {{ event.country }}</span>
-                                                </div>
-                                            </div>
-
-                                            <!-- Divider -->
-                                            <div class="border-t-2 border-gray-100 my-3"></div>
-
-                                            <!-- Message Preview -->
-                                            <div class="text-xs text-gray-700 leading-relaxed line-clamp-6 mb-4">
-                                                {{ form.message }}
-                                            </div>
-
-                                        </div>
-                                    </div>
-
-                                    <!-- Helper Text -->
-                                    <p class="text-xs text-center text-gray-500 mt-3 italic">
-                                        ✓ Ready to send to {{ selectedGuests.length }} guest{{ selectedGuests.length !==
-                                            1 ? 's'
-                                            : '' }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                        <div class="preview-note">✓ Ready to send to {{ selectedGuests.length }} guest{{ selectedGuests.length!==1?'s':'' }}</div>
                     </div>
                 </div>
-
             </div>
+
         </div>
     </AuthenticatedLayout>
 </template>
@@ -769,17 +338,30 @@ const props = defineProps({
     event: Object,
     guests: Array,
     preselectedGuests: Array,
-    qrCodeBase64: String
+    qrCodeBase64: String,
 })
 
-const currentStep = ref(1)
-const selectedGuests = ref(props.preselectedGuests || [])
-const sending = ref(false)
-const imagePreview = ref(null)
-const fileInput = ref(null)
+const STEPS   = ['Recipients', 'Message', 'Send']
+const METHODS = [
+    { val:'email',    icon:'📧', label:'Email'    },
+    { val:'sms',      icon:'💬', label:'SMS'      },
+    { val:'whatsapp', icon:'📱', label:'WhatsApp' },
+]
+const VARS = ['[Guest Name]','[Event Name]','[Event Date]','[Event Location]']
+const AVATAR_COLORS = {
+    vip:'#b45309', family:'#7c3aed', friends:'#1D5C96',
+    colleagues:'#16a34a', business:'#1D5C96', media:'#db2777',
+    sponsors:'#C0170F', other:'#9E9890',
+}
 
+const currentStep     = ref(1)
+const selectedGuests  = ref([...(props.preselectedGuests||[])])
+const sending         = ref(false)
+const imagePreview    = ref(null)
+const fileInput       = ref(null)
+const recipientSearch = ref('')
+const recipientFilter = ref('all')
 
-// Updated form ref - Remove wedding-specific fields
 const form = ref({
     invitation_method: 'email',
     subject: `You're Invited to ${props.event.title}!`,
@@ -787,141 +369,229 @@ const form = ref({
 
 You are cordially invited to join us for ${props.event.title}.
 
-Event Details:
-📅 Date: ${formatEventDate(props.event.event_date)}
-📍 Location: ${props.event.city ? `${props.event.city}, ${props.event.country}` : 'To be announced'}
+📅 Date: ${fmtDate(props.event.event_date)}
+${props.event.city ? `📍 Location: ${props.event.city}, ${props.event.country}` : ''}
 
 We look forward to celebrating with you!
 
 Warm regards,
 ${props.event.title} Team`,
-    image: null
+    image: null,
 })
 
-
-
-// Add QR Code computed property
-const qrCodeUrl = computed(() => {
-    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data`
+const filteredGuests = computed(() => {
+    let list = props.guests || []
+    if (recipientFilter.value === 'vip')       list = list.filter(g => g.is_vip)
+    if (recipientFilter.value === 'pending')   list = list.filter(g => g.rsvp_status === 'pending')
+    if (recipientFilter.value === 'attending') list = list.filter(g => g.rsvp_status === 'attending')
+    const q = recipientSearch.value.trim().toLowerCase()
+    if (q) list = list.filter(g => `${g.first_name} ${g.last_name} ${g.email||''}`.toLowerCase().includes(q))
+    return list
 })
 
+const toggleGuest  = id => { const i=selectedGuests.value.indexOf(id); i>-1 ? selectedGuests.value.splice(i,1) : selectedGuests.value.push(id) }
+const nextStep     = () => { if (currentStep.value < 3) currentStep.value++ }
+const previousStep = () => { if (currentStep.value > 1) currentStep.value-- }
 
-const toggleGuest = (guestId) => {
-    const index = selectedGuests.value.indexOf(guestId)
-    if (index > -1) {
-        selectedGuests.value.splice(index, 1)
-    } else {
-        selectedGuests.value.push(guestId)
-    }
+const handleImg = e => {
+    const file = e.target.files[0]
+    if (!file || !file.type.startsWith('image/')) return
+    const r = new FileReader()
+    r.onload = ev => { imagePreview.value = ev.target.result; form.value.image = file }
+    r.readAsDataURL(file)
+}
+const clearImg = () => { imagePreview.value = null; form.value.image = null; if (fileInput.value) fileInput.value.value = '' }
+
+const initials      = g => `${g.first_name?.[0]||''}${g.last_name?.[0]||''}`.toUpperCase()
+const findGuest     = id => (props.guests||[]).find(g => g.id === id)
+const guestName     = id => { const g=findGuest(id); return g ? `${g.first_name} ${g.last_name}` : 'Unknown' }
+const guestEmail    = id => findGuest(id)?.email || 'No email'
+const guestColor    = id => AVATAR_COLORS[findGuest(id)?.category] || '#9E9890'
+const guestInitials = id => { const g=findGuest(id); return g ? initials(g) : '?' }
+
+function fmtDate(d) {
+    if (!d) return 'Date TBA'
+    return new Date(d).toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
 }
 
-const nextStep = () => {
-    if (currentStep.value < 3) {
-        currentStep.value++
-    }
-}
-
-const previousStep = () => {
-    if (currentStep.value > 1) {
-        currentStep.value--
-    }
-}
-
-const handleImageUpload = (event) => {
-    const file = event.target.files[0]
-    if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader()
-        reader.onload = (e) => {
-            imagePreview.value = e.target.result
-            form.value.image = file
-        }
-        reader.readAsDataURL(file)
-    }
-}
-
-const removeImage = () => {
-    imagePreview.value = null
-    form.value.image = null
-    if (fileInput.value) {
-        fileInput.value.value = ''
-    }
-}
-
-const getGuestInitials = (guestId) => {
-    const guest = props.guests.find(g => g.id === guestId)
-    if (!guest) return '?'
-    return `${guest.first_name?.[0] || ''}${guest.last_name?.[0] || ''}`.toUpperCase()
-}
-
-const getGuestName = (guestId) => {
-    const guest = props.guests.find(g => g.id === guestId)
-    if (!guest) return 'Unknown'
-    return `${guest.first_name} ${guest.last_name}`
-}
-
-const getGuestEmail = (guestId) => {
-    const guest = props.guests.find(g => g.id === guestId)
-    return guest?.email || 'No email'
-}
-
-function formatEventDate(date) {
-    if (!date) return 'Date TBA'
-    return new Date(date).toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    })
-}
-
-const sendEmailInvitations = () => {
+const sendInvitations = () => {
     sending.value = true
+    const fd = new FormData()
+    selectedGuests.value.forEach(id => fd.append('guest_ids[]', id))
+    fd.append('invitation_method', form.value.invitation_method)
+    fd.append('subject', form.value.subject)
+    fd.append('custom_message', form.value.message)
+    if (form.value.image) fd.append('invitation_image', form.value.image)
 
-    const formData = new FormData()
-    // formData.append('guest_ids', JSON.stringify(selectedGuests.value))
-
-    selectedGuests.value.forEach(id => {
-        formData.append('guest_ids[]', id)
-    })
-    formData.append('invitation_method', form.value.invitation_method)
-    formData.append('subject', form.value.subject)
-    formData.append('custom_message', form.value.message)
-    if (form.value.image) {
-        formData.append('invitation_image', form.value.image)
-    }
-
-    router.post(route('events.guests.bulk-invites', props.event.id), formData, {
-        onSuccess: (response) => {
+    router.post(route('events.guests.bulk-invites', props.event.id), fd, {
+        onSuccess: res => {
             sending.value = false
-            const flashData = response.props?.flash?.data || {}
-
+            const d = res.props?.flash?.data || {}
             Swal.fire({
-                title: 'Success!',
-                html: `
-                    <div class="text-left">
-                        <p class="mb-3">Invitations sent successfully!</p>
-                        <div class="space-y-2 text-sm">
-                            ${flashData.invited_now > 0 ? `<p>✅ <strong>${flashData.invited_now}</strong> sent</p>` : ''}
-                            ${flashData.skipped > 0 ? `<p>⚠️ <strong>${flashData.skipped}</strong> already invited</p>` : ''}
-                        </div>
-                    </div>
-                `,
+                title: 'Invitations Sent! 🎉',
+                html: `<div style="text-align:left;font-family:'DM Sans',sans-serif">
+                    ${d.invited_now>0 ? `<p style="margin-bottom:6px">✅ <strong>${d.invited_now}</strong> invitation${d.invited_now!==1?'s':''} sent</p>` : ''}
+                    ${d.skipped>0    ? `<p>⚠️ <strong>${d.skipped}</strong> already invited (skipped)</p>` : ''}
+                </div>`,
                 icon: 'success',
-                confirmButtonColor: '#4F46E5',
-            }).then(() => {
-                router.visit(route('events.guests.index', props.event.id))
-            })
+                confirmButtonColor: '#C0170F',
+                confirmButtonText: 'View Guest List',
+            }).then(() => router.visit(route('events.guests.index', props.event.id)))
         },
         onError: () => {
             sending.value = false
-            Swal.fire({
-                title: 'Error!',
-                text: 'Failed to send invitations. Please try again.',
-                icon: 'error',
-                confirmButtonColor: '#4F46E5',
-            })
-        }
+            Swal.fire({ title:'Error', text:'Failed to send invitations.', icon:'error', confirmButtonColor:'#C0170F' })
+        },
     })
 }
-
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.cdot{position:absolute;opacity:0;animation:rise linear infinite}
+@keyframes rise{0%{transform:translateY(110vh) rotate(0deg);opacity:0}5%{opacity:.32}95%{opacity:.12}100%{transform:translateY(-80px) rotate(540deg);opacity:0}}
+
+.page-wrap{position:relative;z-index:1;background:#F7F5F2;min-height:100vh;padding:28px 24px 72px;font-family:'DM Sans',sans-serif;color:#1A1410}
+
+.page-header{margin-bottom:22px}
+.breadcrumb{display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;font-size:11px;margin-bottom:8px}
+.bc-link{display:inline-flex;align-items:center;gap:4px;color:#9E9890;text-decoration:none;transition:color .15s}
+.bc-link:hover{color:#C0170F}
+.bc-sep{color:#C8C2BA}.bc-cur{color:#6B6560;font-weight:500}
+.page-eyebrow{display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;color:#9E9890;text-transform:uppercase;margin-bottom:5px}
+.eyebrow-dot{width:6px;height:6px;border-radius:50%;background:#C0170F;animation:blink .9s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.page-title{font-family:'Playfair Display',serif;font-size:clamp(20px,3vw,27px);font-weight:900;color:#1A1410;line-height:1.15}
+
+.stepper{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:24px;max-width:520px}
+.step-item{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.step-circle{width:34px;height:34px;border-radius:50%;border:2px solid #E8E2DA;background:#fff;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:#9E9890;transition:all .25s;flex-shrink:0}
+.step-circle.active{border-color:#C0170F;background:#C0170F;color:#fff;box-shadow:0 0 0 4px rgba(192,23,15,.14)}
+.step-circle.done{border-color:#16a34a;background:#16a34a;color:#fff}
+.step-label{font-family:'DM Mono',monospace;font-size:11px;color:#9E9890;white-space:nowrap;transition:color .25s}
+.step-label-active{color:#1A1410;font-weight:700}
+.step-line{flex:1 1 40px;height:2px;background:#E8E2DA;margin:0 10px;transition:background .35s}
+.step-line-filled{background:linear-gradient(90deg,#16a34a,#C0170F)}
+
+.card{background:#fff;border:1px solid #E8E2DA;border-radius:22px;box-shadow:0 2px 18px rgba(0,0,0,.06);overflow:hidden;margin-bottom:0}
+.card-head{padding:18px 24px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ch-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:900}
+.ch-sub{font-size:12px;opacity:.85;font-family:'DM Mono',monospace;margin-top:2px}
+.card-body{padding:20px 24px;display:flex;flex-direction:column;gap:18px}
+.card-footer{padding:14px 24px 20px;border-top:1px solid #F0EDE8;background:#FAFAF8}
+
+.sel-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;font-family:'DM Mono',monospace;flex-shrink:0}
+.sel-clear{background:rgba(255,255,255,.3);border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:10px;color:#fff;display:flex;align-items:center;justify-content:center;line-height:1}
+
+.search-row{display:flex;gap:10px;flex-wrap:wrap}
+.search-wrap{position:relative;flex:1;min-width:160px}
+.search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#9E9890;pointer-events:none}
+.search-input{padding-left:34px !important}
+.ep-input{width:100%;padding:9px 13px;border:1.5px solid #E8E2DA;border-radius:11px;font-size:13px;font-family:'DM Sans',sans-serif;color:#1A1410;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;box-sizing:border-box}
+.ep-input:focus{border-color:#C0170F;box-shadow:0 0 0 3px rgba(192,23,15,.09)}
+.ep-select{padding:9px 13px;border:1.5px solid #E8E2DA;border-radius:11px;font-size:12px;font-family:'DM Sans',sans-serif;color:#1A1410;background:#fff;outline:none;cursor:pointer;transition:border-color .15s}
+.ep-select:focus{border-color:#C0170F}
+
+.sel-banner{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(192,23,15,.06);border:1.5px solid rgba(192,23,15,.18);border-radius:11px;font-size:13px;color:#1A1410}
+.sel-banner-clear{margin-left:auto;font-size:11px;font-weight:700;color:#C0170F;background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace}
+.sel-banner-clear:hover{text-decoration:underline}
+
+.guest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(218px,1fr));gap:10px;max-height:360px;overflow-y:auto;padding:2px}
+.guest-tile{display:flex;align-items:center;gap:10px;padding:10px 13px;border:2px solid #E8E2DA;border-radius:13px;cursor:pointer;transition:all .17s;background:#fff;user-select:none}
+.guest-tile:hover{border-color:#F05A00;background:#FAFAF8;transform:translateY(-1px)}
+.guest-tile-sel{border-color:#C0170F;background:rgba(192,23,15,.04);box-shadow:0 0 0 3px rgba(192,23,15,.1)}
+.tile-check{width:18px;height:18px;border-radius:5px;border:2px solid #E8E2DA;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;background:#fff}
+.tile-check-on{background:#C0170F;border-color:#C0170F;color:#fff}
+.tile-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'DM Mono',monospace;font-size:12px;font-weight:700;flex-shrink:0}
+.tile-info{flex:1;min-width:0}
+.tile-name{font-size:13px;font-weight:700;color:#1A1410;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.tile-email{font-size:11px;color:#9E9890;font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vip-badge{display:inline-flex;padding:1px 6px;background:rgba(249,178,51,.18);color:#b45309;border-radius:20px;font-size:10px;font-weight:700;border:1px solid rgba(249,178,51,.4)}
+
+.empty-state{text-align:center;padding:40px 20px;background:#F7F5F2;border-radius:16px;border:2px dashed #E8E2DA}
+.empty-icon{font-size:40px;margin-bottom:10px;opacity:.35}
+.empty-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#1A1410;margin-bottom:10px}
+
+.field{display:flex;flex-direction:column;gap:6px}
+.field-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#6B6560;font-weight:500}
+.field-opt{text-transform:none;letter-spacing:0;font-size:10px;color:#9E9890;font-style:italic}
+.req{color:#C0170F}
+
+.method-row{display:flex;gap:8px}
+.method-chip{flex:1;padding:9px 10px;border:2px solid #E8E2DA;border-radius:11px;cursor:pointer;font-size:12px;font-weight:700;font-family:'DM Mono',monospace;color:#6B6560;background:#fff;transition:all .18s;text-align:center;user-select:none}
+.method-chip:hover{border-color:#9E9890}
+.method-chip-on{border-color:#C0170F;background:rgba(192,23,15,.06);color:#C0170F}
+
+.var-strip{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:5px}
+.var-label{font-family:'DM Mono',monospace;font-size:10px;color:#9E9890;white-space:nowrap}
+.var-chip{display:inline-flex;padding:3px 9px;background:#F0EDE8;border:1px solid #E8E2DA;border-radius:7px;font-size:11px;font-family:'DM Mono',monospace;color:#6B6560;cursor:pointer;transition:all .15s}
+.var-chip:hover{background:rgba(192,23,15,.08);border-color:rgba(192,23,15,.25);color:#C0170F}
+
+.dropzone{border:2px dashed #E8E2DA;border-radius:14px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;background:#F7F5F2}
+.dropzone:hover{border-color:#C0170F;background:rgba(192,23,15,.03)}
+.dz-icon{font-size:30px;margin-bottom:8px;opacity:.45}
+.dz-title{font-size:13px;font-weight:600;color:#1A1410;margin-bottom:3px}
+.dz-sub{font-size:11px;color:#9E9890;font-family:'DM Mono',monospace}
+.hidden-input{display:none}
+.img-wrap{position:relative;display:inline-block}
+.preview-img{max-height:120px;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.1)}
+.img-remove{position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:#C0170F;border:2px solid #fff;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+
+.two-col{display:grid;grid-template-columns:3fr 2fr;gap:18px;align-items:start}
+.two-col-3{grid-template-columns:2fr 1fr}
+@media(max-width:1024px){.two-col,.two-col-3{grid-template-columns:1fr}}
+
+.preview-panel{background:#fff;border:1px solid #E8E2DA;border-radius:22px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.06);position:sticky;top:80px}
+.preview-head{padding:10px 16px;background:#F0EDE8;font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:#6B6560;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid #E8E2DA}
+.preview-body{padding:10px;background:#F7F5F2}
+.inv-card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1);border:1px solid #E8E2DA}
+.inv-img-wrap{background:#0a0504}
+.inv-img{width:100%;max-height:600px;object-fit:contain;display:block}
+.inv-placeholder{background:linear-gradient(135deg,#C0170F 0%,#F05A00 50%,#F9B233 100%);height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.inv-placeholder-txt{font-size:12px;color:rgba(255,255,255,.75);font-family:'DM Mono',monospace}
+.inv-content{padding:8px 12px 12px}
+.inv-event-name{font-family:'Playfair Display',serif;font-size:14px;font-weight:900;color:#1A1410;margin-bottom:4px;text-align:center}
+.inv-meta{display:flex;align-items:center;justify-content:center;gap:5px;font-size:10px;color:#6B6560;font-family:'DM Mono',monospace;margin-bottom:3px}
+.inv-divider{height:1px;background:#F0EDE8;margin:8px 0}
+.inv-message{font-size:11px;color:#6B6560;line-height:1.6;white-space:pre-wrap;max-height:80px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 50%,transparent)}
+.preview-note{text-align:center;font-size:10px;color:#9E9890;font-family:'DM Mono',monospace;margin-top:8px;font-style:italic}
+
+.summary-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.ss-card{background:#fff;border:2px solid #E8E2DA;border-top:4px solid var(--c);border-radius:14px;padding:14px;text-align:center}
+.ss-num{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--c);line-height:1}
+.ss-lbl{font-family:'DM Mono',monospace;font-size:10px;color:#9E9890;text-transform:uppercase;letter-spacing:.12em;margin-top:4px}
+
+.review-sec{background:#F7F5F2;border:1px solid #E8E2DA;border-radius:14px;overflow:hidden}
+.review-sec-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #E8E2DA;background:#F0EDE8}
+.rsec-title{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:#1A1410;letter-spacing:.1em;text-transform:uppercase}
+.rsec-edit{font-size:11px;font-weight:700;font-family:'DM Mono',monospace;color:#C0170F;background:none;border:none;cursor:pointer}
+.rsec-edit:hover{text-decoration:underline}
+.rec-grid{padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:200px;overflow-y:auto}
+@media(max-width:640px){.rec-grid{grid-template-columns:1fr}}
+.rec-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:#fff;border-radius:10px;border:1px solid #E8E2DA}
+.rec-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'DM Mono',monospace;font-size:11px;font-weight:700;flex-shrink:0}
+.rec-name{font-size:12px;font-weight:700;color:#1A1410}
+.rec-email{font-size:11px;color:#9E9890;font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.msg-detail{padding:14px;display:flex;flex-direction:column;gap:10px}
+.msg-row{display:flex;gap:10px;align-items:baseline}
+.mr-lbl{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;color:#9E9890;font-weight:700;white-space:nowrap;letter-spacing:.1em;flex-shrink:0}
+.mr-val{font-size:13px;font-weight:600;color:#1A1410}
+.mr-msg{font-size:12px;color:#6B6560;line-height:1.7;white-space:pre-wrap;max-height:120px;overflow-y:auto;background:#fff;border:1px solid #E8E2DA;border-radius:8px;padding:8px 10px;flex:1}
+.mr-img{max-height:80px;border-radius:8px;border:1px solid #E8E2DA}
+
+.step-footer{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid #F0EDE8}
+.btn-cta{display:inline-flex;align-items:center;gap:7px;padding:10px 22px;border-radius:11px;border:none;cursor:pointer;background-image:linear-gradient(135deg,#C0170F 0%,#F05A00 50%,#F9B233 100%);background-size:200% auto;color:#fff;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;text-decoration:none;box-shadow:0 4px 14px rgba(192,23,15,.28);animation:shine 3s linear infinite;transition:transform .2s,box-shadow .2s}
+@keyframes shine{0%{background-position:0% center}100%{background-position:200% center}}
+.btn-cta:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(192,23,15,.38)}
+.btn-cta:disabled{opacity:.5;cursor:not-allowed;transform:none;animation:none}
+.btn-sm{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;border:none;cursor:pointer;background:#C0170F;color:#fff;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif;text-decoration:none}
+.btn-ghost{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:11px;border:1.5px solid #E8E2DA;background:#fff;color:#6B6560;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;text-decoration:none;cursor:pointer;transition:all .18s}
+.btn-ghost:hover{border-color:#9E9890;color:#1A1410}
+.btn-send{display:inline-flex;align-items:center;gap:8px;padding:12px 26px;border-radius:13px;border:none;cursor:pointer;background:linear-gradient(135deg,#16a34a,#1D5C96);color:#fff;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;box-shadow:0 4px 16px rgba(22,163,74,.3);transition:all .2s}
+.btn-send:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(22,163,74,.4)}
+.btn-send:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.spin-ico{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>

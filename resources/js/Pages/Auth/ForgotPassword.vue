@@ -1,185 +1,185 @@
-<template>
-    <Head title="Forgot Password" />
+<script setup>
+import { Head, Link, useForm } from '@inertiajs/vue3';
 
-    <div class="flex min-h-screen bg-white">
-        <!-- Left side - Illustration (same as login page) -->
-        <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50">
-            <!-- EVENTS Logo -->
-            <div class="absolute top-8 left-8 z-10">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+defineProps({ status: String });
+
+const form = useForm({ email: '' });
+const submit = () => form.post(route('password.email'));
+</script>
+
+<template>
+    <Head title="Forgot Password — Event Portal" />
+
+    <div class="ep-root">
+
+        <!-- Left panel -->
+        <div class="ep-left">
+            <div class="ep-blob1"></div>
+            <div class="ep-blob2"></div>
+            <div class="ep-accent-bar"></div>
+            <div class="ep-left-body">
+                <div class="ep-logo">
+                    <div class="ep-logo-icon">
+                        <svg width="26" height="26" viewBox="0 0 80 80" fill="none">
+                            <path d="M22 12 L22 68 L34 74 L34 6 Z" fill="white" opacity="0.95"/>
+                            <circle cx="48" cy="34" r="18" fill="white"/>
+                            <path d="M22 56 L14 61 L14 71 L22 68 Z" fill="white" opacity="0.7"/>
                         </svg>
                     </div>
-                    <h1 class="text-2xl font-bold text-gray-800">EVENTS</h1>
+                    <div>
+                        <div class="ep-logo-name">Event Portal</div>
+                        <div class="ep-logo-tag">Invite · Inform · Remind · Track</div>
+                    </div>
+                </div>
+
+                <div class="ep-hero">
+                    <div class="ep-hero-icon">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            <circle cx="12" cy="16" r="1" fill="white"/>
+                        </svg>
+                    </div>
+                    <h2 class="ep-hero-title">Reset your<br/>password</h2>
+                    <p class="ep-hero-sub">Enter your email and we'll send a secure reset link — valid for 24 hours.</p>
+                </div>
+
+                <div class="ep-left-footer">
+                    <div class="ep-foot-dot"></div>
+                    <span>All systems operational · Dar es Salaam, TZ</span>
                 </div>
             </div>
-
-            <!-- Main Illustration -->
-            <div class="flex items-center justify-center w-full h-full p-16">
-                <svg viewBox="0 0 600 500" class="w-full max-w-lg" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Background circles -->
-                    <circle cx="300" cy="250" r="200" fill="#EFF6FF" opacity="0.5" />
-                    <circle cx="300" cy="250" r="150" fill="#DBEAFE" opacity="0.5" />
-                    
-                    <!-- Key/Lock Illustration -->
-                    <g transform="translate(200, 150)">
-                        <!-- Lock body -->
-                        <rect x="70" y="100" width="60" height="80" rx="8" fill="#3B82F6" />
-                        <rect x="60" y="100" width="80" height="15" rx="4" fill="#2563EB" />
-                        <circle cx="100" cy="80" r="12" fill="#2563EB" />
-                        
-                        <!-- Key -->
-                        <g transform="translate(250, 130)">
-                            <rect x="0" y="20" width="40" height="8" rx="4" fill="#F59E0B" />
-                            <circle cx="20" cy="24" r="12" fill="#F59E0B" />
-                            <rect x="20" y="0" width="3" height="20" fill="#D97706" />
-                            <rect x="15" y="5" width="10" height="3" rx="1.5" fill="#D97706" />
-                            <rect x="10" y="10" width="5" height="3" rx="1.5" fill="#D97706" />
-                            <rect x="25" y="15" width="7" height="3" rx="1.5" fill="#D97706" />
-                        </g>
-                    </g>
-                    
-                    <!-- Floating elements -->
-                    <g transform="translate(100, 100)">
-                        <circle cx="0" cy="0" r="20" fill="#A78BFA" />
-                        <circle cx="0" cy="-8" r="8" fill="#8B5CF6" />
-                    </g>
-                    
-                    <g transform="translate(480, 180)">
-                        <circle cx="0" cy="0" r="18" fill="#F472B6" />
-                        <circle cx="0" cy="-7" r="7" fill="#EC4899" />
-                    </g>
-                    
-                    <!-- Decorative shapes -->
-                    <circle cx="480" cy="350" r="25" fill="#FCD34D" opacity="0.6" />
-                    <circle cx="450" cy="100" r="20" fill="#60A5FA" opacity="0.5" />
-                    
-                    <!-- Connection lines -->
-                    <line x1="100" y1="100" x2="270" y2="150" stroke="#93C5FD" stroke-width="2" stroke-dasharray="5,5" opacity="0.5" />
-                    <line x1="320" y1="180" x2="380" y2="150" stroke="#FCD34D" stroke-width="2" stroke-dasharray="5,5" opacity="0.5" />
-                </svg>
-            </div>
-
-            <!-- Bottom decoration -->
-            <div class="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-blue-100 to-transparent"></div>
         </div>
 
-        <!-- Right side - Forgot Password form -->
-        <div class="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16">
-            <div class="max-w-md w-full">
-                <!-- Mobile Logo -->
-                <div class="lg:hidden flex items-center gap-3 mb-8">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        <!-- Right panel -->
+        <div class="ep-right">
+            <div class="ep-accent-bar"></div>
+            <div class="ep-right-body">
+
+                <div class="ep-mobile-logo">
+                    <div class="ep-mobile-icon">
+                        <svg width="22" height="22" viewBox="0 0 80 80" fill="none">
+                            <path d="M22 12 L22 68 L34 74 L34 6 Z" fill="white" opacity="0.95"/>
+                            <circle cx="48" cy="34" r="18" fill="white"/>
+                            <path d="M22 56 L14 61 L14 71 L22 68 Z" fill="white" opacity="0.7"/>
                         </svg>
                     </div>
-                    <h1 class="text-2xl font-bold text-gray-800">EVENTS</h1>
+                    <span class="ep-mobile-name">Event <b>Portal</b></span>
                 </div>
 
-                <div class="mb-6">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-3">Reset Your Password</h2>
-                    <p class="text-gray-500 text-sm">
-                        Forgot your password? No problem. Enter your email address and we'll send you a password reset link.
-                    </p>
+                <div class="ep-form-head">
+                    <div class="ep-eyebrow">Account Recovery</div>
+                    <h1 class="ep-title">Forgot Password?</h1>
+                    <p class="ep-subtitle">We'll email you a reset link right away.</p>
                 </div>
 
-                <!-- Back to login link -->
-                <div class="mb-6">
-                    <Link :href="route('login')" class="inline-flex items-center text-sm text-blue-500 hover:text-blue-600 font-medium">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        Back to login
-                    </Link>
+                <div v-if="status" class="ep-success">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    {{ status }}
                 </div>
 
-                <div v-if="status" class="mb-6 p-4 rounded-lg bg-green-50 border border-green-100">
-                    <p class="text-sm text-green-600 font-medium">{{ status }}</p>
-                </div>
-
-                <form @submit.prevent="submit" class="space-y-5">
-                    <div>
-                        <label for="email" class="block text-xs font-medium text-gray-700 mb-1">
-                            Email Address *
-                        </label>
-                        <input 
-                            id="email"
-                            type="email"
-                            v-model="form.email"
-                            required
-                            autofocus
-                            autocomplete="email"
-                            class="w-full rounded-lg border border-gray-300 py-2 px-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm"
-                            :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': form.errors.email }"
-                            placeholder="Enter your email address"
-                        />
-                        <p v-if="form.errors.email" class="text-red-600 text-xs mt-1">
-                            {{ form.errors.email }}
-                        </p>
-                    </div>
-
-                    <button 
-                        type="submit"
-                        :disabled="form.processing"
-                        class="w-full flex justify-center py-2.5 px-6 rounded-lg text-white font-medium bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md shadow-blue-500/20"
-                    >
-                        <span v-if="form.processing" class="flex items-center">
-                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <form @submit.prevent="submit" class="ep-form">
+                    <div class="ep-field">
+                        <label class="ep-label" for="email">Email Address</label>
+                        <div class="ep-input-wrap">
+                            <svg class="ep-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
                             </svg>
-                            Sending...
-                        </span>
-                        <span v-else>Send Reset Link</span>
+                            <input
+                                id="email" type="email"
+                                v-model="form.email"
+                                required autofocus autocomplete="email"
+                                placeholder="Enter your email address"
+                                :class="['ep-input', { 'ep-input--err': form.errors.email }]"
+                            />
+                        </div>
+                        <p v-if="form.errors.email" class="ep-err">{{ form.errors.email }}</p>
+                    </div>
+
+                    <button type="submit" :disabled="form.processing" class="ep-btn">
+                        <svg v-if="form.processing" class="ep-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                        </svg>
+                        {{ form.processing ? 'Sending...' : 'Send Reset Link' }}
                     </button>
 
-                    <!-- Additional help text -->
-                    <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                        <p class="text-xs text-blue-600">
-                            <strong>Note:</strong> The password reset link will be sent to your email and will expire in 24 hours.
-                        </p>
+                    <div class="ep-back">
+                        <Link :href="route('login')" class="ep-back-link">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                            </svg>
+                            Back to login
+                        </Link>
                     </div>
-
-                   
                 </form>
+
+                <div class="ep-form-footer">
+                    <span>Event Portal © 2026</span><span>·</span><span>Dar es Salaam, TZ</span>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
-<script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
-
-defineProps({
-    status: String,
-});
-
-const form = useForm({
-    email: '',
-});
-
-const submit = () => {
-    form.post(route('password.email'));
-};
-</script>
-
 <style scoped>
-/* Smooth animations */
-@keyframes float {
-    0%, 100% {
-        transform: translateY(0px);
-    }
-    50% {
-        transform: translateY(-20px);
-    }
-}
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+*, *::before, *::after { box-sizing: border-box; }
+@keyframes ep-spin { to { transform: rotate(360deg); } }
+.ep-spin { animation: ep-spin .8s linear infinite; }
 
-/* Additional custom styles if needed */
-input:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
+.ep-root { display: flex; min-height: 100vh; font-family: 'DM Sans', sans-serif; }
+.ep-accent-bar { height: 3px; background: linear-gradient(90deg, #C0170F, #F05A00, #F9B233, #1D5C96); flex-shrink: 0; }
+
+/* Left */
+.ep-left { display: none; flex-direction: column; width: 48%; background: #C0170F; position: relative; overflow: hidden; }
+@media (min-width: 1024px) { .ep-left { display: flex; } }
+.ep-blob1 { position: absolute; top: -100px; right: -80px; width: 400px; height: 400px; border-radius: 50%; background: rgba(240,90,0,.3); filter: blur(70px); pointer-events: none; }
+.ep-blob2 { position: absolute; bottom: -60px; left: -60px; width: 300px; height: 300px; border-radius: 50%; background: rgba(249,178,51,.2); filter: blur(60px); pointer-events: none; }
+.ep-left-body { flex: 1; display: flex; flex-direction: column; padding: 40px 48px; position: relative; z-index: 1; }
+.ep-logo { display: flex; align-items: center; gap: 14px; margin-bottom: auto; }
+.ep-logo-icon { width: 50px; height: 50px; background: rgba(255,255,255,.15); border: 1.5px solid rgba(255,255,255,.25); border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ep-logo-name { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 900; color: #fff; line-height: 1.1; }
+.ep-logo-tag { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .18em; color: rgba(255,255,255,.55); text-transform: uppercase; margin-top: 3px; }
+.ep-hero { margin: auto 0; padding: 48px 0 40px; text-align: center; }
+.ep-hero-icon { width: 72px; height: 72px; background: rgba(255,255,255,.15); border: 1.5px solid rgba(255,255,255,.25); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+.ep-hero-title { font-family: 'Playfair Display', serif; font-size: clamp(30px, 3.5vw, 44px); font-weight: 900; color: #fff; line-height: 1.15; margin: 0 0 14px; }
+.ep-hero-sub { font-size: 15px; color: rgba(255,255,255,.65); line-height: 1.6; max-width: 280px; margin: 0 auto; }
+.ep-left-footer { display: flex; align-items: center; gap: 8px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.15); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .1em; color: rgba(255,255,255,.45); }
+.ep-foot-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 6px #4ade80; flex-shrink: 0; }
+
+/* Right */
+.ep-right { flex: 1; display: flex; flex-direction: column; background: #F7F5F2; }
+.ep-right-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 32px; }
+.ep-mobile-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 36px; }
+.ep-mobile-icon { width: 42px; height: 42px; background: #C0170F; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+.ep-mobile-name { font-family: 'Playfair Display', serif; font-size: 20px; color: #1A1410; }
+.ep-mobile-name b { color: #C0170F; }
+@media (min-width: 1024px) { .ep-mobile-logo { display: none; } }
+.ep-form-head { width: 100%; max-width: 400px; margin-bottom: 28px; }
+.ep-eyebrow { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .22em; color: #C0170F; text-transform: uppercase; margin-bottom: 8px; }
+.ep-title { font-family: 'Playfair Display', serif; font-size: clamp(26px, 4vw, 34px); font-weight: 900; color: #1A1410; line-height: 1.1; margin: 0 0 6px; }
+.ep-subtitle { font-size: 14px; color: #6B6560; margin: 0; }
+.ep-success { width: 100%; max-width: 400px; display: flex; align-items: flex-start; gap: 10px; background: rgba(22,163,74,.08); border-left: 3px solid #16a34a; border-radius: 8px; padding: 11px 14px; font-size: 13px; color: #16a34a; margin-bottom: 20px; }
+.ep-form { width: 100%; max-width: 400px; }
+.ep-field { margin-bottom: 20px; }
+.ep-label { display: block; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .14em; color: #6B6560; text-transform: uppercase; margin-bottom: 6px; }
+.ep-input-wrap { position: relative; }
+.ep-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #9E9890; pointer-events: none; }
+.ep-input { width: 100%; padding: 11px 14px 11px 40px; border: 1.5px solid #E8E2DA; border-radius: 12px; font-size: 14px; font-family: 'DM Sans', sans-serif; color: #1A1410; background: #fff; outline: none; transition: border-color .2s, box-shadow .2s; }
+.ep-input::placeholder { color: #C0B8B0; }
+.ep-input:focus { border-color: #C0170F; box-shadow: 0 0 0 3px rgba(192,23,15,.1); }
+.ep-input--err { border-color: #C0170F; }
+.ep-err { font-family: 'DM Mono', monospace; font-size: 11px; color: #C0170F; margin-top: 4px; }
+.ep-btn { width: 100%; padding: 13px; border: none; border-radius: 12px; background: linear-gradient(135deg, #C0170F, #8B0000); color: #fff; font-size: 14px; font-weight: 700; font-family: 'DM Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 18px rgba(192,23,15,.35); transition: all .22s; position: relative; overflow: hidden; margin-bottom: 16px; }
+.ep-btn::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, #F05A00, #C0170F); opacity: 0; transition: opacity .22s; }
+.ep-btn:hover::after { opacity: 1; }
+.ep-btn:hover { box-shadow: 0 6px 24px rgba(192,23,15,.45); transform: translateY(-1px); }
+.ep-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.ep-btn > * { position: relative; z-index: 1; }
+.ep-back { text-align: center; padding-top: 14px; border-top: 1px solid #E8E2DA; }
+.ep-back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #6B6560; text-decoration: none; transition: color .2s; }
+.ep-back-link:hover { color: #C0170F; }
+.ep-form-footer { width: 100%; max-width: 400px; margin-top: 24px; padding-top: 16px; border-top: 1px solid #E8E2DA; display: flex; gap: 8px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .08em; color: #9E9890; }
 </style>

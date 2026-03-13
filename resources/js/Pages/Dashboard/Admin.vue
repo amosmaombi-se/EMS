@@ -2,229 +2,328 @@
     <Head title="Dashboard" />
 
     <AuthenticatedLayout>
-        <div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
-            <div v-if="isLoading" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
-                <div class="text-center">
-                    <div class="relative">
-                        <div class="w-20 h-20 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
-                        <div class="w-20 h-20 border-4 border-gray-200 border-b-indigo-500 rounded-full animate-spin absolute inset-0" style="animation-duration: 1.5s"></div>
+        <component :is="'style'">
+            @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+            :root {
+                --crimson: #C0170F;
+                --orange:  #F05A00;
+                --amber:   #F9B233;
+                --navy:    #1D5C96;
+            }
+
+            .ep-dash * { box-sizing: border-box; }
+
+            .ep-dash {
+                --bg:           #F7F5F2;
+                --bg-card:      #FFFFFF;
+                --bg-muted:     #F0EDE8;
+                --border:       #E8E2DA;
+                --text:         #1A1410;
+                --text-2:       #6B6560;
+                --text-3:       #9E9890;
+                --font-body:    'DM Sans', sans-serif;
+                --font-display: 'Playfair Display', serif;
+                --font-mono:    'DM Mono', monospace;
+                --shadow:       0 2px 16px rgba(0,0,0,.08);
+                --shadow-lg:    0 8px 40px rgba(0,0,0,.13);
+                --accent-bar:   linear-gradient(90deg, var(--crimson), var(--orange), var(--amber), var(--navy));
+            }
+
+            .ep-dash.dark {
+                --bg:        #0F0D0C;
+                --bg-card:   #1A1714;
+                --bg-muted:  #242018;
+                --border:    #2E2925;
+                --text:      #F0EDE8;
+                --text-2:    #A09890;
+                --text-3:    #605850;
+                --shadow:    0 2px 16px rgba(0,0,0,.4);
+                --shadow-lg: 0 8px 40px rgba(0,0,0,.6);
+            }
+
+            .ep-dash {
+                min-height: 100vh;
+                background: var(--bg);
+                color: var(--text);
+                font-family: var(--font-body);
+                transition: background .3s, color .3s;
+            }
+
+            .ep-accent-bar { height: 3px; background: var(--accent-bar); }
+
+            .ep-card {
+                background: var(--bg-card);
+                border: 1px solid var(--border);
+                border-radius: 20px;
+                box-shadow: var(--shadow);
+                transition: transform .22s, box-shadow .22s;
+            }
+            .ep-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+
+            .ep-stat {
+                border-radius: 20px;
+                padding: 22px 20px;
+                position: relative;
+                overflow: hidden;
+                cursor: pointer;
+                box-shadow: var(--shadow);
+                transition: transform .22s, box-shadow .22s;
+            }
+            .ep-stat:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+            .ep-stat-ghost {
+                position: absolute; top: -16px; right: -16px;
+                font-size: 76px; opacity: .12; pointer-events: none; line-height: 1;
+            }
+
+            .ep-table { width: 100%; border-collapse: collapse; }
+            .ep-table thead th {
+                padding: 10px 20px; text-align: left;
+                font-size: 10px; font-family: var(--font-mono);
+                letter-spacing: .15em; color: var(--text-3); font-weight: 600;
+                background: var(--bg-muted); border-bottom: 1px solid var(--border);
+            }
+            .ep-table tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+            .ep-table tbody tr:hover { background: var(--bg-muted); }
+            .ep-table tbody td { padding: 13px 20px; font-size: 13px; }
+
+            .ep-badge {
+                display: inline-block; padding: 3px 10px; border-radius: 6px;
+                font-size: 10px; font-family: var(--font-mono);
+                font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+            }
+
+            .ep-progress { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+            .ep-progress-fill { height: 100%; border-radius: 2px; transition: width .6s ease; }
+
+            .ep-btn-period {
+                padding: 5px 13px; border-radius: 8px; border: none; cursor: pointer;
+                font-size: 11px; font-family: var(--font-mono); letter-spacing: .08em; font-weight: 600;
+                transition: all .2s;
+            }
+            .ep-btn-period.active { background: var(--crimson); color: #fff; }
+            .ep-btn-period:not(.active) { background: var(--bg-muted); color: var(--text-2); }
+
+            /* Info pills */
+            .ep-info-pill {
+                display: inline-flex; align-items: center; gap: 7px;
+                background: var(--bg-card);
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 8px 14px;
+                box-shadow: var(--shadow);
+                font-size: 12px;
+                font-family: var(--font-mono);
+                color: var(--text-2);
+                white-space: nowrap;
+            }
+
+            .ep-label {
+                font-size: 10px; font-family: var(--font-mono);
+                letter-spacing: .2em; color: var(--text-3); text-transform: uppercase; margin-bottom: 14px;
+            }
+
+            @media (max-width: 1024px) {
+                .ep-grid-main { grid-template-columns: 1fr !important; }
+            }
+            @media (max-width: 768px) {
+                .ep-grid-stats { grid-template-columns: 1fr 1fr !important; }
+                .ep-grid-3 { grid-template-columns: 1fr !important; }
+                .ep-header-row { flex-direction: column !important; gap: 16px !important; align-items: flex-start !important; }
+            }
+            @media (max-width: 480px) {
+                .ep-grid-stats { grid-template-columns: 1fr !important; }
+            }
+
+            .ep-upcoming-card {
+                background: var(--bg-muted);
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                padding: 16px;
+                transition: all .2s;
+                cursor: pointer;
+            }
+            .ep-upcoming-card:hover { border-color: var(--orange); box-shadow: var(--shadow); }
+
+            .ep-rsvp-box {
+                border-radius: 12px;
+                padding: 12px 14px;
+                border-left: 3px solid;
+                background: var(--bg-muted);
+            }
+
+            .ep-chart-wrap {
+                position: relative; height: 160px;
+                background: var(--bg-muted); border-radius: 14px; padding: 12px;
+            }
+
+            .ep-headline { font-family: var(--font-display); }
+        </component>
+
+        <div :class="['ep-dash', isDark ? 'dark' : '']">
+            <div class="ep-accent-bar"></div>
+
+            <!-- Loading overlay -->
+            <div v-if="isLoading"
+                :style="{ position:'fixed', inset:0, background: isDark ? 'rgba(15,13,12,.85)' : 'rgba(247,245,242,.85)', backdropFilter:'blur(8px)', zIndex:50, display:'flex', alignItems:'center', justifyContent:'center' }">
+                <div style="text-align:center">
+                    <div style="position:relative; width:56px; height:56px; margin:0 auto 14px">
+                        <div :style="{ position:'absolute', inset:0, border:'3px solid transparent', borderTopColor:'var(--crimson)', borderRadius:'50%', animation:'spin 0.8s linear infinite' }"></div>
+                        <div :style="{ position:'absolute', inset:'6px', border:'3px solid transparent', borderBottomColor:'var(--amber)', borderRadius:'50%', animation:'spin 1.2s linear infinite reverse' }"></div>
                     </div>
-                    <p class="mt-4 text-gray-600 font-medium animate-pulse">Loading your dashboard...</p>
+                    <p :style="{ color:'var(--text-2)', fontFamily:'var(--font-mono)', fontSize:'12px', letterSpacing:'.1em' }">LOADING DASHBOARD...</p>
                 </div>
+                <style>@keyframes spin { to { transform:rotate(360deg) } }</style>
             </div>
 
-            <div v-else class="p-3 sm:p-4 lg:p-6">
-                <div class="mb-6">
-                    <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-clip-text text-transparent mb-2">
-                        Dashboard Overview
-                    </h1>
-                    <p class="text-gray-600 text-sm">Welcome back! Here's what's happening with your events. 🎉</p>
-                </div>
+            <div v-else :style="{ padding:'0 24px 48px', maxWidth:'1400px', margin:'0 auto' }">
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div class="group relative bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <div class="absolute inset-0 bg-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div class="relative">
-                            <div class="flex items-center justify-between mb-3">
-                                <div class="p-2.5 bg-white/20 backdrop-blur-sm rounded-xl">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                                <span class="text-blue-100 text-xs font-bold tracking-wide">EVENTS</span>
-                            </div>
-                            <div class="text-4xl font-black text-white mb-2">{{ stats.total_events }}</div>
-                            <div class="flex items-center text-blue-50 text-xs">
-                                <svg class="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                                </svg>
-                                <span class="font-bold">+{{ stats.events_this_month }}</span>
-                                <span class="ml-1.5">this month</span>
-                            </div>
+                <!-- ── HEADER ── -->
+                <div class="ep-header-row" :style="{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', padding:'28px 0 28px', borderBottom:'1px solid var(--border)', marginBottom:'28px', gap:'20px' }">
+                    <div>
+                        <div :style="{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'10px' }">
+                            <div :style="{ width:'32px', height:'32px', borderRadius:'8px', background:'var(--crimson)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'16px' }">🚪</div>
+                            <span :style="{ fontSize:'10px', fontFamily:'var(--font-mono)', letterSpacing:'.25em', color:'var(--text-3)', textTransform:'uppercase' }">Event Portal</span>
                         </div>
+                        <h1 class="ep-headline" :style="{ fontSize:'clamp(26px, 4vw, 40px)', fontWeight:900, margin:0, lineHeight:1.1, color:'var(--text)' }">
+                            {{ greeting }}, <span :style="{ color:'var(--crimson)' }">Admin</span> 👋
+                        </h1>
+                        <p :style="{ margin:'6px 0 0', color:'var(--text-2)', fontSize:'13px', fontFamily:'var(--font-body)' }">Here's what's happening with your events today.</p>
                     </div>
 
-                    <div class="group relative bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <div class="absolute inset-0 bg-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div class="relative">
-                            <div class="flex items-center justify-between mb-3">
-                                <div class="p-2.5 bg-white/20 backdrop-blur-sm rounded-xl">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    </svg>
-                                </div>
-                                <span class="text-emerald-100 text-xs font-bold tracking-wide">GUESTS</span>
-                            </div>
-                            <div class="text-4xl font-black text-white mb-2">{{ stats.total_guests }}</div>
-                            <div class="flex items-center text-emerald-50 text-xs">
-                                <svg class="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                </svg>
-                                <span class="font-bold">{{ stats.total_attending }}</span>
-                                <span class="ml-1.5">attending</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="group relative bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <div class="absolute inset-0 bg-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div class="relative">
-                            <div class="flex items-center justify-between mb-3">
-                                <div class="p-2.5 bg-white/20 backdrop-blur-sm rounded-xl">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <span class="text-purple-100 text-xs font-bold tracking-wide">REVENUE</span>
-                            </div>
-                            <div class="text-4xl font-black text-white mb-2">${{ formatNumber(stats.total_revenue) }}</div>
-                            <div class="flex items-center text-purple-50 text-xs">
-                                <svg class="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
-                                </svg>
-                                <span class="font-bold">{{ stats.pending_bookings }}</span>
-                                <span class="ml-1.5">pending</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="group relative bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <div class="absolute inset-0 bg-white/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <div class="relative">
-                            <div class="flex items-center justify-between mb-3">
-                                <div class="p-2.5 bg-white/20 backdrop-blur-sm rounded-xl">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <span class="text-amber-100 text-xs font-bold tracking-wide">UPCOMING</span>
-                            </div>
-                            <div class="text-4xl font-black text-white mb-2">{{ stats.upcoming_events }}</div>
-                            <div class="flex items-center text-amber-50 text-xs">
-                                <svg class="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                                </svg>
-                                <span class="font-bold">{{ stats.active_vendors }}</span>
-                                <span class="ml-1.5">vendors</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div v-for="(event, index) in recentEvents.slice(0, 3)" :key="event.id" 
-                        class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden hover:-translate-y-1">
-                        <div class="p-5">
-                            <div class="flex justify-between items-start mb-4">
-                                <div :class="[
-                                    'p-3 rounded-xl shadow-sm',
-                                    index === 0 ? 'bg-gradient-to-br from-blue-500 to-blue-600' : '',
-                                    index === 1 ? 'bg-gradient-to-br from-purple-500 to-purple-600' : '',
-                                    index === 2 ? 'bg-gradient-to-br from-orange-500 to-orange-600' : ''
-                                ]">
-                                    <component :is="getEventIcon(event.event_type)" class="w-5 h-5 text-white" />
-                                </div>
-                                <span class="text-xs text-gray-400 font-medium">{{ event.date }}</span>
-                            </div>
-                            
-                            <h3 class="text-lg font-bold text-gray-800 mb-3 group-hover:text-blue-600 transition-colors">{{ event.name }}</h3>
-                            
-                            <div class="flex -space-x-2 mb-4">
-                                <div v-for="n in Math.min(4, event.confirmed_guests)" :key="n" 
-                                    :class="[
-                                        'w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-xs font-bold text-white shadow-sm',
-                                        index === 0 ? 'bg-gradient-to-br from-blue-400 to-blue-500' : '',
-                                        index === 1 ? 'bg-gradient-to-br from-purple-400 to-purple-500' : '',
-                                        index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-500' : ''
-                                    ]">
-                                    {{ String.fromCharCode(65 + n - 1) }}
-                                </div>
-                                <div v-if="event.confirmed_guests > 4" 
-                                    class="w-8 h-8 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-xs font-bold text-gray-600 shadow-sm">
-                                    +{{ event.confirmed_guests - 4 }}
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
-                                    <span class="font-medium">Completion</span>
-                                    <span class="font-bold text-gray-700">{{ event.completion }}%</span>
-                                </div>
-                                <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                                    <div :class="[
-                                        'h-2 rounded-full transition-all duration-500',
-                                        index === 0 ? 'bg-gradient-to-r from-blue-500 to-blue-600' : '',
-                                        index === 1 ? 'bg-gradient-to-r from-purple-500 to-purple-600' : '',
-                                        index === 2 ? 'bg-gradient-to-r from-orange-500 to-orange-600' : ''
-                                    ]" :style="{ width: event.completion + '%' }"></div>
-                                </div>
-                            </div>
-                            
-                            <div class="flex justify-between items-center text-xs text-gray-500 pt-3 border-t border-gray-100">
-                                <div class="flex items-center gap-1.5">
-                                    <svg class="w-3.5 h-3.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                                    </svg>
-                                    <span class="font-bold text-gray-700">{{ event.confirmed_guests }}/{{ event.guests_count }}</span>
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <svg class="w-3.5 h-3.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-                                    </svg>
-                                    <span class="font-medium text-gray-600">{{ event.eventDay }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
-                    <div class="px-5 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200 flex justify-between items-center">
-                        <h2 class="text-sm font-bold text-gray-700 flex items-center gap-2">
-                            <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+                    <!-- Right: date pill + location pill only -->
+                    <div :style="{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'10px', paddingTop:'6px' }">
+                        <!-- Date pill -->
+                        <div class="ep-info-pill">
+                            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;opacity:.7">
+                                <rect x="1" y="2" width="14" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M5 1v2M11 1v2M1 6h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                             </svg>
-                            RECENT EVENTS
-                        </h2>
-                        <Link :href="route('events.index')" class="px-3 py-1.5 bg-white text-gray-700 hover:text-gray-900 rounded-lg text-xs font-semibold transition-all border border-gray-200 hover:border-gray-300 hover:shadow-sm">
+                            <span>{{ currentDate }}</span>
+                        </div>
+                        <!-- Location pill -->
+                        <div class="ep-info-pill">
+                            <svg width="11" height="14" viewBox="0 0 11 14" fill="none" style="flex-shrink:0;opacity:.7">
+                                <path d="M5.5 0C3.015 0 1 2.015 1 4.5 1 7.875 5.5 13 5.5 13S10 7.875 10 4.5C10 2.015 7.985 0 5.5 0z" stroke="currentColor" stroke-width="1.4"/>
+                                <circle cx="5.5" cy="4.5" r="1.5" stroke="currentColor" stroke-width="1.4"/>
+                            </svg>
+                            <span>Dar es Salaam, TZ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── STAT CARDS ── -->
+                <div class="ep-grid-stats" :style="{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'16px', marginBottom:'28px' }">
+                    <div class="ep-stat" :style="{ background:'linear-gradient(135deg, var(--crimson), #8B0000)' }">
+                        <span class="ep-stat-ghost">📅</span>
+                        <div :style="{ fontSize:'10px', fontFamily:'var(--font-mono)', letterSpacing:'.2em', color:'rgba(255,255,255,.7)', marginBottom:'10px' }">TOTAL EVENTS</div>
+                        <div :style="{ fontSize:'42px', fontWeight:900, color:'#fff', lineHeight:1, marginBottom:'6px', fontFamily:'var(--font-display)' }">{{ stats.total_events }}</div>
+                        <div :style="{ fontSize:'11px', color:'rgba(255,255,255,.75)', fontFamily:'var(--font-mono)' }">↑ +{{ stats.events_this_month }} this month</div>
+                    </div>
+                    <div class="ep-stat" :style="{ background:'linear-gradient(135deg, var(--orange), var(--crimson))' }">
+                        <span class="ep-stat-ghost">👥</span>
+                        <div :style="{ fontSize:'10px', fontFamily:'var(--font-mono)', letterSpacing:'.2em', color:'rgba(255,255,255,.7)', marginBottom:'10px' }">TOTAL GUESTS</div>
+                        <div :style="{ fontSize:'42px', fontWeight:900, color:'#fff', lineHeight:1, marginBottom:'6px', fontFamily:'var(--font-display)' }">{{ formatNumber(stats.total_guests) }}</div>
+                        <div :style="{ fontSize:'11px', color:'rgba(255,255,255,.75)', fontFamily:'var(--font-mono)' }">✓ {{ formatNumber(stats.total_attending) }} attending</div>
+                    </div>
+                    <div class="ep-stat" :style="{ background:'linear-gradient(135deg, var(--amber), var(--orange))' }">
+                        <span class="ep-stat-ghost">💰</span>
+                        <div :style="{ fontSize:'10px', fontFamily:'var(--font-mono)', letterSpacing:'.2em', color:'rgba(255,255,255,.7)', marginBottom:'10px' }">REVENUE</div>
+                        <div :style="{ fontSize:'42px', fontWeight:900, color:'#fff', lineHeight:1, marginBottom:'6px', fontFamily:'var(--font-display)' }">TZS{{ formatShort(stats.total_revenue) }}</div>
+                        <div :style="{ fontSize:'11px', color:'rgba(255,255,255,.75)', fontFamily:'var(--font-mono)' }">⏳ {{ stats.pending_bookings }} pending</div>
+                    </div>
+                    <div class="ep-stat" :style="{ background:'linear-gradient(135deg, var(--navy), #0d3a6e)' }">
+                        <span class="ep-stat-ghost">⏰</span>
+                        <div :style="{ fontSize:'10px', fontFamily:'var(--font-mono)', letterSpacing:'.2em', color:'rgba(255,255,255,.7)', marginBottom:'10px' }">UPCOMING</div>
+                        <div :style="{ fontSize:'42px', fontWeight:900, color:'#fff', lineHeight:1, marginBottom:'6px', fontFamily:'var(--font-display)' }">{{ stats.upcoming_events }}</div>
+                        <div :style="{ fontSize:'11px', color:'rgba(255,255,255,.75)', fontFamily:'var(--font-mono)' }">🏪 {{ stats.active_vendors }} vendors</div>
+                    </div>
+                </div>
+
+                <!-- ── FEATURE CARDS ── -->
+                <div class="ep-grid-3" :style="{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'16px', marginBottom:'28px' }">
+                    <div v-for="(event, index) in recentEvents.slice(0, 3)" :key="event.id" class="ep-card" :style="{ padding:'20px', borderTop: `3px solid ${featureColors[index]}` }">
+                        <div :style="{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'14px' }">
+                            <div :style="{ width:'40px', height:'40px', borderRadius:'12px', background:featureColors[index], display:'flex', alignItems:'center', justifyContent:'center', fontSize:'18px', flexShrink:0 }">
+                                {{ getEventEmoji(event.event_type) }}
+                            </div>
+                            <span :style="{ fontSize:'11px', color:'var(--text-3)', fontFamily:'var(--font-mono)' }">{{ event.date }}</span>
+                        </div>
+                        <h3 :style="{ fontSize:'15px', fontWeight:700, color:'var(--text)', margin:'0 0 10px', fontFamily:'var(--font-display)' }">{{ event.name }}</h3>
+                        <div :style="{ display:'flex', alignItems:'center', marginBottom:'12px' }">
+                            <div v-for="n in Math.min(4, event.confirmed_guests)" :key="n"
+                                :style="{ width:'28px', height:'28px', borderRadius:'50%', border:'2px solid var(--bg-card)', background:featureColors[index], display:'flex', alignItems:'center', justifyContent:'center', fontSize:'10px', fontWeight:700, color:'#fff', marginLeft: n > 1 ? '-8px' : '0' }">
+                                {{ String.fromCharCode(64 + n) }}
+                            </div>
+                            <div v-if="event.confirmed_guests > 4"
+                                :style="{ width:'28px', height:'28px', borderRadius:'50%', border:'2px solid var(--bg-card)', background:'var(--bg-muted)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'10px', fontWeight:700, color:'var(--text-2)', marginLeft:'-8px' }">
+                                +{{ event.confirmed_guests - 4 }}
+                            </div>
+                        </div>
+                        <div :style="{ marginBottom:'12px' }">
+                            <div :style="{ display:'flex', justifyContent:'space-between', fontSize:'11px', color:'var(--text-2)', marginBottom:'5px', fontFamily:'var(--font-mono)' }">
+                                <span>COMPLETION</span>
+                                <span :style="{ fontWeight:700, color:'var(--text)' }">{{ event.completion }}%</span>
+                            </div>
+                            <div class="ep-progress">
+                                <div class="ep-progress-fill" :style="{ width: event.completion + '%', background: featureColors[index] }"></div>
+                            </div>
+                        </div>
+                        <div :style="{ display:'flex', justifyContent:'space-between', paddingTop:'10px', borderTop:'1px solid var(--border)', fontSize:'12px', color:'var(--text-2)' }">
+                            <span>👥 <strong :style="{ color:'var(--text)' }">{{ event.confirmed_guests }}/{{ event.guests_count }}</strong></span>
+                            <span :style="{ fontFamily:'var(--font-mono)' }">{{ event.eventDay }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── RECENT EVENTS TABLE ── -->
+                <div class="ep-card" :style="{ overflow:'hidden', marginBottom:'28px' }">
+                    <div :style="{ padding:'16px 22px', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'1px solid var(--border)', background:'var(--bg-muted)' }">
+                        <div class="ep-label" :style="{ margin:0 }">📋 RECENT EVENTS</div>
+                        <Link :href="route('events.index')" :style="{ fontSize:'11px', fontFamily:'var(--font-mono)', color:'var(--crimson)', background:'transparent', border:'1px solid var(--crimson)', borderRadius:'8px', padding:'4px 12px', textDecoration:'none', transition:'all .2s' }">
                             View All →
                         </Link>
                     </div>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead class="bg-gray-50 border-b border-gray-100">
+                    <div :style="{ overflowX:'auto' }">
+                        <table class="ep-table">
+                            <thead>
                                 <tr>
-                                    <th class="text-left py-3 px-5 text-xs font-bold text-gray-600 uppercase tracking-wider">Event</th>
-                                    <th class="text-left py-3 px-5 text-xs font-bold text-gray-600 uppercase tracking-wider">Handler</th>
-                                    <th class="text-left py-3 px-5 text-xs font-bold text-gray-600 uppercase tracking-wider">Event Day</th>
-                                    <th class="text-left py-3 px-5 text-xs font-bold text-gray-600 uppercase tracking-wider">Guests</th>
-                                    <th class="text-left py-3 px-5 text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
+                                    <th>Event</th>
+                                    <th>Handler</th>
+                                    <th>Event Day</th>
+                                    <th>Guests</th>
+                                    <th>Progress</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                <tr v-for="event in recentEvents" :key="event.id" class="hover:bg-gray-50 transition-colors">
-                                    <td class="py-3 px-5">
-                                        <div class="flex items-center space-x-3">
-                                            <div :class="['w-10 h-10 rounded-xl flex items-center justify-center shadow-sm', event.iconBg || 'bg-gradient-to-br from-gray-100 to-gray-200']">
-                                                <component :is="getEventIcon(event.event_type)" class="w-5 h-5 text-gray-600" />
+                            <tbody>
+                                <tr v-for="event in recentEvents" :key="event.id">
+                                    <td>
+                                        <div :style="{ display:'flex', alignItems:'center', gap:'12px' }">
+                                            <div :style="{ width:'36px', height:'36px', borderRadius:'10px', background:'var(--bg-muted)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'16px', flexShrink:0 }">
+                                                {{ getEventEmoji(event.event_type) }}
                                             </div>
                                             <div>
-                                                <div class="font-semibold text-gray-800 text-sm">{{ event.name }}</div>
-                                                <div class="text-xs text-gray-400">{{ event.created }}</div>
+                                                <div :style="{ fontWeight:600, fontSize:'13px', color:'var(--text)', fontFamily:'var(--font-body)' }">{{ event.name }}</div>
+                                                <div :style="{ fontSize:'11px', color:'var(--text-3)', fontFamily:'var(--font-mono)' }">{{ event.created }}</div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="py-3 px-5 text-gray-600 font-medium text-sm">{{ event.handler }}</td>
-                                    <td class="py-3 px-5 text-gray-600 font-medium text-sm">{{ event.eventDay }}</td>
-                                    <td class="py-3 px-5">
-                                        <span class="font-bold text-gray-700 text-sm">{{ event.confirmed_guests }}/{{ event.guests_count }}</span>
+                                    <td :style="{ color:'var(--text-2)' }">{{ event.handler }}</td>
+                                    <td :style="{ color:'var(--text-2)', fontFamily:'var(--font-mono)', fontSize:'12px' }">{{ event.eventDay }}</td>
+                                    <td :style="{ fontFamily:'var(--font-mono)', fontWeight:700, color:'var(--text)' }">
+                                        {{ event.confirmed_guests }}<span :style="{ color:'var(--text-3)' }">/{{ event.guests_count }}</span>
                                     </td>
-                                    <td class="py-3 px-5">
-                                        <span :class="['px-3 py-1.5 rounded-lg text-xs font-bold uppercase shadow-sm', event.status_class]">
-                                            {{ event.status }}
-                                        </span>
+                                    <td :style="{ minWidth:'120px' }">
+                                        <div :style="{ display:'flex', alignItems:'center', gap:'8px' }">
+                                            <div class="ep-progress" :style="{ flex:1 }">
+                                                <div class="ep-progress-fill" :style="{ width: event.completion + '%', background: event.completion > 75 ? 'var(--orange)' : 'var(--amber)' }"></div>
+                                            </div>
+                                            <span :style="{ fontSize:'10px', fontFamily:'var(--font-mono)', color:'var(--text-3)', minWidth:'28px' }">{{ event.completion }}%</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="ep-badge" :style="getStatusStyle(event.status_class)">{{ event.status }}</span>
                                     </td>
                                 </tr>
                             </tbody>
@@ -232,122 +331,84 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white rounded-2xl shadow-sm p-5 border border-gray-100">
-                        <div class="mb-5">
-                            <div class="flex items-center justify-between mb-4">
-                                <h2 class="text-sm font-bold text-gray-700 flex items-center gap-2">
-                                    <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                                    </svg>
-                                    GUEST OVERVIEW
-                                </h2>
-                                <div class="flex gap-2">
-                                    <button @click="setChartPeriod('monthly')" 
-                                        :class="['px-3 py-1.5 rounded-lg text-xs font-bold transition-all', 
-                                                chartPeriod === 'monthly' 
-                                                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-sm' 
-                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200']">
-                                        Monthly
-                                    </button>
-                                    <button @click="setChartPeriod('weekly')"
-                                        :class="['px-3 py-1.5 rounded-lg text-xs font-bold transition-all', 
-                                                chartPeriod === 'weekly' 
-                                                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-sm' 
-                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200']">
-                                        Weekly
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-baseline space-x-3 mb-5">
-                                <span class="text-4xl font-black text-gray-800">{{ stats.total_guests }}</span>
-                                <div class="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-emerald-50 to-green-50 rounded-full border border-emerald-100">
-                                    <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                                    </svg>
-                                    <span class="text-xs font-bold text-emerald-700">+12%</span>
-                                </div>
-                            </div>
+                <!-- ── BOTTOM GRID ── -->
+                <div class="ep-grid-main" :style="{ display:'grid', gridTemplateColumns:'1fr 400px', gap:'20px' }">
 
-                            <div class="grid grid-cols-2 gap-3 mb-5">
-                                <div class="bg-gradient-to-br from-emerald-50 to-green-50 p-4 rounded-xl border border-emerald-100 hover:shadow-sm transition-shadow">
-                                    <div class="text-xs font-bold text-emerald-700 uppercase mb-1.5">Attending</div>
-                                    <div class="text-2xl font-black text-emerald-800">{{ guestStats.rsvp_breakdown.attending }}</div>
+                    <!-- Guest Overview + Chart -->
+                    <div class="ep-card" :style="{ padding:'22px' }">
+                        <div :style="{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'18px' }">
+                            <div>
+                                <div class="ep-label">👥 GUEST OVERVIEW</div>
+                                <div :style="{ display:'flex', alignItems:'baseline', gap:'10px' }">
+                                    <span class="ep-headline" :style="{ fontSize:'36px', fontWeight:900, color:'var(--text)' }">{{ formatNumber(stats.total_guests) }}</span>
+                                    <span :style="{ fontSize:'12px', color:'#16a34a', background:'rgba(34,197,94,.1)', padding:'2px 8px', borderRadius:'20px', fontFamily:'var(--font-mono)' }">↑ +12%</span>
                                 </div>
-                                <div class="bg-gradient-to-br from-amber-50 to-yellow-50 p-4 rounded-xl border border-amber-100 hover:shadow-sm transition-shadow">
-                                    <div class="text-xs font-bold text-amber-700 uppercase mb-1.5">Pending</div>
-                                    <div class="text-2xl font-black text-amber-800">{{ guestStats.rsvp_breakdown.pending }}</div>
-                                </div>
-                                <div class="bg-gradient-to-br from-red-50 to-rose-50 p-4 rounded-xl border border-red-100 hover:shadow-sm transition-shadow">
-                                    <div class="text-xs font-bold text-red-700 uppercase mb-1.5">Not Attending</div>
-                                    <div class="text-2xl font-black text-red-800">{{ guestStats.rsvp_breakdown.not_attending }}</div>
-                                </div>
-                                <div class="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-xl border border-blue-100 hover:shadow-sm transition-shadow">
-                                    <div class="text-xs font-bold text-blue-700 uppercase mb-1.5">Maybe</div>
-                                    <div class="text-2xl font-black text-blue-800">{{ guestStats.rsvp_breakdown.maybe }}</div>
-                                </div>
+                            </div>
+                            <div :style="{ display:'flex', gap:'6px' }">
+                                <button class="ep-btn-period" :class="{ active: chartPeriod === 'monthly' }" @click="setChartPeriod('monthly')">Monthly</button>
+                                <button class="ep-btn-period" :class="{ active: chartPeriod === 'weekly' }" @click="setChartPeriod('weekly')">Weekly</button>
                             </div>
                         </div>
-
-                        <div class="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4">
+                        <div :style="{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'10px', marginBottom:'18px' }">
+                            <div class="ep-rsvp-box" :style="{ borderLeftColor:'#16a34a' }">
+                                <div :style="{ fontSize:'10px', fontFamily:'var(--font-mono)', color:'#16a34a', marginBottom:'4px' }">ATTENDING</div>
+                                <div class="ep-headline" :style="{ fontSize:'22px', fontWeight:900, color:'var(--text)' }">{{ guestStats.rsvp_breakdown.attending }}</div>
+                            </div>
+                            <div class="ep-rsvp-box" :style="{ borderLeftColor:'var(--amber)' }">
+                                <div :style="{ fontSize:'10px', fontFamily:'var(--font-mono)', color:'var(--orange)', marginBottom:'4px' }">PENDING</div>
+                                <div class="ep-headline" :style="{ fontSize:'22px', fontWeight:900, color:'var(--text)' }">{{ guestStats.rsvp_breakdown.pending }}</div>
+                            </div>
+                            <div class="ep-rsvp-box" :style="{ borderLeftColor:'var(--crimson)' }">
+                                <div :style="{ fontSize:'10px', fontFamily:'var(--font-mono)', color:'var(--crimson)', marginBottom:'4px' }">DECLINED</div>
+                                <div class="ep-headline" :style="{ fontSize:'22px', fontWeight:900, color:'var(--text)' }">{{ guestStats.rsvp_breakdown.not_attending }}</div>
+                            </div>
+                            <div class="ep-rsvp-box" :style="{ borderLeftColor:'var(--navy)' }">
+                                <div :style="{ fontSize:'10px', fontFamily:'var(--font-mono)', color:'var(--navy)', marginBottom:'4px' }">MAYBE</div>
+                                <div class="ep-headline" :style="{ fontSize:'22px', fontWeight:900, color:'var(--text)' }">{{ guestStats.rsvp_breakdown.maybe }}</div>
+                            </div>
+                        </div>
+                        <div class="ep-chart-wrap">
                             <canvas ref="participantChart"></canvas>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-2xl shadow-sm p-5 border border-gray-100">
-                        <h2 class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-                            <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-                            </svg>
-                            UPCOMING EVENTS
-                        </h2>
-                        
-                        <div class="space-y-3 mb-5">
-                            <div v-for="(event, index) in upcomingEvents" :key="event.id" 
-                                class="group bg-gradient-to-r from-gray-50 to-white p-4 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all">
-                                <div class="flex justify-between items-start mb-3">
-                                    <div class="flex-1">
-                                        <h3 class="font-bold text-gray-800 text-sm mb-2 group-hover:text-blue-600 transition-colors">{{ event.title }}</h3>
-                                        <div class="flex items-center gap-2 text-xs text-gray-500">
-                                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
-                                            </svg>
-                                            <span class="font-semibold">{{ event.date }} at {{ event.time }}</span>
-                                        </div>
-                                        <p class="text-xs text-gray-400 mt-1.5 flex items-center gap-1.5">
-                                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                                            </svg>
-                                            {{ event.venue }}
-                                        </p>
-                                    </div>
-                                    <span :class="['px-3 py-1 rounded-lg text-xs font-bold uppercase shadow-sm', 
-                                        event.status === 'published' ? 'bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-700 border border-emerald-200' : 'bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border border-amber-200']">
+                    <!-- Upcoming Events -->
+                    <div class="ep-card" :style="{ padding:'22px' }">
+                        <div class="ep-label">🗓 UPCOMING EVENTS</div>
+                        <div :style="{ display:'flex', flexDirection:'column', gap:'10px', marginBottom:'16px' }">
+                            <div v-for="(event, index) in upcomingEvents" :key="event.id" class="ep-upcoming-card"
+                                :style="{ borderTop: `2px solid ${featureColors[index]}` }">
+                                <div :style="{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'8px' }">
+                                    <h3 :style="{ fontSize:'13px', fontWeight:700, color:'var(--text)', margin:0, fontFamily:'var(--font-display)', flex:1, paddingRight:'8px' }">{{ event.title }}</h3>
+                                    <span class="ep-badge" :style="event.status === 'published' ? 'background:rgba(34,197,94,.12);color:#16a34a' : 'background:rgba(249,178,51,.15);color:#b45309'">
                                         {{ event.status }}
                                     </span>
                                 </div>
-                                <div class="flex items-center justify-between text-xs mb-2">
-                                    <span class="text-gray-500 font-medium">Guest confirmation</span>
-                                    <span class="font-black text-gray-800">{{ event.confirmed_guests }}/{{ event.expected_guests }}</span>
+                                <div :style="{ fontSize:'11px', color:'var(--text-2)', marginBottom:'2px', fontFamily:'var(--font-mono)' }">🕐 {{ event.date }} at {{ event.time }}</div>
+                                <div :style="{ fontSize:'11px', color:'var(--text-3)', marginBottom:'10px' }">📍 {{ event.venue }}</div>
+                                <div :style="{ display:'flex', justifyContent:'space-between', fontSize:'11px', marginBottom:'5px' }">
+                                    <span :style="{ color:'var(--text-2)', fontFamily:'var(--font-mono)' }">CONFIRMATION</span>
+                                    <span :style="{ fontWeight:700, fontFamily:'var(--font-mono)', color:'var(--text)' }">{{ event.confirmed_guests }}/{{ event.expected_guests }}</span>
                                 </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                                    <div :class="[
-                                        'h-2 rounded-full transition-all duration-500',
-                                        index === 0 ? 'bg-gradient-to-r from-blue-500 to-blue-600' : '',
-                                        index === 1 ? 'bg-gradient-to-r from-purple-500 to-purple-600' : '',
-                                        index === 2 ? 'bg-gradient-to-r from-orange-500 to-orange-600' : ''
-                                    ]" :style="{ width: (event.confirmed_guests / event.expected_guests * 100) + '%' }">
-                                    </div>
+                                <div class="ep-progress">
+                                    <div class="ep-progress-fill" :style="{ width: (event.confirmed_guests / event.expected_guests * 100) + '%', background: featureColors[index] }"></div>
                                 </div>
                             </div>
                         </div>
-
-                        <Link :href="route('events.index')" 
-                            class="block w-full text-center px-4 py-3 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all font-bold text-sm shadow-sm hover:shadow-md">
+                        <Link :href="route('events.index')"
+                            :style="{ display:'block', textAlign:'center', padding:'11px', background:'var(--crimson)', color:'#fff', borderRadius:'12px', fontSize:'13px', fontWeight:700, textDecoration:'none', transition:'opacity .2s', fontFamily:'var(--font-mono)', letterSpacing:'.05em' }">
                             View All Events →
                         </Link>
                     </div>
+                </div>
+
+                <!-- Footer -->
+                <div :style="{ marginTop:'32px', display:'flex', justifyContent:'space-between', alignItems:'center', paddingTop:'18px', borderTop:'1px solid var(--border)' }">
+                    <div :style="{ display:'flex', alignItems:'center', gap:'7px' }">
+                        <div :style="{ width:'7px', height:'7px', borderRadius:'50%', background:'#16a34a', boxShadow:'0 0 6px #16a34a' }"></div>
+                        <span :style="{ fontSize:'11px', fontFamily:'var(--font-mono)', color:'var(--text-3)' }">All systems operational</span>
+                    </div>
+                    <span :style="{ fontSize:'10px', fontFamily:'var(--font-mono)', color:'var(--text-3)', letterSpacing:'.08em' }">Event Portal © 2026 · Invite. Inform. Remind. Track.</span>
                 </div>
             </div>
         </div>
@@ -357,7 +418,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { Head, Link } from '@inertiajs/vue3'
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import Chart from 'chart.js/auto'
 
 const props = defineProps({
@@ -368,88 +429,124 @@ const props = defineProps({
     guestStats: Object
 })
 
-const isLoading = ref(true)
+// ── State ──────────────────────────────────────────
+const isLoading        = ref(true)
+const isDark           = ref(false)
 const participantChart = ref(null)
-const chartPeriod = ref('monthly')
-let chartInstance = null
+const chartPeriod      = ref('monthly')
+let chartInstance      = null
 
-onMounted(() => {
-    setTimeout(() => {
-        isLoading.value = false
-        setTimeout(() => {
-            updateChart()
-        }, 100)
-    }, 3000)
+// ── Brand colors ───────────────────────────────────
+const featureColors = ['#C0170F', '#1D5C96', '#F05A00']
+
+// ── Greeting ──────────────────────────────────────
+const greeting = computed(() => {
+    const h = new Date().getHours()
+    return h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening'
 })
 
-const formatNumber = (num) => {
-    return new Intl.NumberFormat().format(num || 0)
+// ── Static date pill (no ticking clock) ───────────
+const currentDate = computed(() => {
+    const now    = new Date()
+    const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    return `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()} ${now.getFullYear()}`
+})
+
+// ── Dark mode: synced from Header via CustomEvent ──
+const syncDark = (e) => { isDark.value = e.detail }
+
+// ── Lifecycle ──────────────────────────────────────
+onMounted(() => {
+    isDark.value = localStorage.getItem('ep-dark') === 'true'
+    window.addEventListener('ep-dark-toggle', syncDark)
+
+    setTimeout(() => {
+        isLoading.value = false
+        setTimeout(updateChart, 100)
+    }, 1500)
+})
+
+onUnmounted(() => {
+    window.removeEventListener('ep-dark-toggle', syncDark)
+    if (chartInstance) chartInstance.destroy()
+})
+
+// ── Helpers ────────────────────────────────────────
+const formatNumber = (n) => new Intl.NumberFormat().format(n || 0)
+const formatShort  = (n) => {
+    if (!n) return '0'
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M'
+    if (n >= 1000)    return (n / 1000).toFixed(0) + 'K'
+    return n.toString()
 }
 
-const getEventIcon = (eventType) => {
-    return 'div'
+const getEventEmoji = (type) => {
+    const map = { wedding:'💍', conference:'🎤', gala:'✨', corporate:'🏢', festival:'🎉' }
+    return map[type] || '📅'
 }
 
+const getStatusStyle = (cls) => {
+    const map = {
+        active:    'background:rgba(192,23,15,.1);color:#C0170F',
+        published: 'background:rgba(34,197,94,.1);color:#16a34a',
+        pending:   'background:rgba(249,178,51,.15);color:#b45309',
+        draft:     'background:rgba(29,92,150,.1);color:#1D5C96',
+    }
+    return map[cls] || map.draft
+}
+
+// ── Chart ──────────────────────────────────────────
 const setChartPeriod = (period) => {
     chartPeriod.value = period
     updateChart()
 }
 
 const updateChart = () => {
-    if (chartInstance) {
-        chartInstance.destroy()
-    }
-    
-    if (participantChart.value) {
-        const data = chartPeriod.value === 'monthly' ? getMonthlyData() : getWeeklyData()
-            
-        chartInstance = new Chart(participantChart.value, {
-            type: 'bar',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    data: data.values,
-                    backgroundColor: '#3B82F6',
-                    borderRadius: 6,
-                    barThickness: 14
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { 
-                        beginAtZero: true,
-                        grid: { color: '#E5E7EB' },
-                        ticks: { display: false }
-                    },
-                    x: { 
-                        grid: { display: false },
-                        ticks: { font: { size: 10, weight: 'bold' } }
-                    }
-                }
+    if (chartInstance) { chartInstance.destroy(); chartInstance = null }
+    if (!participantChart.value) return
+
+    const { labels, values } = chartPeriod.value === 'monthly' ? getMonthlyData() : getWeeklyData()
+    const gridColor = isDark.value ? '#2E2925' : '#E8E2DA'
+    const tickColor = isDark.value ? '#605850' : '#9E9890'
+
+    chartInstance = new Chart(participantChart.value, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                data: values,
+                backgroundColor: '#F05A00',
+                hoverBackgroundColor: '#C0170F',
+                borderRadius: 5,
+                barThickness: chartPeriod.value === 'monthly' ? 6 : 20
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw} guests` } } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: gridColor }, ticks: { display: false } },
+                x: { grid: { display: false }, ticks: { color: tickColor, font: { size: 9, weight: '600', family: 'DM Mono' } } }
             }
-        })
-    }
+        }
+    })
 }
 
 const getMonthlyData = () => {
     const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString())
-    const values = Object.values(props.guestStats?.daily || {}).length 
-        ? Object.values(props.guestStats.daily) 
-        : [150, 200, 180, 220, 190, 250, 240, 210, 280, 260, 290, 310, 280, 320, 350, 380, 360, 340, 370, 350, 330, 310, 290, 270, 250, 230, 210, 190, 170, 150, 130]
-    
-    return { labels: days, values }
+    const vals = Object.values(props.guestStats?.daily || {}).length
+        ? Object.values(props.guestStats.daily)
+        : [150,200,180,220,190,250,240,210,280,260,290,310,280,320,350,380,360,340,370,350,330,310,290,270,250,230,210,190,170,150,130]
+    return { labels: days, values: vals }
 }
 
-const getWeeklyData = () => {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    const values = [180, 220, 280, 320, 380, 350, 290]
-    return { labels: days, values }
-}
-
-watch(chartPeriod, () => {
-    updateChart()
+const getWeeklyData = () => ({
+    labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    values: [180,220,280,320,380,350,290]
 })
+
+watch(isDark, () => setTimeout(updateChart, 50))
+watch(chartPeriod, updateChart)
 </script>

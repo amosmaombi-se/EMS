@@ -1,531 +1,351 @@
 <template>
     <AuthenticatedLayout>
-        <template #header>
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-                <div class="flex-1">
-                    <div class="flex items-center gap-3 mb-3">
-                        <Link :href="route('events.guests.index', event.id)" 
-                              class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors group">
-                            <svg class="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                            </svg>
-                            Back to Guests
-                        </Link>
-                        <div class="h-4 w-px bg-gray-300"></div>
-                        <Link :href="route('events.show', event.id)" 
-                              class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                            {{ event.title }}
-                        </Link>
+
+        <div class="confetti" aria-hidden="true">
+            <div class="cdot" v-for="n in 12" :key="n" :style="{
+                width:(3+(n*3)%9)+'px',height:(3+(n*3)%9)+'px',left:(n*8.2%100)+'%',
+                background:['#C0170F','#F05A00','#F9B233','#1D5C96','#C0170F','#F9B233'][n%6],
+                animationDuration:(10+n*1.1)+'s',animationDelay:(n*.7)+'s',
+                borderRadius:n%3===0?'2px':'50%',
+            }"></div>
+        </div>
+
+        <div class="page-wrap">
+
+            <!-- header -->
+            <div class="page-header">
+                <div>
+                    <div class="breadcrumb">
+                        <Link :href="route('events.guests.index',event.id)" class="bc-link">Guests</Link>
+                        <span class="bc-sep">›</span>
+                        <span class="bc-cur">Edit Guest</span>
                     </div>
-                    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                        <div>
-                            <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold" 
-                                     :class="getAvatarColorClass(form.category)">
-                                    {{ getInitials(form.first_name, form.last_name) }}
-                                </div>
-                                <div>
-                                    <h1 class="font-bold text-3xl text-gray-900 leading-tight mb-1">Edit Guest</h1>
-                                    <p class="text-gray-600">Update details for <span class="font-semibold">{{ form.first_name }} {{ form.last_name }}</span></p>
-                                </div>
-                            </div>
+                    <div class="guest-header-row">
+                        <div class="guest-avatar-lg" :style="{background:AVATAR_COLORS[form.category]||'#9E9890'}">
+                            {{ getInitials(form.first_name,form.last_name) }}
                         </div>
-                        <div class="flex items-center gap-3">
-                            <span class="px-3 py-1.5 rounded-full text-sm font-semibold capitalize"
-                                  :class="getRsvpStatusClass(form.rsvp_status)">
-                                {{ form.rsvp_status.replace('_', ' ') }}
-                            </span>
-                            <span v-if="form.is_vip" 
-                                  class="px-3 py-1.5 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
-                                VIP
-                            </span>
+                        <div>
+                            <div class="page-eyebrow"><span class="eyebrow-dot"></span>Editing Guest</div>
+                            <h1 class="page-title">{{ form.first_name||'New' }} {{ form.last_name||'Guest' }}</h1>
                         </div>
                     </div>
                 </div>
+                <div class="header-right">
+                    <span class="rsvp-pill" :style="RSVP_STYLE[form.rsvp_status]||RSVP_STYLE.pending">
+                        {{ RSVP_LABEL[form.rsvp_status]||form.rsvp_status }}
+                    </span>
+                    <span v-if="form.is_vip" class="vip-pill">⭐ VIP</span>
+                    <Link :href="route('events.guests.index',event.id)" class="btn-ghost">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                        Back
+                    </Link>
+                </div>
             </div>
-        </template>
 
-        <div class="py-6">
-            <div class="max-w-12xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Main Form -->
-                    <div class="lg:col-span-2">
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                            <form @submit.prevent="submit">
-                                <div class="p-6 space-y-8">
-                                    <!-- Basic Information -->
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200">
-                                            <svg class="w-5 h-5 inline-block mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                            </svg>
-                                            Basic Information
-                                        </h3>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div>
-                                                <label for="first_name" class="block text-sm font-medium text-gray-700 mb-2">
-                                                    First Name *
-                                                </label>
-                                                <input type="text" 
-                                                       id="first_name" 
-                                                       v-model="form.first_name"
-                                                       class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors"
-                                                       :class="{ 'border-red-300': form.errors.first_name }"
-                                                       required>
-                                                <p v-if="form.errors.first_name" class="mt-1 text-sm text-red-600">
-                                                    {{ form.errors.first_name }}
-                                                </p>
-                                            </div>
-                                            
-                                            <div>
-                                                <label for="last_name" class="block text-sm font-medium text-gray-700 mb-2">
-                                                    Last Name *
-                                                </label>
-                                                <input type="text" 
-                                                       id="last_name" 
-                                                       v-model="form.last_name"
-                                                       class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors"
-                                                       :class="{ 'border-red-300': form.errors.last_name }"
-                                                       required>
-                                                <p v-if="form.errors.last_name" class="mt-1 text-sm text-red-600">
-                                                    {{ form.errors.last_name }}
-                                                </p>
-                                            </div>
-                                            
-                                            <div>
-                                                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                                                    Email Address
-                                                </label>
-                                                <input type="email" 
-                                                       id="email" 
-                                                       v-model="form.email"
-                                                       class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors"
-                                                       :class="{ 'border-red-300': form.errors.email }"
-                                                       placeholder="john.doe@example.com">
-                                                <p v-if="form.errors.email" class="mt-1 text-sm text-red-600">
-                                                    {{ form.errors.email }}
-                                                </p>
-                                            </div>
-                                            
-                                            <div>
-                                                <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
-                                                    Phone Number
-                                                </label>
-                                                <input type="tel" 
-                                                       id="phone" 
-                                                       v-model="form.phone"
-                                                       class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors"
-                                                       :class="{ 'border-red-300': form.errors.phone }"
-                                                       placeholder="+1 (555) 123-4567">
-                                                <p v-if="form.errors.phone" class="mt-1 text-sm text-red-600">
-                                                    {{ form.errors.phone }}
-                                                </p>
-                                            </div>
-                                        </div>
+            <div class="layout">
+                <!-- ── Main form ── -->
+                <div class="layout-main">
+                    <form @submit.prevent="submit">
+
+                        <!-- Basic Info -->
+                        <div class="form-card">
+                            <div class="form-card-head">
+                                <div class="card-icon-wrap" style="background:rgba(29,92,150,.1)">👤</div>
+                                <div>
+                                    <div class="card-title">Basic Information</div>
+                                    <div class="card-sub">Name, contact details</div>
+                                </div>
+                            </div>
+                            <div class="fields">
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label class="field-label">First Name <span class="required">*</span></label>
+                                        <input type="text" v-model="form.first_name" class="field-input" :class="form.errors.first_name?'err-border':''">
+                                        <p v-if="form.errors.first_name" class="err-msg">{{ form.errors.first_name }}</p>
                                     </div>
-
-                                    <!-- Guest Classification -->
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200">
-                                            <svg class="w-5 h-5 inline-block mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                            </svg>
-                                            Guest Classification
-                                        </h3>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div>
-                                                <label for="category" class="block text-sm font-medium text-gray-700 mb-2">
-                                                    Category *
-                                                </label>
-                                                <select id="category" 
-                                                        v-model="form.category"
-                                                        class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors"
-                                                        :class="{ 'border-red-300': form.errors.category }"
-                                                        required>
-                                                    <option value="vip">VIP</option>
-                                                    <option value="family">Family</option>
-                                                    <option value="friends">Friends</option>
-                                                    <option value="colleagues">Colleagues</option>
-                                                    <option value="business">Business</option>
-                                                    <option value="media">Media</option>
-                                                    <option value="sponsors">Sponsors</option>
-                                                    <option value="other">Other</option>
-                                                </select>
-                                                <p v-if="form.errors.category" class="mt-1 text-sm text-red-600">
-                                                    {{ form.errors.category }}
-                                                </p>
-                                            </div>
-                                            
-                                            <div>
-                                                <label for="guest_type" class="block text-sm font-medium text-gray-700 mb-2">
-                                                    Guest Type
-                                                </label>
-                                                <select id="guest_type" 
-                                                        v-model="form.guest_type"
-                                                        class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors">
-                                                    <option value="primary">Primary Guest</option>
-                                                    <option value="plus_one">Plus One</option>
-                                                    <option value="child">Child</option>
-                                                    <option value="vendor">Vendor</option>
-                                                    <option value="staff">Staff</option>
-                                                    <option value="speaker">Speaker</option>
-                                                    <option value="performer">Performer</option>
-                                                    <option value="sponsor">Sponsor</option>
-                                                </select>
-                                            </div>
-                                            
-                                            <div>
-                                                <label for="rsvp_status" class="block text-sm font-medium text-gray-700 mb-2">
-                                                    RSVP Status *
-                                                </label>
-                                                <select id="rsvp_status" 
-                                                        v-model="form.rsvp_status"
-                                                        class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors"
-                                                        :class="{ 'border-red-300': form.errors.rsvp_status }"
-                                                        required>
-                                                    <option value="pending">Pending</option>
-                                                    <option value="attending">Attending</option>
-                                                    <option value="not_attending">Not Attending</option>
-                                                    <option value="maybe">Maybe</option>
-                                                </select>
-                                                <p v-if="form.errors.rsvp_status" class="mt-1 text-sm text-red-600">
-                                                    {{ form.errors.rsvp_status }}
-                                                </p>
-                                            </div>
-                                            
-                                            <div>
-                                                <label for="language_preference" class="block text-sm font-medium text-gray-700 mb-2">
-                                                    Language Preference
-                                                </label>
-                                                <select id="language_preference" 
-                                                        v-model="form.language_preference"
-                                                        class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors">
-                                                    <option value="en">English</option>
-                                                    <option value="es">Spanish</option>
-                                                    <option value="fr">French</option>
-                                                    <option value="de">German</option>
-                                                    <option value="it">Italian</option>
-                                                    <option value="pt">Portuguese</option>
-                                                    <option value="ru">Russian</option>
-                                                    <option value="zh">Chinese</option>
-                                                    <option value="ja">Japanese</option>
-                                                    <option value="ko">Korean</option>
-                                                    <option value="ar">Arabic</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                                            <div class="space-y-4">
-                                                <div class="flex items-center">
-                                                    <input type="checkbox" 
-                                                           id="is_vip" 
-                                                           v-model="form.is_vip"
-                                                           class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                                                    <label for="is_vip" class="ml-2 block text-sm text-gray-700">
-                                                        Mark as VIP Guest
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="space-y-4">
-                                                <div class="flex items-center">
-                                                    <input type="checkbox" 
-                                                           id="plus_one_allowed" 
-                                                           v-model="form.plus_one_allowed"
-                                                           class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                                                    <label for="plus_one_allowed" class="ml-2 block text-sm text-gray-700">
-                                                        Allow Plus One(s)
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div v-if="form.plus_one_allowed" class="mt-6">
-                                            <label for="plus_ones" class="block text-sm font-medium text-gray-700 mb-2">
-                                                Number of Plus Ones
-                                            </label>
-                                            <input type="number" 
-                                                   id="plus_ones" 
-                                                   v-model="form.plus_ones"
-                                                   min="0" 
-                                                   max="10"
-                                                   class="w-32 rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors"
-                                                   :class="{ 'border-red-300': form.errors.plus_ones }">
-                                            <p v-if="form.errors.plus_ones" class="mt-1 text-sm text-red-600">
-                                                {{ form.errors.plus_ones }}
-                                            </p>
-                                        </div>
+                                    <div class="field">
+                                        <label class="field-label">Last Name <span class="required">*</span></label>
+                                        <input type="text" v-model="form.last_name" class="field-input" :class="form.errors.last_name?'err-border':''">
+                                        <p v-if="form.errors.last_name" class="err-msg">{{ form.errors.last_name }}</p>
                                     </div>
-
-                                    <!-- Special Requirements -->
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200">
-                                            <svg class="w-5 h-5 inline-block mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                                            </svg>
-                                            Special Requirements
-                                        </h3>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div>
-                                                <label for="dietary_preference" class="block text-sm font-medium text-gray-700 mb-2">
-                                                    Dietary Preference
-                                                </label>
-                                                <select id="dietary_preference" 
-                                                        v-model="form.dietary_preference"
-                                                        class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors">
-                                                    <option value="">None</option>
-                                                    <option value="Vegetarian">Vegetarian</option>
-                                                    <option value="Vegan">Vegan</option>
-                                                    <option value="Gluten-Free">Gluten-Free</option>
-                                                    <option value="Dairy-Free">Dairy-Free</option>
-                                                    <option value="Kosher">Kosher</option>
-                                                    <option value="Halal">Halal</option>
-                                                    <option value="Pescatarian">Pescatarian</option>
-                                                    <option value="Low-Carb">Low-Carb</option>
-                                                    <option value="Other">Other</option>
-                                                </select>
-                                            </div>
-                                            
-                                            <div>
-                                                <label for="allergies" class="block text-sm font-medium text-gray-700 mb-2">
-                                                    Allergies
-                                                </label>
-                                                <input type="text" 
-                                                       id="allergies" 
-                                                       v-model="form.allergies"
-                                                       class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors"
-                                                       placeholder="e.g., Peanuts, Shellfish">
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="grid grid-cols-1 gap-6 mt-6">
-                                            <div>
-                                                <label for="special_requirements" class="block text-sm font-medium text-gray-700 mb-2">
-                                                    Special Requirements
-                                                </label>
-                                                <textarea id="special_requirements" 
-                                                          v-model="form.special_requirements"
-                                                          rows="3"
-                                                          class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors"
-                                                          placeholder="Any special requirements for the guest..."></textarea>
-                                            </div>
-                                            
-                                            <div>
-                                                <label for="accessibility_needs" class="block text-sm font-medium text-gray-700 mb-2">
-                                                    Accessibility Needs
-                                                </label>
-                                                <textarea id="accessibility_needs" 
-                                                          v-model="form.accessibility_needs"
-                                                          rows="3"
-                                                          class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors"
-                                                          placeholder="e.g., Wheelchair access, hearing assistance..."></textarea>
-                                            </div>
-                                            
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div>
-                                                    <label for="accommodation_needs" class="block text-sm font-medium text-gray-700 mb-2">
-                                                        Accommodation Needs
-                                                    </label>
-                                                    <textarea id="accommodation_needs" 
-                                                              v-model="form.accommodation_needs"
-                                                              rows="2"
-                                                              class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors"
-                                                              placeholder="Hotel, special room requirements..."></textarea>
-                                                </div>
-                                                
-                                                <div>
-                                                    <label for="transportation_needs" class="block text-sm font-medium text-gray-700 mb-2">
-                                                        Transportation Needs
-                                                    </label>
-                                                    <textarea id="transportation_needs" 
-                                                              v-model="form.transportation_needs"
-                                                              rows="2"
-                                                              class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors"
-                                                              placeholder="Airport pickup, parking requirements..."></textarea>
-                                                </div>
-                                            </div>
-                                        </div>
+                                </div>
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label class="field-label">Email Address</label>
+                                        <input type="email" v-model="form.email" class="field-input" :class="form.errors.email?'err-border':''" placeholder="john.doe@example.com">
+                                        <p v-if="form.errors.email" class="err-msg">{{ form.errors.email }}</p>
                                     </div>
+                                    <div class="field">
+                                        <label class="field-label">Phone Number</label>
+                                        <input type="tel" v-model="form.phone" class="field-input" placeholder="+255 700 000 000">
+                                        <p v-if="form.errors.phone" class="err-msg">{{ form.errors.phone }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                                    <!-- Additional Notes -->
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200">
-                                            <svg class="w-5 h-5 inline-block mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                            </svg>
-                                            Additional Notes
-                                        </h3>
+                        <!-- Classification -->
+                        <div class="form-card">
+                            <div class="form-card-head">
+                                <div class="card-icon-wrap" style="background:rgba(192,23,15,.1)">🏷️</div>
+                                <div>
+                                    <div class="card-title">Guest Classification</div>
+                                    <div class="card-sub">Category, type, RSVP and preferences</div>
+                                </div>
+                            </div>
+                            <div class="fields">
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label class="field-label">Category <span class="required">*</span></label>
+                                        <select v-model="form.category" class="field-input">
+                                            <option value="vip">VIP</option><option value="family">Family</option>
+                                            <option value="friends">Friends</option><option value="colleagues">Colleagues</option>
+                                            <option value="business">Business</option><option value="media">Media</option>
+                                            <option value="sponsors">Sponsors</option><option value="other">Other</option>
+                                        </select>
+                                        <p v-if="form.errors.category" class="err-msg">{{ form.errors.category }}</p>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Guest Type</label>
+                                        <select v-model="form.guest_type" class="field-input">
+                                            <option value="primary">Primary Guest</option><option value="plus_one">Plus One</option>
+                                            <option value="child">Child</option><option value="vendor">Vendor</option>
+                                            <option value="staff">Staff</option><option value="speaker">Speaker</option>
+                                            <option value="performer">Performer</option><option value="sponsor">Sponsor</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label class="field-label">RSVP Status <span class="required">*</span></label>
+                                        <div class="rsvp-chips">
+                                            <div v-for="s in RSVP_OPTIONS" :key="s.value"
+                                                 @click="form.rsvp_status=s.value"
+                                                 :class="['rsvp-chip', form.rsvp_status===s.value?'selected':'']"
+                                                 :style="form.rsvp_status===s.value?{borderColor:s.color,background:s.bg,color:s.color}:{}">
+                                                <span class="rsvp-dot" :style="{background:s.color}"></span>
+                                                {{ s.label }}
+                                            </div>
+                                        </div>
+                                        <p v-if="form.errors.rsvp_status" class="err-msg">{{ form.errors.rsvp_status }}</p>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Language Preference</label>
+                                        <select v-model="form.language_preference" class="field-input">
+                                            <option value="en">English</option><option value="es">Spanish</option>
+                                            <option value="fr">French</option><option value="de">German</option>
+                                            <option value="it">Italian</option><option value="pt">Portuguese</option>
+                                            <option value="ar">Arabic</option><option value="sw">Swahili</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="toggle-grid">
+                                    <div class="toggle-item" @click="form.is_vip=!form.is_vip" :class="form.is_vip?'active-amber':''">
+                                        <span class="ti-icon">⭐</span>
                                         <div>
-                                            <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
-                                                Notes & Comments
-                                            </label>
-                                            <textarea id="notes" 
-                                                      v-model="form.notes"
-                                                      rows="4"
-                                                      class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors"
-                                                      placeholder="Any additional notes about this guest..."></textarea>
+                                            <div class="ti-label">VIP Guest</div>
+                                            <div class="ti-sub">Priority treatment</div>
                                         </div>
+                                        <div :class="['toggle', form.is_vip?'on':'']"><div class="toggle-knob"></div></div>
+                                    </div>
+                                    <div class="toggle-item" @click="form.plus_one_allowed=!form.plus_one_allowed" :class="form.plus_one_allowed?'active-navy':''">
+                                        <span class="ti-icon">👥</span>
+                                        <div>
+                                            <div class="ti-label">Allow Plus One(s)</div>
+                                            <div class="ti-sub">Can bring additional guests</div>
+                                        </div>
+                                        <div :class="['toggle', form.plus_one_allowed?'on':'']"><div class="toggle-knob"></div></div>
                                     </div>
                                 </div>
+                                <div v-if="form.plus_one_allowed" class="field" style="max-width:180px">
+                                    <label class="field-label">Plus Ones Count</label>
+                                    <input type="number" v-model="form.plus_ones" min="0" max="10" class="field-input">
+                                </div>
+                            </div>
+                        </div>
 
-                                <!-- Form Actions -->
-                                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-3">
-                                            <Link :href="route('events.guests.index', event.id)" 
-                                                  class="inline-flex items-center px-4 py-2.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                                                Cancel
-                                            </Link>
-                                            <button type="button" 
-                                                    @click="deleteGuest"
-                                                    class="inline-flex items-center px-4 py-2.5 border border-red-300 text-sm font-medium rounded-lg text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                                                Delete Guest
-                                            </button>
-                                        </div>
-                                        <div class="flex items-center gap-3">
-                                            <button type="submit" 
-                                                    :disabled="form.processing"
-                                                    class="inline-flex items-center px-4 py-2.5 bg-indigo-600 border border-transparent text-sm font-medium rounded-lg text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                                <svg v-if="form.processing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                {{ form.processing ? 'Saving...' : 'Update Guest' }}
-                                            </button>
-                                        </div>
+                        <!-- Special Requirements -->
+                        <div class="form-card">
+                            <div class="form-card-head">
+                                <div class="card-icon-wrap" style="background:rgba(22,163,74,.1)">🛡️</div>
+                                <div>
+                                    <div class="card-title">Special Requirements</div>
+                                    <div class="card-sub">Dietary, accessibility and logistics needs</div>
+                                </div>
+                            </div>
+                            <div class="fields">
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label class="field-label">Dietary Preference</label>
+                                        <select v-model="form.dietary_preference" class="field-input">
+                                            <option value="">None</option><option value="Vegetarian">Vegetarian</option>
+                                            <option value="Vegan">Vegan</option><option value="Gluten-Free">Gluten-Free</option>
+                                            <option value="Dairy-Free">Dairy-Free</option><option value="Kosher">Kosher</option>
+                                            <option value="Halal">Halal</option><option value="Pescatarian">Pescatarian</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Allergies</label>
+                                        <input type="text" v-model="form.allergies" class="field-input" placeholder="e.g. Peanuts, Shellfish">
                                     </div>
                                 </div>
-                            </form>
+                                <div class="field">
+                                    <label class="field-label">Special Requirements</label>
+                                    <textarea v-model="form.special_requirements" rows="2" class="field-input" placeholder="Any other special requirements…"></textarea>
+                                </div>
+                                <div class="field">
+                                    <label class="field-label">Accessibility Needs</label>
+                                    <textarea v-model="form.accessibility_needs" rows="2" class="field-input" placeholder="e.g. Wheelchair access, hearing assistance…"></textarea>
+                                </div>
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label class="field-label">Accommodation Needs</label>
+                                        <textarea v-model="form.accommodation_needs" rows="2" class="field-input" placeholder="Hotel, room requirements…"></textarea>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Transportation Needs</label>
+                                        <textarea v-model="form.transportation_needs" rows="2" class="field-input" placeholder="Airport pickup, parking…"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="form-card">
+                            <div class="form-card-head">
+                                <div class="card-icon-wrap" style="background:rgba(158,152,144,.15)">📝</div>
+                                <div>
+                                    <div class="card-title">Notes</div>
+                                    <div class="card-sub">Internal notes about this guest</div>
+                                </div>
+                            </div>
+                            <div class="fields">
+                                <div class="field">
+                                    <textarea v-model="form.notes" rows="3" class="field-input" placeholder="Any internal notes or comments about this guest…"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form actions -->
+                        <div class="form-actions-bar">
+                            <div class="form-actions-left">
+                                <Link :href="route('events.guests.index',event.id)" class="btn-ghost">Cancel</Link>
+                                <button type="button" @click="showDeleteModal=true" class="btn-danger-outline">
+                                    🗑️ Delete Guest
+                                </button>
+                            </div>
+                            <button type="submit" :disabled="form.processing" class="btn-cta">
+                                <svg v-if="form.processing" class="spin-icon" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                                <svg v-else width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+                                {{ form.processing?'Saving…':'Update Guest' }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ── Sidebar ── -->
+                <div class="layout-side">
+
+                    <!-- Invitation status -->
+                    <div class="side-card">
+                        <div class="side-card-title">✉️ Invitation</div>
+                        <div class="side-rows">
+                            <div class="side-row">
+                                <span class="sr-lbl">Status</span>
+                                <span :class="['sr-val', guest.invitation_sent?'green':'muted']">
+                                    {{ guest.invitation_sent?'✓ Sent':'Not Sent' }}
+                                </span>
+                            </div>
+                            <div v-if="guest.invitation_sent" class="side-row">
+                                <span class="sr-lbl">Method</span>
+                                <span class="sr-val capitalize">{{ guest.invitation_method||'email' }}</span>
+                            </div>
+                            <div v-if="guest.invitation_sent_at" class="side-row">
+                                <span class="sr-lbl">Sent on</span>
+                                <span class="sr-val">{{ fmtDate(guest.invitation_sent_at) }}</span>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Sidebar (Simplified) -->
-                    <div class="space-y-6">
-                        <!-- Guest Summary -->
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Guest Summary</h3>
-                            <div class="space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm text-gray-500">Invitation Status:</span>
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full" 
-                                          :class="guest.invitation_sent ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'">
-                                        {{ guest.invitation_sent ? 'Sent' : 'Not Sent' }}
-                                    </span>
-                                </div>
-                                
-                                <div v-if="guest.invitation_sent" class="space-y-2">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-sm text-gray-500">Method:</span>
-                                        <span class="text-sm font-medium text-gray-900 capitalize">{{ guest.invitation_method || 'email' }}</span>
-                                    </div>
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-sm text-gray-500">Sent On:</span>
-                                        <span class="text-sm font-medium text-gray-900">{{ formatDate(guest.invitation_sent_at) }}</span>
-                                    </div>
-                                </div>
+                    <!-- Check-in status -->
+                    <div class="side-card">
+                        <div class="side-card-title">🎫 Check-in</div>
+                        <div v-if="guest.check_in_time" class="side-rows">
+                            <div class="side-row">
+                                <span class="sr-lbl">Checked In</span>
+                                <span class="sr-val green">{{ fmtDateTime(guest.check_in_time) }}</span>
+                            </div>
+                            <div v-if="guest.check_out_time" class="side-row">
+                                <span class="sr-lbl">Checked Out</span>
+                                <span class="sr-val">{{ fmtDateTime(guest.check_out_time) }}</span>
+                            </div>
+                            <div class="side-row">
+                                <span class="sr-lbl">Duration</span>
+                                <span class="sr-val">{{ getDuration(guest.check_in_time,guest.check_out_time) }}</span>
                             </div>
                         </div>
-
-                        <!-- Check-in Status -->
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Check-in Status</h3>
-                            <div class="space-y-4">
-                                <div v-if="guest.check_in_time" class="space-y-3">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-sm text-gray-500">Check-in Time:</span>
-                                        <span class="text-sm font-medium text-green-600">{{ formatDateTime(guest.check_in_time) }}</span>
-                                    </div>
-                                    <div v-if="guest.check_out_time" class="flex items-center justify-between">
-                                        <span class="text-sm text-gray-500">Check-out Time:</span>
-                                        <span class="text-sm font-medium text-gray-900">{{ formatDateTime(guest.check_out_time) }}</span>
-                                    </div>
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-sm text-gray-500">Duration:</span>
-                                        <span class="text-sm font-medium text-gray-900">{{ getDuration(guest.check_in_time, guest.check_out_time) }}</span>
-                                    </div>
-                                </div>
-                                <div v-else class="text-center py-4">
-                                    <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                    </div>
-                                    <p class="text-sm text-gray-500">Guest has not checked in yet</p>
-                                </div>
-                            </div>
+                        <div v-else class="empty-checkin">
+                            <div style="font-size:28px;margin-bottom:6px;opacity:.4">⏳</div>
+                            <div style="font-size:12px;color:#9E9890">Not checked in yet</div>
                         </div>
+                    </div>
 
-                        <!-- System Information -->
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">System Information</h3>
-                            <div class="space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm text-gray-500">Guest ID:</span>
-                                    <span class="text-sm font-medium text-gray-900">{{ guest.id }}</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm text-gray-500">Created:</span>
-                                    <span class="text-sm font-medium text-gray-900">{{ formatDateTime(guest.created_at) }}</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm text-gray-500">Last Updated:</span>
-                                    <span class="text-sm font-medium text-gray-900">{{ formatDateTime(guest.updated_at) }}</span>
-                                </div>
-                                <div v-if="guest.rsvp_responded_at" class="flex items-center justify-between">
-                                    <span class="text-sm text-gray-500">RSVP Responded:</span>
-                                    <span class="text-sm font-medium text-gray-900">{{ formatDateTime(guest.rsvp_responded_at) }}</span>
-                                </div>
+                    <!-- System info -->
+                    <div class="side-card">
+                        <div class="side-card-title">🔧 System Info</div>
+                        <div class="side-rows">
+                            <div class="side-row">
+                                <span class="sr-lbl">Guest ID</span>
+                                <span class="sr-val mono">#{{ guest.id }}</span>
+                            </div>
+                            <div class="side-row">
+                                <span class="sr-lbl">Created</span>
+                                <span class="sr-val">{{ fmtDate(guest.created_at) }}</span>
+                            </div>
+                            <div class="side-row">
+                                <span class="sr-lbl">Updated</span>
+                                <span class="sr-val">{{ fmtDate(guest.updated_at) }}</span>
+                            </div>
+                            <div v-if="guest.rsvp_responded_at" class="side-row">
+                                <span class="sr-lbl">RSVP At</span>
+                                <span class="sr-val">{{ fmtDate(guest.rsvp_responded_at) }}</span>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
 
-        <!-- Delete Confirmation Modal -->
-        <Modal :show="showDeleteModal" @close="showDeleteModal = false">
-            <div class="p-6">
-                <div class="flex items-center mb-6">
-                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
-                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                        </svg>
-                    </div>
+        <!-- Delete modal -->
+        <Modal :show="showDeleteModal" @close="showDeleteModal=false">
+            <div class="modal-wrap">
+                <div class="modal-header">
                     <div>
-                        <h2 class="text-xl font-bold text-gray-900">Delete Guest</h2>
-                        <p class="text-sm text-gray-500">This action cannot be undone</p>
+                        <h2 class="modal-title" style="color:#C0170F">Delete Guest</h2>
+                        <p class="modal-sub">This action cannot be undone</p>
                     </div>
-                </div>
-                
-                <p class="text-sm text-gray-600 mb-6">
-                    Are you sure you want to delete <span class="font-semibold">{{ guest.first_name }} {{ guest.last_name }}</span> from the event?
-                    This will remove all their information including RSVP responses and check-in records.
-                </p>
-                
-                <div class="flex justify-end gap-3">
-                    <button
-                        type="button"
-                        @click="showDeleteModal = false"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
-                    >
-                        Cancel
+                    <button @click="showDeleteModal=false" class="modal-close">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
                     </button>
-                    <button
-                        type="button"
-                        @click="confirmDelete"
-                        :disabled="deleteForm.processing"
-                        class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                        <span v-if="deleteForm.processing">Deleting...</span>
-                        <span v-else>Delete Guest</span>
+                </div>
+                <div class="delete-body">
+                    <div class="delete-icon-wrap">🗑️</div>
+                    <p style="font-size:14px;color:#1A1410;line-height:1.7">
+                        Are you sure you want to delete <strong>{{ guest.first_name }} {{ guest.last_name }}</strong>?
+                        This will remove all their information including RSVP responses and check-in records.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button @click="showDeleteModal=false" class="btn-ghost">Cancel</button>
+                    <button @click="confirmDelete" :disabled="deleteForm.processing" class="btn-cta" style="background-image:linear-gradient(135deg,#C0170F,#8B0000)">
+                        {{ deleteForm.processing?'Deleting…':'Delete Guest' }}
                     </button>
                 </div>
             </div>
         </Modal>
+
     </AuthenticatedLayout>
 </template>
 
@@ -536,193 +356,177 @@ import { Link, useForm, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import Swal from 'sweetalert2'
 
-const props = defineProps({
-    event: Object,
-    guest: Object
-})
-
+const props = defineProps({ event:Object, guest:Object })
 const showDeleteModal = ref(false)
 
 const form = useForm({
-    first_name: props.guest.first_name,
-    last_name: props.guest.last_name,
-    email: props.guest.email,
-    phone: props.guest.phone,
-    category: props.guest.category,
-    guest_type: props.guest.guest_type || 'primary',
-    rsvp_status: props.guest.rsvp_status,
-    plus_ones: props.guest.plus_ones || 0,
-    plus_one_allowed: props.guest.plus_one_allowed || false,
-    dietary_preference: props.guest.dietary_preference || '',
-    allergies: props.guest.allergies || '',
-    special_requirements: props.guest.special_requirements || '',
-    accessibility_needs: props.guest.accessibility_needs || '',
-    accommodation_needs: props.guest.accommodation_needs || '',
-    transportation_needs: props.guest.transportation_needs || '',
-    is_vip: props.guest.is_vip || false,
-    language_preference: props.guest.language_preference || 'en',
-    notes: props.guest.notes || '',
+    first_name:           props.guest.first_name,
+    last_name:            props.guest.last_name,
+    email:                props.guest.email||'',
+    phone:                props.guest.phone||'',
+    category:             props.guest.category,
+    guest_type:           props.guest.guest_type||'primary',
+    rsvp_status:          props.guest.rsvp_status,
+    plus_ones:            props.guest.plus_ones||0,
+    plus_one_allowed:     props.guest.plus_one_allowed||false,
+    dietary_preference:   props.guest.dietary_preference||'',
+    allergies:            props.guest.allergies||'',
+    special_requirements: props.guest.special_requirements||'',
+    accessibility_needs:  props.guest.accessibility_needs||'',
+    accommodation_needs:  props.guest.accommodation_needs||'',
+    transportation_needs: props.guest.transportation_needs||'',
+    is_vip:               props.guest.is_vip||false,
+    language_preference:  props.guest.language_preference||'en',
+    notes:                props.guest.notes||'',
 })
-
 const deleteForm = useForm({})
 
-const submit = async () => {
-    try {
-        await form.put(route('events.guests.update', [props.event.id, props.guest.id]), {
-            preserveScroll: true,
-            onSuccess: () => {
-                Swal.fire({
-                    title: 'Success!',
-                    text: 'Guest has been updated successfully.',
-                    icon: 'success',
-                    timer: 2000,
-                    showConfirmButton: false
-                })
-            },
-            onError: (errors) => {
-                console.error('Update error:', errors)
-                Swal.fire({
-                    title: 'Error!',
-                    text: 'Failed to update guest. Please check the form for errors.',
-                    icon: 'error',
-                    confirmButtonColor: '#ef4444'
-                })
-            }
-        })
-    } catch (error) {
-        console.error('Submission error:', error)
-        Swal.fire({
-            title: 'Error!',
-            text: 'Failed to update guest. Please try again.',
-            icon: 'error',
-            confirmButtonColor: '#ef4444'
-        })
-    }
-}
-
-const deleteGuest = () => {
-    showDeleteModal.value = true
+const submit = () => {
+    form.put(route('events.guests.update',[props.event.id,props.guest.id]), {
+        preserveScroll:true,
+        onSuccess:()=>Swal.fire({title:'Saved!',text:'Guest updated successfully.',icon:'success',timer:2000,showConfirmButton:false,confirmButtonColor:'#C0170F'}),
+        onError:()=>Swal.fire({title:'Error',text:'Failed to update. Please check the form.',icon:'error',confirmButtonColor:'#C0170F'}),
+    })
 }
 
 const confirmDelete = async () => {
-    const result = await Swal.fire({
-        title: 'Are you sure?',
-        html: `Delete <strong>${props.guest.first_name} ${props.guest.last_name}</strong> from this event?<br><span class="text-sm text-gray-500">This action cannot be undone.</span>`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Yes, delete guest!',
-        cancelButtonText: 'Cancel',
-        reverseButtons: true
+    const r=await Swal.fire({
+        title:'Delete Guest?', html:`Delete <strong>${props.guest.first_name} ${props.guest.last_name}</strong>? Cannot be undone.`,
+        icon:'warning', showCancelButton:true, confirmButtonColor:'#C0170F', cancelButtonColor:'#9E9890',
+        confirmButtonText:'Delete', cancelButtonText:'Cancel', reverseButtons:true
     })
-
-    if (!result.isConfirmed) {
-        showDeleteModal.value = false
-        return
-    }
-
-    try {
-        await deleteForm.delete(route('events.guests.destroy', [props.event.id, props.guest.id]), {
-            preserveScroll: true,
-            onSuccess: () => {
-                showDeleteModal.value = false
-                Swal.fire({
-                    title: 'Deleted!',
-                    text: 'Guest has been deleted successfully.',
-                    icon: 'success',
-                    timer: 2000,
-                    showConfirmButton: false
-                }).then(() => {
-                    router.visit(route('events.guests.index', props.event.id))
-                })
-            },
-            onError: () => {
-                Swal.fire({
-                    title: 'Error!',
-                    text: 'Failed to delete guest. Please try again.',
-                    icon: 'error',
-                    confirmButtonColor: '#ef4444'
-                })
-            }
-        })
-    } catch (error) {
-        console.error('Delete error:', error)
-        Swal.fire({
-            title: 'Error!',
-            text: 'Failed to delete guest. Please try again.',
-            icon: 'error',
-            confirmButtonColor: '#ef4444'
-        })
-    } finally {
-        showDeleteModal.value = false
-    }
-}
-
-// Helper functions
-const getInitials = (firstName, lastName) => {
-    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase()
-}
-
-const getAvatarColorClass = (category) => {
-    const colors = {
-        vip: 'bg-yellow-500',
-        family: 'bg-purple-500',
-        friends: 'bg-blue-500',
-        colleagues: 'bg-green-500',
-        business: 'bg-indigo-500',
-        media: 'bg-pink-500',
-        sponsors: 'bg-red-500',
-        other: 'bg-gray-500'
-    }
-    return colors[category] || 'bg-gray-500'
-}
-
-const getRsvpStatusClass = (status) => {
-    const classes = {
-        pending: 'bg-yellow-100 text-yellow-800',
-        attending: 'bg-green-100 text-green-800',
-        not_attending: 'bg-red-100 text-red-800',
-        maybe: 'bg-blue-100 text-blue-800'
-    }
-    return classes[status] || 'bg-gray-100 text-gray-800'
-}
-
-const formatDate = (date) => {
-    if (!date) return 'N/A'
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
+    if(!r.isConfirmed){ showDeleteModal.value=false; return }
+    deleteForm.delete(route('events.guests.destroy',[props.event.id,props.guest.id]),{
+        onSuccess:()=>{ showDeleteModal.value=false; Swal.fire({title:'Deleted!',icon:'success',timer:2000,showConfirmButton:false}).then(()=>router.visit(route('events.guests.index',props.event.id))) },
+        onError:()=>Swal.fire({title:'Error',text:'Failed to delete.',icon:'error',confirmButtonColor:'#C0170F'})
     })
 }
 
-const formatDateTime = (dateTime) => {
-    if (!dateTime) return 'N/A'
-    const date = new Date(dateTime)
-    return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-    }) + ' at ' + date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit'
-    })
+const getInitials = (f,l) => `${f?.[0]||''}${l?.[0]||''}`.toUpperCase()
+const fmtDate = d => d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'N/A'
+const fmtTime = d => d?new Date(d).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'N/A'
+const fmtDateTime = d => d?fmtDate(d)+' '+fmtTime(d):'N/A'
+const getDuration = (ci,co) => {
+    if(!ci) return 'N/A'
+    const ms=(co?new Date(co):new Date())-new Date(ci)
+    const h=Math.floor(ms/(1000*60*60)), m=Math.floor((ms%(1000*60*60))/(1000*60))
+    return h>0?`${h}h ${m}m`:`${m}m`
 }
 
-const getDuration = (checkInTime, checkOutTime) => {
-    if (!checkInTime) return 'N/A'
-    
-    const checkIn = new Date(checkInTime)
-    const checkOut = checkOutTime ? new Date(checkOutTime) : new Date()
-    
-    const diffMs = checkOut - checkIn
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
-    
-    if (diffHours > 0) {
-        return `${diffHours}h ${diffMinutes}m`
-    }
-    return `${diffMinutes}m`
+const AVATAR_COLORS = { vip:'#b45309',family:'#7c3aed',friends:'#1D5C96',colleagues:'#16a34a',business:'#1D5C96',media:'#db2777',sponsors:'#C0170F',other:'#9E9890' }
+const RSVP_OPTIONS = [
+    {value:'pending',     label:'Pending',      color:'#b45309', bg:'rgba(249,178,51,.12)'},
+    {value:'attending',   label:'Attending',    color:'#16a34a', bg:'rgba(22,163,74,.1)'},
+    {value:'not_attending',label:'Not Attending',color:'#C0170F',bg:'rgba(192,23,15,.08)'},
+    {value:'maybe',       label:'Maybe',        color:'#1D5C96', bg:'rgba(29,92,150,.1)'},
+]
+const RSVP_STYLE = {
+    pending:{background:'rgba(249,178,51,.12)',color:'#b45309',border:'1px solid rgba(249,178,51,.3)'},
+    attending:{background:'rgba(22,163,74,.1)',color:'#16a34a',border:'1px solid rgba(22,163,74,.25)'},
+    not_attending:{background:'rgba(192,23,15,.08)',color:'#C0170F',border:'1px solid rgba(192,23,15,.2)'},
+    maybe:{background:'rgba(29,92,150,.1)',color:'#1D5C96',border:'1px solid rgba(29,92,150,.2)'},
 }
+const RSVP_LABEL = {pending:'Pending',attending:'Attending',not_attending:'Not Attending',maybe:'Maybe'}
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.cdot{position:absolute;opacity:0;animation:rise linear infinite}
+@keyframes rise{0%{transform:translateY(110vh) rotate(0deg);opacity:0}5%{opacity:.35}95%{opacity:.15}100%{transform:translateY(-80px) rotate(540deg);opacity:0}}
+.page-wrap{position:relative;z-index:1;background:#F7F5F2;min-height:100vh;padding:28px 24px 64px;font-family:'DM Sans',sans-serif;color:#1A1410}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:11px;margin-bottom:10px}
+.bc-link{color:#9E9890;text-decoration:none;transition:color .15s}.bc-link:hover{color:#C0170F}
+.bc-sep{color:#C8C2BA}.bc-cur{color:#6B6560;font-weight:500}
+.guest-header-row{display:flex;align-items:center;gap:14px}
+.guest-avatar-lg{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'DM Mono',monospace;font-size:18px;font-weight:700;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.page-eyebrow{display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;color:#9E9890;text-transform:uppercase;margin-bottom:4px}
+.eyebrow-dot{width:6px;height:6px;border-radius:50%;background:#F05A00;animation:blink .9s ease-in-out infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.page-title{font-family:'Playfair Display',serif;font-size:clamp(18px,3vw,24px);font-weight:900;color:#1A1410;line-height:1.2}
+.header-right{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.rsvp-pill,.vip-pill{display:inline-flex;padding:5px 13px;border-radius:20px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace}
+.vip-pill{background:rgba(249,178,51,.18);color:#b45309;border:1px solid rgba(249,178,51,.35)}
+/* layout */
+.layout{display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start}
+@media(max-width:1024px){.layout{grid-template-columns:1fr}}
+.layout-main{display:flex;flex-direction:column;gap:16px}
+.layout-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:80px}
+/* form cards */
+.form-card{background:#fff;border:1px solid #E8E2DA;border-radius:20px;box-shadow:0 2px 14px rgba(0,0,0,.05);overflow:hidden}
+.form-card-head{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid #E8E2DA;background:#F0EDE8}
+.card-icon-wrap{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.card-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#1A1410}
+.card-sub{font-size:11px;color:#9E9890;font-family:'DM Mono',monospace;margin-top:1px}
+.fields{padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.field-row{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:5px}
+.field-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#6B6560;font-weight:500}
+.required{color:#C0170F}
+.field-input{padding:10px 13px;border:1.5px solid #E8E2DA;border-radius:11px;font-size:13px;font-family:'DM Sans',sans-serif;color:#1A1410;background:#fff;outline:none;transition:border-color .18s,box-shadow .18s;width:100%}
+.field-input:focus{border-color:#C0170F;box-shadow:0 0 0 3px rgba(192,23,15,.1)}
+.err-border{border-color:#C0170F!important}
+.err-msg{font-size:11px;color:#C0170F;font-family:'DM Mono',monospace}
+textarea.field-input{resize:vertical;min-height:72px}
+/* rsvp chips */
+.rsvp-chips{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media(max-width:500px){.rsvp-chips{grid-template-columns:1fr 1fr}}
+.rsvp-chip{display:flex;align-items:center;gap:7px;padding:8px 12px;border:1.5px solid #E8E2DA;border-radius:11px;cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Mono',monospace;color:#6B6560;background:#fff;transition:all .15s;user-select:none}
+.rsvp-chip:hover{border-color:#9E9890}
+.rsvp-chip.selected{font-weight:700}
+.rsvp-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+/* toggle grid */
+.toggle-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:640px){.toggle-grid{grid-template-columns:1fr}}
+.toggle-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid #E8E2DA;border-radius:13px;cursor:pointer;transition:all .18s;background:#F7F5F2;user-select:none}
+.toggle-item:hover{border-color:#9E9890}
+.toggle-item.active-amber{border-color:rgba(249,178,51,.5);background:rgba(249,178,51,.06)}
+.toggle-item.active-navy{border-color:rgba(29,92,150,.3);background:rgba(29,92,150,.06)}
+.ti-icon{font-size:18px;flex-shrink:0}
+.ti-label{font-size:13px;font-weight:600;color:#1A1410}
+.ti-sub{font-size:11px;color:#9E9890;font-family:'DM Mono',monospace}
+.toggle-item .toggle{margin-left:auto;flex-shrink:0}
+.toggle{width:40px;height:22px;border-radius:11px;background:#E8E2DA;position:relative;transition:background .2s}
+.toggle.on{background:linear-gradient(135deg,#C0170F,#F05A00)}
+.toggle-knob{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:transform .2s}
+.toggle.on .toggle-knob{transform:translateX(18px)}
+/* form actions */
+.form-actions-bar{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid #E8E2DA;border-radius:16px;padding:14px 20px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.form-actions-left{display:flex;align-items:center;gap:10px}
+/* sidebar cards */
+.side-card{background:#fff;border:1px solid #E8E2DA;border-radius:18px;padding:16px 18px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.side-card-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:#1A1410;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #F0EDE8}
+.side-rows{display:flex;flex-direction:column;gap:0}
+.side-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid #F7F5F2;gap:8px}
+.side-row:last-child{border-bottom:none}
+.sr-lbl{font-size:11px;color:#9E9890;font-family:'DM Mono',monospace;flex-shrink:0}
+.sr-val{font-size:12px;font-weight:600;color:#1A1410;text-align:right}
+.sr-val.green{color:#16a34a}
+.sr-val.muted{color:#9E9890;font-weight:400}
+.sr-val.mono{font-family:'DM Mono',monospace}
+.empty-checkin{text-align:center;padding:16px 0}
+/* buttons */
+.btn-cta{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:11px;border:none;cursor:pointer;background-image:linear-gradient(135deg,#C0170F 0%,#F05A00 50%,#F9B233 100%);background-size:200% auto;color:#fff;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;text-decoration:none;box-shadow:0 4px 14px rgba(192,23,15,.28);animation:shine 3s linear infinite;transition:transform .2s,box-shadow .2s}
+@keyframes shine{0%{background-position:0% center}100%{background-position:200% center}}
+.btn-cta:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(192,23,15,.38)}
+.btn-cta:disabled{opacity:.5;cursor:not-allowed;transform:none;animation:none}
+.btn-ghost{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:11px;border:1.5px solid #E8E2DA;background:#fff;color:#6B6560;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;text-decoration:none;cursor:pointer;transition:all .18s}
+.btn-ghost:hover{border-color:#9E9890;color:#1A1410}
+.btn-danger-outline{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:11px;border:1.5px solid rgba(192,23,15,.3);background:rgba(192,23,15,.05);color:#C0170F;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .18s}
+.btn-danger-outline:hover{background:rgba(192,23,15,.1);border-color:#C0170F}
+.spin-icon{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* modal */
+.modal-wrap{padding:24px;font-family:'DM Sans',sans-serif}
+.modal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
+.modal-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:#1A1410}
+.modal-sub{font-size:12px;color:#9E9890;margin-top:2px}
+.modal-close{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:8px;border:1.5px solid #E8E2DA;background:#fff;color:#9E9890;cursor:pointer;transition:all .15s;flex-shrink:0}
+.modal-close:hover{border-color:#C0170F;color:#C0170F}
+.delete-body{display:flex;align-items:flex-start;gap:16px;margin-bottom:20px}
+.delete-icon-wrap{font-size:36px;flex-shrink:0;opacity:.7}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;padding-top:16px;border-top:1px solid #F0EDE8}
+.capitalize{text-transform:capitalize}
+</style>

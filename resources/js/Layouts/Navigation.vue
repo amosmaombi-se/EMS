@@ -1,231 +1,385 @@
 <template>
-    <!-- Mobile menu overlay -->
-    <div :class="$page.props.showingMobileMenu ? 'block' : 'hidden'" @click="$page.props.showingMobileMenu = false"
-        class="fixed inset-0 z-20 bg-black opacity-50 transition-opacity lg:hidden"></div>
-
-    <!-- Sidebar -->
-    <div :class="$page.props.showingMobileMenu ? 'translate-x-0 ease-out' : '-translate-x-full ease-in'"
-        class="overflow-y-auto fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-200 transition duration-300 transform lg:translate-x-0 lg:static lg:inset-0 shadow-sm">
-
-        <!-- Logo Section -->
-        <div class="flex items-center px-6 py-6 border-b border-gray-200">
-            <div class="flex items-center gap-3">
-                <div
-                    class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                </div>
-                <span class="text-xl font-bold text-gray-800">EVENTS</span>
-            </div>
+    <div>
+        <!-- Mobile overlay -->
+        <div v-if="showMobile"
+            @click="$emit('close')"
+            :style="{ position:'fixed', inset:0, background:'rgba(0,0,0,.5)', zIndex:40, backdropFilter:'blur(4px)' }">
         </div>
 
-        <!-- Navigation -->
-        <nav class="px-3 py-4 space-y-1">
-            <!-- Main Section -->
-            <div class="mb-6">
-                <nav-link :href="route('dashboard')" :active="route().current('dashboard')">
-                    <template #icon>
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <rect x="3" y="3" width="7" height="7" stroke-width="2" stroke-linecap="round" />
-                            <rect x="14" y="3" width="7" height="7" stroke-width="2" stroke-linecap="round" />
-                            <rect x="14" y="14" width="7" height="7" stroke-width="2" stroke-linecap="round" />
-                            <rect x="3" y="14" width="7" height="7" stroke-width="2" stroke-linecap="round" />
-                        </svg>
-                    </template>
-                    Dashboard
-                </nav-link>
+        <!-- Sidebar -->
+        <aside :class="['ep-nav', isDark ? 'dark' : '']"
+            :style="{
+                position:'fixed', top:0, left:0, height:'100vh', width:'256px',
+                zIndex:50, display:'flex', flexDirection:'column',
+                transform: showMobile ? 'translateX(0)' : (isMobileScreen ? 'translateX(-100%)' : 'translateX(0)'),
+                transition:'transform .3s cubic-bezier(.4,0,.2,1)'
+            }">
 
-                <nav-link :href="route('users.index')" :active="route().current('users.*')">
-                    <template #icon>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                    </template>
-                    All Users
-                </nav-link>
+            <component :is="'style'">
+                @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
-                <nav-link :href="route('events.index')" :active="route().current('events.*')">
-                    <template #icon>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                    </template>
-                    My Events
-                </nav-link>
+                .ep-nav {
+                    --crimson: #C0170F;
+                    --orange:  #F05A00;
+                    --amber:   #F9B233;
+                    --navy:    #1D5C96;
+                    --bg:      #FFFFFF;
+                    --bg-muted:#F0EDE8;
+                    --border:  #E8E2DA;
+                    --text:    #1A1410;
+                    --text-2:  #6B6560;
+                    --text-3:  #9E9890;
+                    background: var(--bg);
+                    border-right: 1px solid var(--border);
+                    box-shadow: 4px 0 24px rgba(0,0,0,.06);
+                }
+                .ep-nav.dark {
+                    --bg:      #1A1714;
+                    --bg-muted:#242018;
+                    --border:  #2E2925;
+                    --text:    #F0EDE8;
+                    --text-2:  #A09890;
+                    --text-3:  #605850;
+                    box-shadow: 4px 0 24px rgba(0,0,0,.4);
+                }
 
-                <nav-link :href="route('bookings.index')" :active="route().current('bookings.*')">
-                    <template #icon>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                        </svg>
-                    </template>
-                    My Bookings
-                </nav-link>
+                /* Brand accent bar */
+                .ep-nav-accent {
+                    height: 3px;
+                    background: linear-gradient(90deg, var(--crimson), var(--orange), var(--amber), var(--navy));
+                    flex-shrink: 0;
+                }
 
-                 <nav-link :href="route('reports.messages')" :active="route().current('reports.*')">
-                    <template #icon>
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
+                /* Logo area */
+                .ep-nav-logo {
+                    padding: 20px 18px 16px;
+                    border-bottom: 1px solid var(--border);
+                    flex-shrink: 0;
+                }
 
-                    </template>
-                    Messages Report
-                </nav-link>
-            </div>
+                /* Nav scroll area */
+                .ep-nav-scroll {
+                    flex: 1;
+                    overflow-y: auto;
+                    padding: 12px 10px;
+                    scrollbar-width: thin;
+                    scrollbar-color: var(--border) transparent;
+                }
+                .ep-nav-scroll::-webkit-scrollbar { width: 4px; }
+                .ep-nav-scroll::-webkit-scrollbar-track { background: transparent; }
+                .ep-nav-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-            <!-- Services Section -->
-            <div class="mb-6">
-                <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Services</p>
+                /* Section label */
+                .ep-nav-section {
+                    font-size: 9px;
+                    font-family: 'DM Mono', monospace;
+                    letter-spacing: .2em;
+                    color: var(--text-3);
+                    text-transform: uppercase;
+                    padding: 14px 10px 6px;
+                    font-weight: 600;
+                }
 
-                <nav-link :href="route('venues.index')" :active="route().current('venues.*')">
-                    <template #icon>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                    </template>
-                    Venues
-                </nav-link>
+                /* Nav item */
+                .ep-nav-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    padding: 9px 12px;
+                    border-radius: 10px;
+                    text-decoration: none;
+                    font-size: 13px;
+                    font-family: 'DM Sans', sans-serif;
+                    font-weight: 500;
+                    color: var(--text-2);
+                    transition: all .18s;
+                    cursor: pointer;
+                    border: none;
+                    background: transparent;
+                    width: 100%;
+                    text-align: left;
+                    position: relative;
+                    margin-bottom: 1px;
+                }
+                .ep-nav-item:hover {
+                    background: var(--bg-muted);
+                    color: var(--text);
+                }
+                .ep-nav-item.active {
+                    background: var(--crimson);
+                    color: #fff;
+                    font-weight: 600;
+                }
+                .ep-nav-item.active .ep-nav-icon { color: #fff; }
 
-                <nav-link :href="route('vendors.index')" :active="route().current('vendors.*')">
-                    <template #icon>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                    </template>
-                    Vendors
-                </nav-link>
-            </div>
+                /* Active left accent bar */
+                .ep-nav-item.active::before {
+                    content: '';
+                    position: absolute;
+                    left: 0; top: 50%;
+                    transform: translateY(-50%);
+                    width: 3px; height: 60%;
+                    background: rgba(255,255,255,.5);
+                    border-radius: 0 2px 2px 0;
+                }
 
-            <!-- Management Section (Admin/Organizer) -->
-            <!-- <div class="mb-6" v-if="hasRole(['admin', 'event-organizer'])">
-                <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Management</p>
+                /* Icon wrapper — fixed size so all icons align */
+                .ep-nav-icon {
+                    width: 18px;
+                    height: 18px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                    color: var(--text-3);
+                    transition: color .18s;
+                    overflow: hidden;
+                }
+                .ep-nav-icon svg {
+                    width: 16px !important;
+                    height: 16px !important;
+                    flex-shrink: 0;
+                }
+                .ep-nav-item:hover .ep-nav-icon { color: var(--text-2); }
 
-                <nav-link :href="route('users.index')" :active="route().current('users.*')" v-if="hasRole('admin')">
-                    <template #icon>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                    </template>
-                    Users
-                </nav-link>
+                /* Active dot */
+                .ep-nav-dot {
+                    margin-left: auto;
+                    width: 5px; height: 5px;
+                    border-radius: 50%;
+                    background: rgba(255,255,255,.7);
+                    flex-shrink: 0;
+                }
 
-                <nav-link :href="route('reviews.index')" :active="route().current('reviews.*')" v-if="hasRole('admin')">
-                    <template #icon>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                        </svg>
-                    </template>
-                    Reviews
-                </nav-link>
+                /* Logout special styling */
+                .ep-nav-logout {
+                    color: #ef4444;
+                }
+                .ep-nav-logout .ep-nav-icon { color: #ef4444; }
+                .ep-nav-logout:hover {
+                    background: rgba(239,68,68,.08);
+                    color: #dc2626;
+                }
+                .ep-nav-logout:hover .ep-nav-icon { color: #dc2626; }
+                .ep-nav.dark .ep-nav-logout { color: #f87171; }
+                .ep-nav.dark .ep-nav-logout .ep-nav-icon { color: #f87171; }
+                .ep-nav.dark .ep-nav-logout:hover { background: rgba(192,23,15,.15); color: #fca5a5; }
 
-                <nav-link :href="route('reports.index')" :active="route().current('reports.*')">
-                    <template #icon>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                    </template>
-                    Analytics
-                </nav-link>
-            </div> -->
+                /* User strip */
+                .ep-nav-user {
+                    padding: 14px 18px;
+                    border-top: 1px solid var(--border);
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    flex-shrink: 0;
+                }
+                .ep-nav-avatar {
+                    width: 34px; height: 34px;
+                    border-radius: 50%;
+                    background: var(--crimson);
+                    display: flex; align-items: center; justify-content: center;
+                    font-size: 13px; font-weight: 700; color: #fff;
+                    flex-shrink: 0;
+                    position: relative;
+                }
+                .ep-nav-online {
+                    position: absolute; bottom: 0; right: 0;
+                    width: 9px; height: 9px;
+                    border-radius: 50%;
+                    background: #16a34a;
+                    border: 2px solid var(--bg);
+                }
+            </component>
 
-            <!-- Settings Section -->
-            <div class="mb-20">
-                <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Settings</p>
+            <!-- Accent bar -->
+            <div class="ep-nav-accent"></div>
 
-                <nav-link :href="route('profile.edit')" :active="route().current('profile.*')">
-                    <template #icon>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                    </template>
-                    Profile
-                </nav-link>
-
-                <nav-link :href="route('settings.index')" :active="route().current('settings.*')"
-                    v-if="hasRole('admin')">
-                    <template #icon>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                    </template>
-                    Settings
-                </nav-link>
-
-                <button @click="logout"
-                    class="w-full flex items-center px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors duration-150 group">
-                    <svg class="w-5 h-5 mr-3 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    Logout
-                </button>
-            </div>
-        </nav>
-
-        <!-- User Profile Section at Bottom -->
-        <div class="absolute bottom-0 left-0 right-0 p-4 bg-gray-50 border-t border-gray-200">
-            <div class="flex items-center space-x-3">
-                <div class="relative">
-                    <img :src="$page.props.auth.user.avatar || '/default-avatar.png'" alt="User avatar"
-                        class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm">
-                    <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full">
+            <!-- Logo -->
+            <div class="ep-nav-logo">
+                <div :style="{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'6px' }">
+                    <div :style="{ width:'36px', height:'36px', borderRadius:'10px', background:'linear-gradient(135deg, var(--crimson), var(--orange))', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'18px', flexShrink:0 }">🚪</div>
+                    <div>
+                        <div :style="{ fontFamily:'Playfair Display, serif', fontWeight:900, fontSize:'16px', lineHeight:1.1, color:'var(--text)' }">
+                            Event <span :style="{ color:'var(--crimson)' }">Portal</span>
+                        </div>
+                        <div :style="{ fontFamily:'DM Mono, monospace', fontSize:'9px', letterSpacing:'.15em', color:'var(--text-3)', textTransform:'uppercase', marginTop:'2px' }">Admin Panel</div>
                     </div>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-900 truncate">
-                        {{ $page.props.auth.user.full_name }}
-                    </p>
-                    <p class="text-xs text-gray-500 truncate">
-                        {{ $page.props.auth.user.email }}
-                    </p>
-                </div>
-                <button class="p-1 hover:bg-gray-200 rounded-lg transition-colors">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                    </svg>
-                </button>
             </div>
-        </div>
+
+            <!-- Nav items -->
+            <div class="ep-nav-scroll">
+
+                <!-- Main -->
+                <div class="ep-nav-section">Main</div>
+
+                <Link :href="route('dashboard')" :class="['ep-nav-item', isActive('dashboard') ? 'active' : '']">
+                    <span class="ep-nav-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+                        </svg>
+                    </span>
+                    Dashboard
+                    <span v-if="isActive('dashboard')" class="ep-nav-dot"></span>
+                </Link>
+
+                <Link :href="route('users.index')" :class="['ep-nav-item', isActive('users') ? 'active' : '']">
+                    <span class="ep-nav-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </span>
+                    All Users
+                    <span v-if="isActive('users')" class="ep-nav-dot"></span>
+                </Link>
+
+                <!-- Services -->
+                <div class="ep-nav-section">Services</div>
+
+                <Link :href="route('events.index')" :class="['ep-nav-item', isActive('events') ? 'active' : '']">
+                    <span class="ep-nav-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </span>
+                    My Events
+                    <span v-if="isActive('events')" class="ep-nav-dot"></span>
+                </Link>
+
+                <Link :href="route('bookings.index')" :class="['ep-nav-item', isActive('bookings') ? 'active' : '']">
+                    <span class="ep-nav-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                    </span>
+                    My Bookings
+                    <span v-if="isActive('bookings')" class="ep-nav-dot"></span>
+                </Link>
+
+                <Link :href="route('reports.messages')" :class="['ep-nav-item', isActive('messages') ? 'active' : '']">
+                    <span class="ep-nav-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                    </span>
+                    Messages Report
+                    <span v-if="isActive('messages')" class="ep-nav-dot"></span>
+                </Link>
+
+                <Link :href="route('venues.index')" :class="['ep-nav-item', isActive('venues') ? 'active' : '']">
+                    <span class="ep-nav-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+                        </svg>
+                    </span>
+                    Venues
+                    <span v-if="isActive('venues')" class="ep-nav-dot"></span>
+                </Link>
+
+                <Link :href="route('vendors.index')" :class="['ep-nav-item', isActive('vendors') ? 'active' : '']">
+                    <span class="ep-nav-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+                        </svg>
+                    </span>
+                    Vendors
+                    <span v-if="isActive('vendors')" class="ep-nav-dot"></span>
+                </Link>
+
+                <!-- Settings -->
+                <div class="ep-nav-section">Settings</div>
+
+                <Link :href="route('profile.edit')" :class="['ep-nav-item', isActive('profile') ? 'active' : '']">
+                    <span class="ep-nav-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </span>
+                    Profile
+                    <span v-if="isActive('profile')" class="ep-nav-dot"></span>
+                </Link>
+
+                <Link v-if="$page.props.auth.user?.is_admin" :href="route('settings.index')" :class="['ep-nav-item', isActive('settings') ? 'active' : '']">
+                    <span class="ep-nav-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/>
+                        </svg>
+                    </span>
+                    Settings
+                    <span v-if="isActive('settings')" class="ep-nav-dot"></span>
+                </Link>
+
+                <!-- Logout — icon fixed to same 16px as all others -->
+                <div :style="{ borderTop: '1px solid var(--border)', marginTop:'8px', paddingTop:'8px' }">
+                    <Link :href="route('logout')" method="post" as="button" class="ep-nav-item ep-nav-logout">
+                        <span class="ep-nav-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                        </span>
+                        Logout
+                    </Link>
+                </div>
+            </div>
+
+            <!-- User strip -->
+            <div class="ep-nav-user">
+                <div class="ep-nav-avatar">
+                    {{ $page.props.auth.user?.name?.charAt(0)?.toUpperCase() || 'A' }}
+                    <div class="ep-nav-online"></div>
+                </div>
+                <div :style="{ flex:1, minWidth:0 }">
+                    <div :style="{ fontFamily:'DM Sans, sans-serif', fontSize:'13px', fontWeight:600, color:'var(--text)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }">
+                        {{ $page.props.auth.user?.name }}
+                    </div>
+                    <div :style="{ fontFamily:'DM Mono, monospace', fontSize:'10px', color:'var(--text-3)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }">
+                        {{ $page.props.auth.user?.email }}
+                    </div>
+                </div>
+                <div :style="{ display:'flex', alignItems:'center', gap:'4px', flexShrink:0 }">
+                    <div :style="{ width:'6px', height:'6px', borderRadius:'50%', background:'#16a34a' }"></div>
+                    <span :style="{ fontFamily:'DM Mono, monospace', fontSize:'9px', color:'var(--text-3)', letterSpacing:'.08em' }">Online</span>
+                </div>
+            </div>
+        </aside>
     </div>
 </template>
 
 <script setup>
-import NavLink from '@/Components/NavLink.vue'
-import { Link, router, usePage } from '@inertiajs/vue3'
-import { computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { Link, usePage } from '@inertiajs/vue3'
 
+const props = defineProps({
+    showMobile: { type: Boolean, default: false },
+    isDark:     { type: Boolean, default: false }
+})
+defineEmits(['close'])
+
+const isMobileScreen = ref(false)
 const page = usePage()
 
-// Reactive user roles
-const userRoles = computed(() => page.props.auth.user?.roles || [])
+const checkMobile = () => { isMobileScreen.value = window.innerWidth < 1024 }
 
-// Function to check if user has role(s)
-const hasRole = (roles) => {
-    if (Array.isArray(roles)) {
-        return roles.some(role => userRoles.value.includes(role))
+onMounted(() => {
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+})
+onUnmounted(() => window.removeEventListener('resize', checkMobile))
+
+const isActive = (name) => {
+    const current = page.url || ''
+    const routeMap = {
+        dashboard: ['/dashboard'],
+        users:     ['/users'],
+        events:    ['/events'],
+        bookings:  ['/bookings'],
+        messages:  ['/messages'],
+        venues:    ['/venues'],
+        vendors:   ['/vendors'],
+        profile:   ['/profile'],
+        settings:  ['/settings'],
     }
-    return userRoles.value.includes(roles)
-}
-
-// Logout function
-const logout = () => {
-    router.post(route('logout'))
+    return (routeMap[name] || []).some(path => current.startsWith(path))
 }
 </script>

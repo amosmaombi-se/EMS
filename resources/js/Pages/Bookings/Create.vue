@@ -1,479 +1,301 @@
 <template>
     <AuthenticatedLayout>
-        <template #header>
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-                <div class="flex-1">
-                    <h1 class="font-bold text-3xl text-gray-900 leading-tight mb-2">Create New Booking</h1>
-                    <p class="text-gray-600">Create a new booking for your event</p>
+        <div class="page-wrap">
+
+            <!-- Confetti -->
+            <div class="confetti-layer" aria-hidden="true">
+                <div v-for="i in 16" :key="i" class="cdot" :style="cdotStyle(i)"></div>
+            </div>
+
+            <!-- ── Header ── -->
+            <div class="page-header">
+                <div>
+                    <div class="breadcrumb">
+                        <Link :href="route('bookings.index')" class="bc-link">Bookings</Link>
+                        <span class="bc-sep">›</span>
+                        <span class="bc-cur">Create</span>
+                    </div>
+                    <div class="page-eyebrow"><span class="eyebrow-dot"></span>New Booking</div>
+                    <h1 class="page-title">Create Booking</h1>
+                    <p class="page-sub">Fill in the details to register a new event booking</p>
                 </div>
-                <Link :href="route('bookings.index')"
-                    class="inline-flex items-center px-4 py-2.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                    Cancel
+                <Link :href="route('bookings.index')" class="btn-ghost">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
+                    Back to Bookings
                 </Link>
             </div>
-        </template>
 
-        <div class="py-6">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <form @submit.prevent="submit">
+                <div class="two-col">
 
-                <!-- ── Validation Summary Banner ─────────────────────────────── -->
-                <div v-if="showSummary && Object.keys(clientErrors).length > 0"
-                    class="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
-                    <div class="flex items-start gap-3">
-                        <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                        <div>
-                            <p class="text-sm font-semibold text-red-800">
-                                Please fix the following errors before submitting:
-                            </p>
-                            <ul class="mt-1.5 space-y-0.5">
-                                <li v-for="(msg, field) in clientErrors" :key="field"
-                                    class="text-xs text-red-700 flex items-center gap-1.5">
-                                    <span class="w-1 h-1 bg-red-400 rounded-full flex-shrink-0"></span>
-                                    {{ msg }}
-                                </li>
-                            </ul>
+                    <!-- ── LEFT: Main Form ── -->
+                    <div class="form-col">
+
+                        <!-- Event & Client -->
+                        <div class="form-card">
+                            <div class="card-head">
+                                <span class="card-icon" style="background:rgba(192,23,15,.12)">📅</span>
+                                <div>
+                                    <div class="card-title">Event & Client</div>
+                                    <div class="card-sub">Select the event and client for this booking</div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label class="field-label">Event <span class="req">*</span></label>
+                                        <select v-model="form.event_id" class="ep-select" :class="{error: form.errors.event_id}" @change="onEventChange">
+                                            <option value="">— Select Event —</option>
+                                            <option v-for="e in events" :key="e.id" :value="e.id">{{ e.title }}</option>
+                                        </select>
+                                        <div v-if="form.errors.event_id" class="field-error">{{ form.errors.event_id }}</div>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Client / Customer <span class="req">*</span></label>
+                                        <select v-model="form.client_id" class="ep-select" :class="{error: form.errors.client_id}">
+                                            <option value="">— Select Client —</option>
+                                            <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.name }}</option>
+                                        </select>
+                                        <div v-if="form.errors.client_id" class="field-error">{{ form.errors.client_id }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label class="field-label">Venue</label>
+                                        <select v-model="form.venue_id" class="ep-select">
+                                            <option value="">— Select Venue —</option>
+                                            <option v-for="v in venues" :key="v.id" :value="v.id">{{ v.name }}</option>
+                                        </select>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Event Type</label>
+                                        <select v-model="form.event_type" class="ep-select">
+                                            <option value="">— Select Type —</option>
+                                            <option value="wedding">Wedding</option>
+                                            <option value="corporate">Corporate</option>
+                                            <option value="birthday">Birthday</option>
+                                            <option value="conference">Conference</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- Dates & Times -->
+                        <div class="form-card">
+                            <div class="card-head">
+                                <span class="card-icon" style="background:rgba(29,92,150,.1)">🗓️</span>
+                                <div>
+                                    <div class="card-title">Dates & Times</div>
+                                    <div class="card-sub">Set booking and event schedule</div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label class="field-label">Booking Date <span class="req">*</span></label>
+                                        <input v-model="form.booking_date" type="date" class="ep-input" :class="{error: form.errors.booking_date}">
+                                        <div v-if="form.errors.booking_date" class="field-error">{{ form.errors.booking_date }}</div>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Event Date <span class="req">*</span></label>
+                                        <input v-model="form.event_date" type="date" class="ep-input" :class="{error: form.errors.event_date}">
+                                        <div v-if="form.errors.event_date" class="field-error">{{ form.errors.event_date }}</div>
+                                    </div>
+                                </div>
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label class="field-label">Start Time</label>
+                                        <input v-model="form.start_time" type="time" class="ep-input">
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">End Time</label>
+                                        <input v-model="form.end_time" type="time" class="ep-input">
+                                    </div>
+                                </div>
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label class="field-label">Payment Due Date</label>
+                                        <input v-model="form.due_date" type="date" class="ep-input">
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Guest Count</label>
+                                        <input v-model="form.guest_count" type="number" min="0" placeholder="0" class="ep-input">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Financial -->
+                        <div class="form-card">
+                            <div class="card-head">
+                                <span class="card-icon" style="background:rgba(22,163,74,.1)">💰</span>
+                                <div>
+                                    <div class="card-title">Financial Details</div>
+                                    <div class="card-sub">Set pricing and payment terms</div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label class="field-label">Total Amount (TZS) <span class="req">*</span></label>
+                                        <div class="prefix-wrap">
+                                            <span class="prefix-txt">TZS</span>
+                                            <input v-model="form.total_amount" type="number" min="0" step="0.01" placeholder="0" class="ep-input prefix-pad" :class="{error: form.errors.total_amount}">
+                                        </div>
+                                        <div v-if="form.errors.total_amount" class="field-error">{{ form.errors.total_amount }}</div>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Initial Payment (TZS)</label>
+                                        <div class="prefix-wrap">
+                                            <span class="prefix-txt">TZS</span>
+                                            <input v-model="form.paid_amount" type="number" min="0" step="0.01" placeholder="0" class="ep-input prefix-pad">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label class="field-label">Payment Status</label>
+                                        <select v-model="form.payment_status" class="ep-select">
+                                            <option value="unpaid">Unpaid</option>
+                                            <option value="partially_paid">Partially Paid</option>
+                                            <option value="paid">Paid</option>
+                                        </select>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Discount (TZS)</label>
+                                        <div class="prefix-wrap">
+                                            <span class="prefix-txt">TZS</span>
+                                            <input v-model="form.discount" type="number" min="0" step="0.01" placeholder="0" class="ep-input prefix-pad">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Live balance preview -->
+                                <div class="balance-strip" v-if="form.total_amount">
+                                    <div class="bal-item">
+                                        <span class="bal-label">Total</span>
+                                        <span class="bal-val">TZS {{ fmt(form.total_amount) }}</span>
+                                    </div>
+                                    <div class="bal-divider">−</div>
+                                    <div class="bal-item">
+                                        <span class="bal-label">Paid</span>
+                                        <span class="bal-val">TZS {{ fmt(form.paid_amount || 0) }}</span>
+                                    </div>
+                                    <div class="bal-divider">=</div>
+                                    <div class="bal-item">
+                                        <span class="bal-label">Balance</span>
+                                        <span class="bal-val" :style="{color: balance > 0 ? '#C0170F' : '#16a34a', fontWeight:800}">
+                                            TZS {{ fmt(balance) }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="form-card">
+                            <div class="card-head">
+                                <span class="card-icon" style="background:rgba(249,178,51,.12)">📝</span>
+                                <div>
+                                    <div class="card-title">Notes & Requirements</div>
+                                    <div class="card-sub">Additional info and special requirements</div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="field">
+                                    <label class="field-label">Internal Notes</label>
+                                    <textarea v-model="form.notes" rows="3" placeholder="Add internal notes about this booking…" class="ep-textarea"></textarea>
+                                </div>
+                                <div class="field" style="margin-top:12px">
+                                    <label class="field-label">Special Requirements</label>
+                                    <textarea v-model="form.special_requirements" rows="3" placeholder="Dietary, accessibility, AV, décor requirements…" class="ep-textarea"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
-                </div>
 
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <form @submit.prevent="submit" novalidate>
-                        <div class="p-6 space-y-8">
+                    <!-- ── RIGHT: Sidebar ── -->
+                    <div class="sidebar-col">
 
-                            <!-- ── Event Selection ──────────────────────────── -->
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200 flex items-center">
-                                    <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    Event Selection
-                                </h3>
+                        <!-- Booking Summary -->
+                        <div class="form-card sticky-card">
+                            <div class="card-head">
+                                <span class="card-icon" style="background:rgba(192,23,15,.12)">📋</span>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Select Event <span class="text-red-500">*</span>
-                                    </label>
-                                    <select v-model="form.event_id" @change="onEventChange"
-                                        @blur="touch('event_id')"
-                                        class="w-full rounded-lg border py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors text-sm"
-                                        :class="fieldClass('event_id')">
-                                        <option value="">Choose an event…</option>
-                                        <option v-for="event in events" :key="event.id" :value="event.id">
-                                            {{ event.title }} — {{ formatDate(event.event_date) }}
-                                        </option>
-                                    </select>
-                                    <FieldError :msg="getError('event_id')" :show="hasError('event_id')" />
+                                    <div class="card-title">Booking Summary</div>
+                                    <div class="card-sub">Live preview</div>
                                 </div>
                             </div>
-
-                            <!-- ── Sections shown only after an event is chosen ── -->
-                            <template v-if="form.event_id">
-
-                                <!-- ── Venue Selection ──────────────────────── -->
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200 flex items-center">
-                                        <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                        </svg>
-                                        Venue Selection <span class="text-red-500 ml-1 text-base">*</span>
-                                    </h3>
-
-                                    <div v-if="venues.length === 0"
-                                        class="text-center py-8 bg-gray-50 rounded-lg">
-                                        <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5" />
-                                        </svg>
-                                        <p class="text-gray-500 text-sm">No venues available for this event</p>
-                                    </div>
-
-                                    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div v-for="venue in venues" :key="venue.id"
-                                            @click="selectVenue(venue.id)"
-                                            class="cursor-pointer border-2 rounded-xl p-5 transition-all duration-200"
-                                            :class="form.venue_id === venue.id
-                                                ? 'border-indigo-600 bg-indigo-50 ring-2 ring-indigo-100'
-                                                : 'border-gray-200 hover:border-indigo-300 hover:shadow-sm'">
-                                            <div class="flex justify-between items-start mb-3">
-                                                <h4 class="font-semibold text-gray-900">{{ venue.name }}</h4>
-                                                <span
-                                                    class="px-2.5 py-1 bg-indigo-100 text-indigo-800 text-xs font-semibold rounded-full">
-                                                    {{ venue.type.replace('_', ' ') }}
-                                                </span>
-                                            </div>
-                                            <p class="text-sm text-gray-600 mb-1.5 flex items-center gap-1">
-                                                <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none"
-                                                    stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                </svg>
-                                                {{ venue.city }}, {{ venue.state }}
-                                            </p>
-                                            <p class="text-sm text-gray-600 flex items-center gap-1">
-                                                <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none"
-                                                    stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                                </svg>
-                                                Capacity: {{ venue.capacity_max }} guests
-                                            </p>
-                                            <div
-                                                class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
-                                                <div>
-                                                    <p class="text-xl font-bold text-indigo-600">
-                                                        TZS {{ venue.base_price_per_day.toLocaleString() }}
-                                                    </p>
-                                                    <p class="text-xs text-gray-500">per day</p>
-                                                </div>
-                                                <div v-if="form.venue_id === venue.id"
-                                                    class="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
-                                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="3" d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Venue validation message -->
-                                    <div v-if="hasError('venue_id')"
-                                        class="mt-3 flex items-center gap-1.5 text-sm text-red-600">
-                                        <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd"
-                                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                                clip-rule="evenodd" />
-                                        </svg>
-                                        {{ getError('venue_id') }}
-                                    </div>
+                            <div class="card-body">
+                                <div class="summary-row">
+                                    <span class="sum-label">Event</span>
+                                    <span class="sum-val">{{ selectedEvent?.title || '—' }}</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span class="sum-label">Type</span>
+                                    <span class="sum-val capitalize">{{ form.event_type || '—' }}</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span class="sum-label">Venue</span>
+                                    <span class="sum-val">{{ selectedVenue?.name || '—' }}</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span class="sum-label">Event Date</span>
+                                    <span class="sum-val">{{ fmtDate(form.event_date) }}</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span class="sum-label">Guests</span>
+                                    <span class="sum-val">{{ form.guest_count || '—' }}</span>
+                                </div>
+                                <div class="sum-divider"></div>
+                                <div class="summary-row">
+                                    <span class="sum-label">Total</span>
+                                    <span class="sum-val" style="font-weight:800;color:#1A1410">TZS {{ fmt(form.total_amount || 0) }}</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span class="sum-label">Paid</span>
+                                    <span class="sum-val" style="color:#16a34a;font-weight:700">TZS {{ fmt(form.paid_amount || 0) }}</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span class="sum-label">Balance</span>
+                                    <span class="sum-val" :style="{color: balance > 0 ? '#C0170F' : '#16a34a', fontWeight:800}">TZS {{ fmt(balance) }}</span>
                                 </div>
 
-                                <!-- ── Vendor Services ───────────────────────── -->
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200 flex items-center">
-                                        <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                                        </svg>
-                                        Vendor Services
-                                        <span class="ml-2 text-sm font-normal text-gray-400">(optional)</span>
-                                    </h3>
-
-                                    <div v-if="vendors.length === 0"
-                                        class="text-center py-8 bg-gray-50 rounded-lg">
-                                        <p class="text-gray-500 text-sm">No vendor services available</p>
-                                    </div>
-
-                                    <div v-else class="space-y-4">
-                                        <div v-for="vendor in vendors" :key="vendor.id"
-                                            class="border border-gray-200 rounded-xl p-5 hover:border-gray-300 transition-colors">
-                                            <div class="flex items-center mb-4 gap-3">
-                                                <div
-                                                    class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                                                    <svg class="w-5 h-5 text-indigo-600" fill="none"
-                                                        stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <h4 class="font-semibold text-gray-900">
-                                                        {{ vendor.business_name }}
-                                                    </h4>
-                                                    <p v-if="vendor.description"
-                                                        class="text-xs text-gray-500 mt-0.5">
-                                                        {{ vendor.description }}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            <div class="space-y-2">
-                                                <label v-for="service in vendor.services" :key="service.id"
-                                                    class="flex items-start p-4 rounded-lg border transition-all cursor-pointer"
-                                                    :class="isServiceSelected(service.id)
-                                                        ? 'border-indigo-300 bg-indigo-50'
-                                                        : 'border-gray-200 hover:bg-gray-50'">
-                                                    <input type="checkbox"
-                                                        :checked="isServiceSelected(service.id)"
-                                                        @change="toggleService(vendor, service)"
-                                                        class="mt-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-                                                    <div class="ml-3 flex-1">
-                                                        <div class="flex justify-between items-start">
-                                                            <div>
-                                                                <span
-                                                                    class="font-medium text-gray-900 text-sm">{{ service.name }}</span>
-                                                                <span v-if="service.pricing_type"
-                                                                    class="ml-2 px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
-                                                                    {{ service.pricing_type.replace('_', ' ') }}
-                                                                </span>
-                                                            </div>
-                                                            <div class="text-right ml-4 flex-shrink-0">
-                                                                <span
-                                                                    class="font-semibold text-indigo-600 text-sm">
-                                                                    TZS {{ service.base_price.toLocaleString() }}
-                                                                </span>
-                                                                <span v-if="service.unit"
-                                                                    class="text-xs text-gray-500 block">
-                                                                    per {{ service.unit }}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <p v-if="service.description"
-                                                            class="text-xs text-gray-500 mt-1.5">
-                                                            {{ service.description }}
-                                                        </p>
-                                                    </div>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <!-- Status chip -->
+                                <div class="sum-divider"></div>
+                                <div class="summary-row">
+                                    <span class="sum-label">Status</span>
+                                    <span class="status-chip" :style="BOOKING_STATUS['pending']">Pending</span>
                                 </div>
-
-                                <!-- ── Event Dates ────────────────────────────── -->
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200 flex items-center">
-                                        <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                        Event Dates
-                                    </h3>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                Event Date <span class="text-red-500">*</span>
-                                            </label>
-                                            <input v-model="form.event_date"
-                                                @blur="touch('event_date')"
-                                                @change="touch('event_date')"
-                                                type="date"
-                                                class="w-full rounded-lg border py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors text-sm"
-                                                :class="fieldClass('event_date')" />
-                                            <FieldError :msg="getError('event_date')"
-                                                :show="hasError('event_date')" />
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                End Date
-                                                <span class="text-gray-400 font-normal">(optional)</span>
-                                            </label>
-                                            <input v-model="form.event_end_date"
-                                                @blur="touch('event_end_date')"
-                                                @change="touch('event_end_date')"
-                                                type="date"
-                                                class="w-full rounded-lg border py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors text-sm"
-                                                :class="fieldClass('event_end_date')" />
-                                            <FieldError :msg="getError('event_end_date')"
-                                                :show="hasError('event_end_date')" />
-                                        </div>
-                                    </div>
+                                <div class="summary-row">
+                                    <span class="sum-label">Payment</span>
+                                    <span class="status-chip" :style="PAYMENT_STATUS[form.payment_status] || PAYMENT_STATUS.unpaid">
+                                        {{ form.payment_status?.replace('_',' ') || 'Unpaid' }}
+                                    </span>
                                 </div>
-
-                                <!-- ── Additional Notes ───────────────────────── -->
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200 flex items-center">
-                                        <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>
-                                        Additional Information
-                                    </h3>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                                        Special Requirements &amp; Notes
-                                    </label>
-                                    <textarea v-model="form.customer_notes" rows="4"
-                                        placeholder="Any special requirements, dietary needs, accessibility requirements, or additional notes…"
-                                        class="w-full rounded-lg border border-gray-300 py-2.5 px-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors text-sm resize-none"></textarea>
-                                </div>
-
-                                <!-- ── Booking Summary ─────────────────────────── -->
-                                <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Booking Summary</h3>
-
-                                    <!-- Empty summary prompt -->
-                                    <div v-if="!form.venue_id && form.items.length === 0"
-                                        class="text-center py-8">
-                                        <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                        </svg>
-                                        <p class="text-sm text-gray-400">
-                                            Select a venue and services to see pricing
-                                        </p>
-                                    </div>
-
-                                    <div v-else class="space-y-2">
-                                        <!-- Venue row -->
-                                        <div v-if="form.venue_id"
-                                            class="flex justify-between items-center py-2.5 border-b border-gray-200">
-                                            <div>
-                                                <p class="text-sm font-medium text-gray-900">
-                                                    {{ getVenueName(form.venue_id) }}
-                                                </p>
-                                                <p class="text-xs text-gray-500">Venue</p>
-                                            </div>
-                                            <span class="text-sm font-semibold text-gray-900">
-                                                TZS {{ formatCurrency(getVenuePrice(form.venue_id)) }}
-                                            </span>
-                                        </div>
-
-                                        <!-- Service rows -->
-                                        <div v-for="item in form.items" :key="item.itemable_id"
-                                            class="flex justify-between items-center py-2.5 border-b border-gray-200">
-                                            <div>
-                                                <p class="text-sm font-medium text-gray-900">
-                                                    {{ getServiceName(item.itemable_id) }}
-                                                </p>
-                                                <p class="text-xs text-gray-500">
-                                                    {{ getServiceCategory(item.itemable_id) }}
-                                                </p>
-                                            </div>
-                                            <div class="text-right">
-                                                <p class="text-sm font-semibold text-gray-900">
-                                                    TZS {{ formatCurrency(getServicePrice(item.itemable_id) * item.quantity) }}
-                                                </p>
-                                                <p class="text-xs text-gray-500">
-                                                    TZS {{ formatCurrency(getServicePrice(item.itemable_id)) }}
-                                                    × {{ item.quantity }}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <!-- Totals -->
-                                        <div class="pt-3 space-y-2">
-                                            <div class="flex justify-between text-sm text-gray-600">
-                                                <span>Subtotal</span>
-                                                <span>TZS {{ formatCurrency(calculateSubtotal()) }}</span>
-                                            </div>
-                                            <div class="flex justify-between text-sm text-gray-500">
-                                                <span>Estimated Tax ({{ taxRate }}%)</span>
-                                                <span>TZS {{ formatCurrency(calculateTax()) }}</span>
-                                            </div>
-                                            <div
-                                                class="flex justify-between items-baseline pt-3 border-t border-gray-300">
-                                                <div>
-                                                    <span class="font-bold text-base text-gray-900">
-                                                        Estimated Total
-                                                    </span>
-                                                    <p class="text-xs text-gray-400 mt-0.5">
-                                                        All prices are estimates
-                                                    </p>
-                                                </div>
-                                                <span class="text-2xl font-bold text-indigo-600">
-                                                    TZS {{ formatCurrency(calculateTotal()) }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </template>
-
-                            <!-- Prompt when no event chosen yet -->
-                            <div v-if="!form.event_id"
-                                class="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-                                <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                <p class="text-sm text-gray-400">Select an event above to continue</p>
                             </div>
                         </div>
 
-                        <!-- ── Form Actions ────────────────────────────────────── -->
-                        <div
-                            class="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-xl flex items-center justify-between">
-                            <Link :href="route('bookings.index')"
-                                class="inline-flex items-center px-4 py-2.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50">
+                        <!-- Actions -->
+                        <div class="action-card">
+                            <button type="submit" :disabled="form.processing" class="btn-cta full-width">
+                                <svg v-if="!form.processing" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+                                <span v-if="form.processing" class="spinner"></span>
+                                {{ form.processing ? 'Saving…' : 'Create Booking' }}
+                            </button>
+                            <Link :href="route('bookings.index')" class="btn-ghost full-width" style="justify-content:center;margin-top:8px">
                                 Cancel
                             </Link>
-                            <button type="submit" :disabled="form.processing"
-                                class="inline-flex items-center px-5 py-2.5 bg-indigo-600 border border-transparent text-sm font-medium rounded-lg text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                                <svg v-if="form.processing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                                    fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                        stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor"
-                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                </svg>
-                                {{ form.processing ? 'Creating Booking…' : 'Create Booking' }}
-                            </button>
                         </div>
-                    </form>
-                </div>
 
-                <!-- Help Card -->
-                <div class="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 class="text-base font-semibold text-gray-900 mb-4">Need Help?</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="flex items-start gap-3">
-                            <div
-                                class="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h4 class="text-sm font-medium text-gray-900">Booking Process</h4>
-                                <p class="text-xs text-gray-500 mt-1">Select an event, choose a venue and services,
-                                    then review your booking summary.</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-3">
-                            <div
-                                class="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h4 class="text-sm font-medium text-gray-900">Payment Security</h4>
-                                <p class="text-xs text-gray-500 mt-1">All transactions are secure and encrypted. We
-                                    never store your payment details.</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start gap-3">
-                            <div
-                                class="w-9 h-9 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h4 class="text-sm font-medium text-gray-900">Support Available</h4>
-                                <p class="text-xs text-gray-500 mt-1">Our support team is available 24/7 to help
-                                    with your booking.</p>
-                            </div>
-                        </div>
                     </div>
                 </div>
+            </form>
 
-            </div>
         </div>
     </AuthenticatedLayout>
 </template>
@@ -481,180 +303,165 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { Link, useForm } from '@inertiajs/vue3'
-import { ref, reactive, computed, defineComponent, h } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps({
-    events:  Array,
-    venues:  Array,
-    vendors: Array,
+    events:  { type: Array, default: () => [] },
+    clients: { type: Array, default: () => [] },
+    venues:  { type: Array, default: () => [] },
 })
 
-// ── Inline field-error component ──────────────────────────────────────────────
-const FieldError = defineComponent({
-    props: { msg: String, show: Boolean },
-    setup(p) {
-        return () => p.show && p.msg
-            ? h('p', { class: 'mt-1 text-xs text-red-600 flex items-center gap-1' }, [
-                h('svg', {
-                    class: 'w-3.5 h-3.5 flex-shrink-0',
-                    fill: 'currentColor',
-                    viewBox: '0 0 20 20',
-                }, [
-                    h('path', {
-                        'fill-rule': 'evenodd',
-                        'clip-rule': 'evenodd',
-                        d: 'M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z',
-                    }),
-                ]),
-                p.msg,
-            ])
-            : null
-    },
-})
-
-// ── Form ──────────────────────────────────────────────────────────────────────
 const form = useForm({
-    event_id:       '',
-    venue_id:       null,
-    event_date:     '',
-    event_end_date: '',
-    items:          [],
-    customer_notes: '',
+    event_id:             '',
+    client_id:            '',
+    venue_id:             '',
+    event_type:           '',
+    booking_date:         '',
+    event_date:           '',
+    start_time:           '',
+    end_time:             '',
+    due_date:             '',
+    guest_count:          '',
+    total_amount:         '',
+    paid_amount:          '',
+    discount:             '',
+    payment_status:       'unpaid',
+    notes:                '',
+    special_requirements: '',
 })
 
-const taxRate = 8.5
-
-// ── Validation ────────────────────────────────────────────────────────────────
-const touched     = reactive({})
-const showSummary = ref(false)
-
-const today = new Date().toISOString().split('T')[0]
-
-// Rules return an error string or null
-const rules = {
-    event_id(v) {
-        return !v ? 'Please select an event.' : null
-    },
-    venue_id(v) {
-        // Only enforce venue once an event is chosen
-        if (!form.event_id) return null
-        return !v ? 'Please select a venue.' : null
-    },
-    event_date(v) {
-        if (!form.event_id) return null
-        if (!v) return 'Event date is required.'
-        if (v < today) return 'Event date cannot be in the past.'
-        return null
-    },
-    event_end_date(v) {
-        if (!v || !form.event_date) return null
-        if (v < form.event_date) return 'End date cannot be before the event date.'
-        return null
-    },
-}
-
-const clientErrors = computed(() => {
-    const errors = {}
-    for (const [field, rule] of Object.entries(rules)) {
-        const msg = rule(form[field])
-        if (msg) errors[field] = msg
-    }
-    return errors
-})
-
-const touch    = (field)   => { touched[field] = true }
-const touchAll = ()        => Object.keys(rules).forEach(f => { touched[f] = true })
-const hasError = (field)   => (touched[field] || showSummary.value) && !!clientErrors.value[field]
-const getError = (field)   => form.errors[field] || clientErrors.value[field]
-
-const fieldClass = (field) => hasError(field)
-    ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-red-500'
-    : 'border-gray-300 focus:border-indigo-500'
-
-const selectVenue = (id) => {
-    form.venue_id = id
-    touch('venue_id')
-}
+const selectedEvent  = computed(() => props.events.find(e => e.id == form.event_id)  || null)
+const selectedVenue  = computed(() => props.venues.find(v => v.id == form.venue_id)  || null)
+const balance        = computed(() => Math.max(0, parseFloat(form.total_amount || 0) - parseFloat(form.paid_amount || 0)))
 
 const onEventChange = () => {
-    touch('event_id')
-    const event = props.events.find(e => e.id === form.event_id)
-    if (event?.event_date) {
-        form.event_date = event.event_date.split('T')[0]
+    const ev = selectedEvent.value
+    if (ev) {
+        form.event_date  = ev.start_date || ''
+        form.start_time  = ev.start_time || ''
+        form.event_type  = ev.event_type || ''
+        if (ev.venue_id) form.venue_id = ev.venue_id
     }
-    form.venue_id = null
-    form.items    = []
-}
-
-const isServiceSelected = (serviceId) =>
-    form.items.some(item => item.itemable_id === serviceId)
-
-const toggleService = (vendor, service) => {
-    const idx = form.items.findIndex(item => item.itemable_id === service.id)
-    if (idx > -1) {
-        form.items.splice(idx, 1)
-    } else {
-        form.items.push({
-            itemable_type: 'App\\Models\\VendorService',
-            itemable_id:   service.id,
-            quantity:      1,
-            unit_price:    service.base_price,
-            category:      service.category,
-        })
-    }
-}
-
-const getVenueName  = (id) => props.venues.find(v => v.id === id)?.name || ''
-const getVenuePrice = (id) => props.venues.find(v => v.id === id)?.base_price_per_day || 0
-
-const findService = (id) => {
-    for (const vendor of props.vendors) {
-        const s = vendor.services.find(s => s.id === id)
-        if (s) return s
-    }
-    return null
-}
-
-const getServiceName     = (id) => findService(id)?.name      || ''
-const getServiceCategory = (id) => findService(id)?.category  || 'Service'
-const getServicePrice    = (id) => findService(id)?.base_price || 0
-
-const calculateSubtotal = () => {
-    let total = form.venue_id ? getVenuePrice(form.venue_id) : 0
-    form.items.forEach(item => { total += getServicePrice(item.itemable_id) * item.quantity })
-    return total
-}
-const calculateTax   = () => (calculateSubtotal() * taxRate) / 100
-const calculateTotal = () => calculateSubtotal() + calculateTax()
-
-const formatCurrency = (amount) =>
-    parseFloat(amount || 0).toLocaleString('en-US', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    })
-
-const formatDate = (date) => {
-    if (!date) return 'N/A'
-    return new Date(date).toLocaleDateString('en-US', {
-        month: 'short', day: 'numeric', year: 'numeric',
-    })
 }
 
 const submit = () => {
-    touchAll()
-    showSummary.value = true
+    form.post(route('bookings.store'), {
+        onSuccess: () => form.reset(),
+    })
+}
 
-    if (Object.keys(clientErrors.value).length > 0) {
-        // Scroll to first red field
-        setTimeout(() => {
-            const el = document.querySelector(
-                '.border-red-300, [class*="border-red"]'
-            )
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }, 50)
-        return
+const BOOKING_STATUS = {
+    pending:     { background:'rgba(249,178,51,.15)', color:'#b45309',  border:'1px solid rgba(249,178,51,.4)'  },
+    confirmed:   { background:'rgba(22,163,74,.1)',   color:'#16a34a',  border:'1px solid rgba(22,163,74,.25)'  },
+    in_progress: { background:'rgba(29,92,150,.1)',   color:'#1D5C96',  border:'1px solid rgba(29,92,150,.25)'  },
+    completed:   { background:'rgba(192,23,15,.08)',  color:'#C0170F',  border:'1px solid rgba(192,23,15,.2)'   },
+    cancelled:   { background:'rgba(107,101,96,.12)', color:'#6B6560',  border:'1px solid rgba(107,101,96,.3)'  },
+}
+const PAYMENT_STATUS = {
+    unpaid:         { background:'rgba(192,23,15,.08)',  color:'#C0170F',  border:'1px solid rgba(192,23,15,.2)'  },
+    partially_paid: { background:'rgba(249,178,51,.12)', color:'#b45309',  border:'1px solid rgba(249,178,51,.3)' },
+    paid:           { background:'rgba(22,163,74,.1)',   color:'#16a34a',  border:'1px solid rgba(22,163,74,.25)' },
+}
+
+const fmt = v => parseFloat(v||0).toLocaleString('en-US', { minimumFractionDigits:0, maximumFractionDigits:0 })
+const fmtDate = d => { if (!d) return '—'; return new Date(d).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) }
+
+const cdotStyle = (i) => {
+    const colors = ['#C0170F','#F05A00','#F9B233','#1D5C96','#C0170F','#F9B233']
+    return {
+        left: `${(i * 6.25) % 100}%`,
+        background: colors[i % colors.length],
+        width: `${5 + (i % 4) * 2}px`,
+        height: `${5 + (i % 4) * 2}px`,
+        animationDelay: `${(i * 0.37) % 3}s`,
+        animationDuration: `${3 + (i % 3)}s`,
     }
-
-    form.post(route('bookings.store'))
 }
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+/* ── Base ── */
+*{box-sizing:border-box}
+.page-wrap{background:#F7F5F2;min-height:100vh;padding:28px 24px 72px;font-family:'DM Sans',sans-serif;color:#1A1410;position:relative;overflow-x:hidden}
+
+/* ── Confetti ── */
+.confetti-layer{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.cdot{position:absolute;bottom:-10px;border-radius:50%;opacity:0;animation:rise linear infinite}
+@keyframes rise{0%{transform:translateY(0) rotate(0deg);opacity:.7}100%{transform:translateY(-110vh) rotate(540deg);opacity:0}}
+
+/* ── Header ── */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:26px;flex-wrap:wrap;position:relative;z-index:1}
+.breadcrumb{display:flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;margin-bottom:5px}
+.bc-link{color:#9E9890;text-decoration:none;transition:color .15s}.bc-link:hover{color:#C0170F}
+.bc-sep{color:#C8C0B8}.bc-cur{color:#6B6560}
+.page-eyebrow{display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;color:#9E9890;text-transform:uppercase;margin-bottom:5px}
+.eyebrow-dot{width:6px;height:6px;border-radius:50%;background:#C0170F;animation:blink .9s ease-in-out infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.page-title{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,30px);font-weight:900;color:#1A1410;line-height:1.15;margin-bottom:4px}
+.page-sub{font-size:13px;color:#9E9890;font-family:'DM Mono',monospace}
+
+/* ── Layout ── */
+.two-col{display:grid;grid-template-columns:1fr 300px;gap:18px;position:relative;z-index:1;align-items:start}
+@media(max-width:900px){.two-col{grid-template-columns:1fr}}
+.form-col{display:flex;flex-direction:column;gap:16px}
+.sidebar-col{display:flex;flex-direction:column;gap:14px}
+.sticky-card{position:sticky;top:80px}
+
+/* ── Cards ── */
+.form-card{background:#fff;border:1px solid #E8E2DA;border-radius:18px;overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,.04)}
+.card-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:#F0EDE8;border-bottom:1px solid #E8E2DA}
+.card-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.card-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:900;color:#1A1410;line-height:1.2}
+.card-sub{font-family:'DM Mono',monospace;font-size:10px;color:#9E9890;margin-top:1px}
+.card-body{padding:18px}
+
+/* ── Fields ── */
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.field-row:last-child{margin-bottom:0}
+.field{display:flex;flex-direction:column;gap:5px}
+.field-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:#6B6560;font-weight:600}
+.req{color:#C0170F}
+.field-error{font-size:11px;color:#C0170F;font-family:'DM Mono',monospace;margin-top:2px}
+.ep-input,.ep-select,.ep-textarea{width:100%;padding:9px 12px;border:1.5px solid #E8E2DA;border-radius:11px;font-size:13px;font-family:'DM Sans',sans-serif;color:#1A1410;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s}
+.ep-input:focus,.ep-select:focus,.ep-textarea:focus{border-color:#C0170F;box-shadow:0 0 0 3px rgba(192,23,15,.09)}
+.ep-input.error,.ep-select.error{border-color:#C0170F}
+.ep-textarea{resize:vertical;min-height:80px;line-height:1.6}
+.ep-select{cursor:pointer}
+
+/* ── Prefix inputs ── */
+.prefix-wrap{position:relative}
+.prefix-txt{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-family:'DM Mono',monospace;font-size:10px;color:#9E9890;pointer-events:none;font-weight:600}
+.prefix-pad{padding-left:38px !important}
+
+/* ── Balance strip ── */
+.balance-strip{display:flex;align-items:center;gap:10px;background:#F7F5F2;border:1px solid #E8E2DA;border-radius:12px;padding:12px 16px;margin-top:14px}
+.bal-item{display:flex;flex-direction:column;align-items:center;flex:1}
+.bal-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#9E9890;margin-bottom:3px}
+.bal-val{font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:#1A1410}
+.bal-divider{font-size:16px;color:#C8C0B8;font-weight:300;flex-shrink:0}
+
+/* ── Summary sidebar ── */
+.summary-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #F7F5F2}
+.summary-row:last-child{border-bottom:none}
+.sum-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#9E9890;flex-shrink:0}
+.sum-val{font-size:12px;font-weight:600;color:#1A1410;text-align:right;font-family:'DM Mono',monospace}
+.sum-val.capitalize{text-transform:capitalize}
+.sum-divider{height:1px;background:#F0EDE8;margin:8px 0}
+.status-chip{display:inline-flex;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;text-transform:capitalize}
+
+/* ── Action card ── */
+.action-card{display:flex;flex-direction:column;gap:0}
+
+/* ── Buttons ── */
+.btn-cta{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 22px;border-radius:11px;border:none;cursor:pointer;background-image:linear-gradient(135deg,#C0170F 0%,#F05A00 50%,#F9B233 100%);background-size:200% auto;color:#fff;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;text-decoration:none;box-shadow:0 4px 14px rgba(192,23,15,.28);animation:shine 3s linear infinite;transition:transform .2s,box-shadow .2s}
+@keyframes shine{0%{background-position:0% center}100%{background-position:200% center}}
+.btn-cta:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(192,23,15,.38)}
+.btn-cta:disabled{opacity:.6;cursor:not-allowed;animation:none}
+.btn-ghost{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:11px;border:1.5px solid #E8E2DA;background:#fff;color:#6B6560;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .18s;text-decoration:none;white-space:nowrap}
+.btn-ghost:hover{border-color:#9E9890;color:#1A1410}
+.full-width{width:100%}
+.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>

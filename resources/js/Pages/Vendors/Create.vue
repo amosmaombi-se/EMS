@@ -1,346 +1,299 @@
 <template>
     <AuthenticatedLayout>
-        <template #header>
-            <div class="flex items-center gap-4">
-                <Link :href="route('vendors.index')"
-                    class="inline-flex items-center p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                </Link>
+        <div class="page-wrap">
+
+            <!-- ── Header ── -->
+            <div class="page-header">
                 <div>
-                    <h2 class="font-bold text-2xl text-gray-900">Add New Vendor</h2>
-                    <p class="mt-1 text-sm text-gray-600">Fill in the details below to register a vendor</p>
+                    <div class="breadcrumb">
+                        <Link :href="route('vendors.index')" class="bc-link">Vendors</Link>
+                        <span class="bc-sep">›</span>
+                        <span class="bc-cur">New Vendor</span>
+                    </div>
+                    <div class="eyebrow-row"><span class="eyebrow-dot"></span>Create</div>
+                    <h1 class="page-title">Add New Vendor</h1>
+                    <p class="page-sub">Fill in the details below to register a vendor</p>
                 </div>
             </div>
-        </template>
 
-        <div class="py-6">
-            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                <!-- Validation Summary -->
-                <div v-if="showSummary && Object.keys(clientErrors).length > 0"
-                    class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-                    <div class="flex items-start gap-3">
-                        <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                        <div>
-                            <p class="text-sm font-semibold text-red-800">Please fix the following errors:</p>
-                            <ul class="mt-1.5 space-y-0.5">
-                                <li v-for="(msg, field) in clientErrors" :key="field"
-                                    class="text-xs text-red-700 flex items-center gap-1.5">
-                                    <span class="w-1 h-1 bg-red-400 rounded-full flex-shrink-0"></span>
-                                    {{ msg }}
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
+            <!-- ── Validation Summary ── -->
+            <div v-if="showSummary && Object.keys(clientErrors).length > 0" class="val-summary">
+                <div class="val-icon">
+                    <svg width="16" height="16" fill="none" stroke="#C0170F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 </div>
+                <div>
+                    <p class="val-title">Please fix the following errors:</p>
+                    <ul class="val-list">
+                        <li v-for="(msg, field) in clientErrors" :key="field" class="val-item">
+                            <span class="val-dot"></span>{{ msg }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
 
-                <form @submit.prevent="submit" novalidate class="space-y-6">
+            <!-- ── Layout ── -->
+            <div class="form-layout">
 
-                    <!-- ── Business Information ─── -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 class="text-base font-semibold text-gray-900 mb-5 pb-3 border-b border-gray-100">
-                            Business Information
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <!-- ═══ MAIN FORM ═══ -->
+                <div class="form-main">
+                    <form @submit.prevent="submit" novalidate>
 
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Business Name <span class="text-red-500">*</span>
-                                </label>
-                                <input v-model="form.business_name" @blur="touch('business_name')" type="text"
-                                    placeholder="e.g. Elite Photography Studio"
-                                    class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-1 text-sm transition-colors"
-                                    :class="fc('business_name')">
-                                <FE :msg="ge('business_name')" :show="he('business_name')" />
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Category <span class="text-red-500">*</span>
-                                </label>
-                                <select v-model="form.vendor_category_id" @blur="touch('vendor_category_id')"
-                                    class="w-full px-3 py-2 rounded-lg border bg-white focus:outline-none focus:ring-1 text-sm transition-colors"
-                                    :class="fc('vendor_category_id')">
-                                    <option value="">Select Category</option>
-                                    <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-                                </select>
-                                <FE :msg="ge('vendor_category_id')" :show="he('vendor_category_id')" />
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">Website
-                                    <span class="text-gray-400 font-normal">(optional)</span>
-                                </label>
-                                <input v-model="form.website" @blur="touch('website')" type="text"
-                                    placeholder="https://yourwebsite.com"
-                                    class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-1 text-sm transition-colors"
-                                    :class="fc('website')">
-                                <FE :msg="ge('website')" :show="he('website')" />
-                            </div>
-
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
-                                <textarea v-model="form.description" rows="4"
-                                    placeholder="Describe the vendor's services and expertise..."
-                                    class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm resize-none"></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ── Contact Information ─── -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 class="text-base font-semibold text-gray-900 mb-5 pb-3 border-b border-gray-100">
-                            Contact Information
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Contact Person <span class="text-red-500">*</span>
-                                </label>
-                                <input v-model="form.contact_person" @blur="touch('contact_person')" type="text"
-                                    placeholder="Full name"
-                                    class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-1 text-sm transition-colors"
-                                    :class="fc('contact_person')">
-                                <FE :msg="ge('contact_person')" :show="he('contact_person')" />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Email <span class="text-red-500">*</span>
-                                </label>
-                                <input v-model="form.email" @blur="touch('email')" type="email"
-                                    placeholder="vendor@example.com"
-                                    class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-1 text-sm transition-colors"
-                                    :class="fc('email')">
-                                <FE :msg="ge('email')" :show="he('email')" />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Phone <span class="text-red-500">*</span>
-                                </label>
-                                <input v-model="form.phone" @blur="touch('phone')" type="tel"
-                                    placeholder="+255 712 345 678"
-                                    class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-1 text-sm transition-colors"
-                                    :class="fc('phone')">
-                                <FE :msg="ge('phone')" :show="he('phone')" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ── Location ─── -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 class="text-base font-semibold text-gray-900 mb-5 pb-3 border-b border-gray-100">
-                            Location
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Address <span class="text-red-500">*</span>
-                                </label>
-                                <input v-model="form.address" @blur="touch('address')" type="text"
-                                    placeholder="Street address"
-                                    class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-1 text-sm transition-colors"
-                                    :class="fc('address')">
-                                <FE :msg="ge('address')" :show="he('address')" />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                    City <span class="text-red-500">*</span>
-                                </label>
-                                <input v-model="form.city" @blur="touch('city')" type="text" placeholder="City"
-                                    class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-1 text-sm transition-colors"
-                                    :class="fc('city')">
-                                <FE :msg="ge('city')" :show="he('city')" />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                    State / Region <span class="text-red-500">*</span>
-                                </label>
-                                <input v-model="form.state" @blur="touch('state')" type="text" placeholder="State"
-                                    class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-1 text-sm transition-colors"
-                                    :class="fc('state')">
-                                <FE :msg="ge('state')" :show="he('state')" />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Country <span class="text-red-500">*</span>
-                                </label>
-                                <input v-model="form.country" @blur="touch('country')" type="text"
-                                    placeholder="Country"
-                                    class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-1 text-sm transition-colors"
-                                    :class="fc('country')">
-                                <FE :msg="ge('country')" :show="he('country')" />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">Postal Code</label>
-                                <input v-model="form.postal_code" type="text" placeholder="Postal Code"
-                                    class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ── Business Details ─── -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 class="text-base font-semibold text-gray-900 mb-5 pb-3 border-b border-gray-100">
-                            Business Details
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Registration Number
-                                    <span class="text-gray-400 font-normal">(optional)</span>
-                                </label>
-                                <input v-model="form.business_registration_number" type="text"
-                                    placeholder="e.g. TZ123456"
-                                    class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">Tax ID
-                                    <span class="text-gray-400 font-normal">(optional)</span>
-                                </label>
-                                <input v-model="form.tax_id" type="text" placeholder="e.g. TIN123456789"
-                                    class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">Min. Order Value (TZS)
-                                    <span class="text-gray-400 font-normal">(optional)</span>
-                                </label>
-                                <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 text-xs pointer-events-none">TZS</span>
-                                    <input v-model="form.minimum_order_value" @blur="touch('minimum_order_value')"
-                                        type="number" min="0" step="1000" placeholder="0"
-                                        class="w-full pl-11 pr-3 py-2 rounded-lg border focus:outline-none focus:ring-1 text-sm transition-colors"
-                                        :class="fc('minimum_order_value')">
-                                </div>
-                                <FE :msg="ge('minimum_order_value')" :show="he('minimum_order_value')" />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">Years of Experience
-                                    <span class="text-gray-400 font-normal">(optional)</span>
-                                </label>
-                                <input v-model="form.years_of_experience" @blur="touch('years_of_experience')"
-                                    type="number" min="0" placeholder="e.g. 5"
-                                    class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-1 text-sm transition-colors"
-                                    :class="fc('years_of_experience')">
-                                <FE :msg="ge('years_of_experience')" :show="he('years_of_experience')" />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1.5">Team Size
-                                    <span class="text-gray-400 font-normal">(optional)</span>
-                                </label>
-                                <input v-model="form.team_size" @blur="touch('team_size')" type="number" min="1"
-                                    placeholder="e.g. 10"
-                                    class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-1 text-sm transition-colors"
-                                    :class="fc('team_size')">
-                                <FE :msg="ge('team_size')" :show="he('team_size')" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ── Service Areas & Specializations ─── -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 class="text-base font-semibold text-gray-900 mb-5 pb-3 border-b border-gray-100">
-                            Service Areas & Specializations
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Service Areas -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Service Areas</label>
-                                <div class="flex gap-2 mb-2">
-                                    <input v-model="newServiceArea" @keydown.enter.prevent="addServiceArea"
-                                        type="text" placeholder="Add area and press Enter"
-                                        class="flex-1 px-3 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm">
-                                    <button type="button" @click="addServiceArea"
-                                        class="px-3 py-2 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 text-sm font-medium transition-colors">
-                                        Add
-                                    </button>
-                                </div>
-                                <div class="flex flex-wrap gap-2">
-                                    <span v-for="(area, i) in form.service_areas" :key="i"
-                                        class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-200">
-                                        {{ area }}
-                                        <button type="button" @click="removeServiceArea(i)"
-                                            class="hover:text-blue-900 ml-0.5">✕</button>
-                                    </span>
-                                    <span v-if="form.service_areas.length === 0"
-                                        class="text-xs text-gray-400">No service areas added yet</span>
+                        <!-- Business Information -->
+                        <div class="ep-card form-card">
+                            <div class="card-head">
+                                <span class="card-icon" style="background:rgba(29,92,150,.1)">🏢</span>
+                                <div>
+                                    <div class="card-title">Business Information</div>
+                                    <div class="card-sub">Core details about the vendor</div>
                                 </div>
                             </div>
-
-                            <!-- Specializations -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Specializations</label>
-                                <div class="flex gap-2 mb-2">
-                                    <input v-model="newSpecialization" @keydown.enter.prevent="addSpecialization"
-                                        type="text" placeholder="Add specialization and press Enter"
-                                        class="flex-1 px-3 py-2 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm">
-                                    <button type="button" @click="addSpecialization"
-                                        class="px-3 py-2 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 text-sm font-medium transition-colors">
-                                        Add
-                                    </button>
-                                </div>
-                                <div class="flex flex-wrap gap-2">
-                                    <span v-for="(spec, i) in form.specializations" :key="i"
-                                        class="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 text-purple-700 text-xs rounded-full border border-purple-200">
-                                        {{ spec }}
-                                        <button type="button" @click="removeSpecialization(i)"
-                                            class="hover:text-purple-900 ml-0.5">✕</button>
-                                    </span>
-                                    <span v-if="form.specializations.length === 0"
-                                        class="text-xs text-gray-400">No specializations added yet</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ── Settings ─── -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h3 class="text-base font-semibold text-gray-900 mb-5 pb-3 border-b border-gray-100">
-                            Settings
-                        </h3>
-                        <div class="flex flex-col sm:flex-row gap-6">
-                            <label v-for="toggle in toggleSettings" :key="toggle.key"
-                                class="flex items-center gap-3 cursor-pointer">
-                                <div class="relative" @click="form[toggle.key] = !form[toggle.key]">
-                                    <div class="w-10 h-6 rounded-full transition-colors duration-200"
-                                        :class="form[toggle.key] ? 'bg-indigo-600' : 'bg-gray-200'">
-                                        <div class="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200"
-                                            :class="form[toggle.key] ? 'translate-x-4 left-0.5' : 'left-0.5'"></div>
+                            <div class="card-body">
+                                <div class="field-grid">
+                                    <div class="col-span-2">
+                                        <label class="field-label">Business Name <span class="req">*</span></label>
+                                        <input v-model="form.business_name" @blur="touch('business_name')" type="text" placeholder="e.g. Elite Photography Studio" class="ep-input" :class="fc('business_name')">
+                                        <FE :msg="ge('business_name')" :show="he('business_name')" />
+                                    </div>
+                                    <div>
+                                        <label class="field-label">Category <span class="req">*</span></label>
+                                        <select v-model="form.vendor_category_id" @blur="touch('vendor_category_id')" class="ep-input ep-select" :class="fc('vendor_category_id')">
+                                            <option value="">Select Category</option>
+                                            <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                                        </select>
+                                        <FE :msg="ge('vendor_category_id')" :show="he('vendor_category_id')" />
+                                    </div>
+                                    <div>
+                                        <label class="field-label">Website <span class="opt">(optional)</span></label>
+                                        <input v-model="form.website" @blur="touch('website')" type="text" placeholder="https://yourwebsite.com" class="ep-input" :class="fc('website')">
+                                        <FE :msg="ge('website')" :show="he('website')" />
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="field-label">Description <span class="opt">(optional)</span></label>
+                                        <textarea v-model="form.description" rows="4" placeholder="Describe the vendor's services and expertise…" class="ep-input ep-textarea"></textarea>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="ep-card form-card">
+                            <div class="card-head">
+                                <span class="card-icon" style="background:rgba(240,90,0,.1)">📞</span>
                                 <div>
-                                    <p class="text-sm font-medium text-gray-700">{{ toggle.label }}</p>
-                                    <p class="text-xs text-gray-500">{{ toggle.description }}</p>
+                                    <div class="card-title">Contact Information</div>
+                                    <div class="card-sub">Who to reach for this vendor</div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="field-grid col-3">
+                                    <div>
+                                        <label class="field-label">Contact Person <span class="req">*</span></label>
+                                        <input v-model="form.contact_person" @blur="touch('contact_person')" type="text" placeholder="Full name" class="ep-input" :class="fc('contact_person')">
+                                        <FE :msg="ge('contact_person')" :show="he('contact_person')" />
+                                    </div>
+                                    <div>
+                                        <label class="field-label">Email <span class="req">*</span></label>
+                                        <input v-model="form.email" @blur="touch('email')" type="email" placeholder="vendor@example.com" class="ep-input" :class="fc('email')">
+                                        <FE :msg="ge('email')" :show="he('email')" />
+                                    </div>
+                                    <div>
+                                        <label class="field-label">Phone <span class="req">*</span></label>
+                                        <input v-model="form.phone" @blur="touch('phone')" type="tel" placeholder="+255 712 345 678" class="ep-input" :class="fc('phone')">
+                                        <FE :msg="ge('phone')" :show="he('phone')" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="ep-card form-card">
+                            <div class="card-head">
+                                <span class="card-icon" style="background:rgba(249,178,51,.12)">📍</span>
+                                <div>
+                                    <div class="card-title">Location</div>
+                                    <div class="card-sub">Where this vendor is based</div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="field-grid">
+                                    <div class="col-span-2">
+                                        <label class="field-label">Address <span class="req">*</span></label>
+                                        <input v-model="form.address" @blur="touch('address')" type="text" placeholder="Street address" class="ep-input" :class="fc('address')">
+                                        <FE :msg="ge('address')" :show="he('address')" />
+                                    </div>
+                                    <div>
+                                        <label class="field-label">City <span class="req">*</span></label>
+                                        <input v-model="form.city" @blur="touch('city')" type="text" placeholder="City" class="ep-input" :class="fc('city')">
+                                        <FE :msg="ge('city')" :show="he('city')" />
+                                    </div>
+                                    <div>
+                                        <label class="field-label">State / Region <span class="req">*</span></label>
+                                        <input v-model="form.state" @blur="touch('state')" type="text" placeholder="State" class="ep-input" :class="fc('state')">
+                                        <FE :msg="ge('state')" :show="he('state')" />
+                                    </div>
+                                    <div>
+                                        <label class="field-label">Country <span class="req">*</span></label>
+                                        <input v-model="form.country" @blur="touch('country')" type="text" placeholder="Country" class="ep-input" :class="fc('country')">
+                                        <FE :msg="ge('country')" :show="he('country')" />
+                                    </div>
+                                    <div>
+                                        <label class="field-label">Postal Code <span class="opt">(optional)</span></label>
+                                        <input v-model="form.postal_code" type="text" placeholder="Postal Code" class="ep-input ep-input-plain">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Business Details -->
+                        <div class="ep-card form-card">
+                            <div class="card-head">
+                                <span class="card-icon" style="background:rgba(22,163,74,.1)">📄</span>
+                                <div>
+                                    <div class="card-title">Business Details</div>
+                                    <div class="card-sub">Registration, financials and team info</div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="field-grid col-3">
+                                    <div>
+                                        <label class="field-label">Reg. Number <span class="opt">(optional)</span></label>
+                                        <input v-model="form.business_registration_number" type="text" placeholder="e.g. TZ123456" class="ep-input ep-input-plain">
+                                    </div>
+                                    <div>
+                                        <label class="field-label">Tax ID <span class="opt">(optional)</span></label>
+                                        <input v-model="form.tax_id" type="text" placeholder="e.g. TIN123456789" class="ep-input ep-input-plain">
+                                    </div>
+                                    <div>
+                                        <label class="field-label">Min. Order Value <span class="opt">(TZS)</span></label>
+                                        <div class="prefix-wrap">
+                                            <span class="prefix-label">TZS</span>
+                                            <input v-model="form.minimum_order_value" @blur="touch('minimum_order_value')" type="number" min="0" step="1000" placeholder="0" class="ep-input ep-input-prefix" :class="fc('minimum_order_value')">
+                                        </div>
+                                        <FE :msg="ge('minimum_order_value')" :show="he('minimum_order_value')" />
+                                    </div>
+                                    <div>
+                                        <label class="field-label">Years of Experience <span class="opt">(optional)</span></label>
+                                        <input v-model="form.years_of_experience" @blur="touch('years_of_experience')" type="number" min="0" placeholder="e.g. 5" class="ep-input" :class="fc('years_of_experience')">
+                                        <FE :msg="ge('years_of_experience')" :show="he('years_of_experience')" />
+                                    </div>
+                                    <div>
+                                        <label class="field-label">Team Size <span class="opt">(optional)</span></label>
+                                        <input v-model="form.team_size" @blur="touch('team_size')" type="number" min="1" placeholder="e.g. 10" class="ep-input" :class="fc('team_size')">
+                                        <FE :msg="ge('team_size')" :show="he('team_size')" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Service Areas & Specializations -->
+                        <div class="ep-card form-card">
+                            <div class="card-head">
+                                <span class="card-icon" style="background:rgba(192,23,15,.08)">🗺️</span>
+                                <div>
+                                    <div class="card-title">Service Areas &amp; Specializations</div>
+                                    <div class="card-sub">Where they operate and what they do best</div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="field-grid">
+                                    <!-- Service Areas -->
+                                    <div>
+                                        <label class="field-label">Service Areas</label>
+                                        <div class="tag-input-row">
+                                            <input v-model="newServiceArea" @keydown.enter.prevent="addServiceArea" type="text" placeholder="Add area, press Enter" class="ep-input ep-input-plain tag-input">
+                                            <button type="button" @click="addServiceArea" class="tag-add-btn">Add</button>
+                                        </div>
+                                        <div class="tag-cloud">
+                                            <span v-for="(area, i) in form.service_areas" :key="i" class="tag-navy">
+                                                {{ area }}
+                                                <button type="button" @click="removeServiceArea(i)" class="tag-rm">✕</button>
+                                            </span>
+                                            <span v-if="!form.service_areas.length" class="tag-empty">None added yet</span>
+                                        </div>
+                                    </div>
+                                    <!-- Specializations -->
+                                    <div>
+                                        <label class="field-label">Specializations</label>
+                                        <div class="tag-input-row">
+                                            <input v-model="newSpecialization" @keydown.enter.prevent="addSpecialization" type="text" placeholder="Add specialization, press Enter" class="ep-input ep-input-plain tag-input">
+                                            <button type="button" @click="addSpecialization" class="tag-add-btn">Add</button>
+                                        </div>
+                                        <div class="tag-cloud">
+                                            <span v-for="(spec, i) in form.specializations" :key="i" class="tag-amber">
+                                                {{ spec }}
+                                                <button type="button" @click="removeSpecialization(i)" class="tag-rm">✕</button>
+                                            </span>
+                                            <span v-if="!form.specializations.length" class="tag-empty">None added yet</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+                <!-- ═══ STICKY SIDEBAR ═══ -->
+                <div class="form-sidebar">
+
+                    <!-- Vendor Summary -->
+                    <div class="ep-card">
+                        <div class="card-head">
+                            <span class="card-icon" style="background:rgba(192,23,15,.08)">📋</span>
+                            <div><div class="card-title">Vendor Summary</div></div>
+                        </div>
+                        <div class="dl-list">
+                            <div class="dl-row">
+                                <span class="dl-label">Name</span>
+                                <span class="dl-value">{{ form.business_name || '—' }}</span>
+                            </div>
+                            <div class="dl-row">
+                                <span class="dl-label">Contact</span>
+                                <span class="dl-value">{{ form.contact_person || '—' }}</span>
+                            </div>
+                            <div class="dl-row">
+                                <span class="dl-label">City</span>
+                                <span class="dl-value">{{ form.city || '—' }}</span>
+                            </div>
+                            <div class="dl-row">
+                                <span class="dl-label">Min. Order</span>
+                                <span class="dl-value" style="color:#C0170F">{{ form.minimum_order_value ? 'TZS ' + formatPrice(form.minimum_order_value) : '—' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings toggles -->
+                    <div class="ep-card">
+                        <div class="card-head">
+                            <span class="card-icon" style="background:rgba(29,92,150,.1)">⚙️</span>
+                            <div><div class="card-title">Settings</div></div>
+                        </div>
+                        <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+                            <label v-for="toggle in toggleSettings" :key="toggle.key" class="toggle-row">
+                                <div class="toggle-track" @click="form[toggle.key] = !form[toggle.key]" :class="form[toggle.key] ? 'track-on' : 'track-off'">
+                                    <div class="toggle-thumb" :class="form[toggle.key] ? 'thumb-on' : 'thumb-off'"></div>
+                                </div>
+                                <div>
+                                    <div class="toggle-label">{{ toggle.label }}</div>
+                                    <div class="toggle-desc">{{ toggle.description }}</div>
                                 </div>
                             </label>
                         </div>
                     </div>
 
-                    <!-- ── Actions ─── -->
-                    <div class="flex flex-col sm:flex-row justify-end gap-3 pb-6">
-                        <Link :href="route('vendors.index')"
-                            class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                            Cancel
-                        </Link>
-                        <button type="submit" :disabled="form.processing"
-                            class="inline-flex items-center justify-center px-5 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                            <svg v-if="form.processing" class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none"
-                                viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                    stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                            </svg>
-                            {{ form.processing ? 'Saving...' : 'Create Vendor' }}
+                    <!-- Actions -->
+                    <div class="sidebar-actions">
+                        <button type="button" @click="submit" :disabled="form.processing" class="btn-cta btn-full">
+                            <svg v-if="form.processing" class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,.3)" stroke-width="3"/><path d="M12 2a10 10 0 0 1 10 10" stroke="white" stroke-width="3" stroke-linecap="round"/></svg>
+                            <svg v-else width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            {{ form.processing ? 'Creating…' : 'Create Vendor' }}
                         </button>
+                        <Link :href="route('vendors.index')" class="btn-ghost btn-full">Cancel</Link>
                     </div>
-                </form>
+
+                </div>
             </div>
+
         </div>
     </AuthenticatedLayout>
 </template>
@@ -357,8 +310,8 @@ const FE = defineComponent({
     props: { msg: String, show: Boolean },
     setup(p) {
         return () => p.show && p.msg
-            ? h('p', { class: 'mt-1 text-xs text-red-600 flex items-center gap-1' }, [
-                h('svg', { class: 'w-3.5 h-3.5 flex-shrink-0', fill: 'currentColor', viewBox: '0 0 20 20' }, [
+            ? h('p', { style: 'margin-top:4px;font-size:11px;color:#C0170F;display:flex;align-items:center;gap:4px;font-family:DM Mono,monospace' }, [
+                h('svg', { width: '11', height: '11', fill: 'currentColor', viewBox: '0 0 20 20', style:'flex-shrink:0' }, [
                     h('path', { 'fill-rule': 'evenodd', 'clip-rule': 'evenodd', d: 'M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z' })
                 ]),
                 p.msg
@@ -394,102 +347,153 @@ const form = useForm({
 // ── Tag inputs ────────────────────────────────────────────────────────────────
 const newServiceArea    = ref('')
 const newSpecialization = ref('')
-
-const addServiceArea = () => {
-    const v = newServiceArea.value.trim()
-    if (v && !form.service_areas.includes(v)) form.service_areas.push(v)
-    newServiceArea.value = ''
-}
+const addServiceArea    = () => { const v = newServiceArea.value.trim(); if (v && !form.service_areas.includes(v)) form.service_areas.push(v); newServiceArea.value = '' }
 const removeServiceArea = (i) => form.service_areas.splice(i, 1)
-
-const addSpecialization = () => {
-    const v = newSpecialization.value.trim()
-    if (v && !form.specializations.includes(v)) form.specializations.push(v)
-    newSpecialization.value = ''
-}
+const addSpecialization = () => { const v = newSpecialization.value.trim(); if (v && !form.specializations.includes(v)) form.specializations.push(v); newSpecialization.value = '' }
 const removeSpecialization = (i) => form.specializations.splice(i, 1)
 
 // ── Validation ────────────────────────────────────────────────────────────────
-const touched  = reactive({})
+const touched     = reactive({})
 const showSummary = ref(false)
 
 const rules = {
-    vendor_category_id(v) { return !v ? 'Category is required.' : null },
-    business_name(v) {
-        if (!v?.trim()) return 'Business name is required.'
-        if (v.trim().length > 255) return 'Business name must be 255 characters or fewer.'
-        return null
-    },
-    contact_person(v) { return !v?.trim() ? 'Contact person is required.' : null },
-    email(v) {
-        if (!v?.trim()) return 'Email address is required.'
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Please enter a valid email address.'
-        return null
-    },
-    phone(v) {
-        if (!v?.trim()) return 'Phone number is required.'
-        if (!/^[\d\s+\-()]{7,20}$/.test(v)) return 'Please enter a valid phone number (7–20 digits).'
-        return null
-    },
-    address(v)  { return !v?.trim() ? 'Address is required.' : null },
-    city(v)     { return !v?.trim() ? 'City is required.' : null },
-    state(v)    { return !v?.trim() ? 'State / Region is required.' : null },
-    country(v)  { return !v?.trim() ? 'Country is required.' : null },
-    website(v) {
-        if (!v?.trim()) return null
-        try { new URL(v); return null } catch { return 'Please enter a valid URL (e.g. https://example.com).' }
-    },
-    minimum_order_value(v) {
-        if (v === '' || v === null || v === undefined) return null
-        if (Number(v) < 0) return 'Minimum order value cannot be negative.'
-        return null
-    },
-    years_of_experience(v) {
-        if (v === '' || v === null || v === undefined) return null
-        if (!Number.isInteger(Number(v)) || Number(v) < 0) return 'Years of experience must be a non-negative integer.'
-        return null
-    },
-    team_size(v) {
-        if (v === '' || v === null || v === undefined) return null
-        if (!Number.isInteger(Number(v)) || Number(v) < 1) return 'Team size must be at least 1.'
-        return null
-    },
+    vendor_category_id: v => !v ? 'Category is required.' : null,
+    business_name: v => { if (!v?.trim()) return 'Business name is required.'; if (v.trim().length > 255) return 'Business name must be 255 characters or fewer.'; return null },
+    contact_person: v => !v?.trim() ? 'Contact person is required.' : null,
+    email: v => { if (!v?.trim()) return 'Email address is required.'; if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Please enter a valid email address.'; return null },
+    phone: v => { if (!v?.trim()) return 'Phone number is required.'; if (!/^[\d\s+\-()]{7,20}$/.test(v)) return 'Please enter a valid phone number.'; return null },
+    address: v => !v?.trim() ? 'Address is required.' : null,
+    city:    v => !v?.trim() ? 'City is required.' : null,
+    state:   v => !v?.trim() ? 'State / Region is required.' : null,
+    country: v => !v?.trim() ? 'Country is required.' : null,
+    website: v => { if (!v?.trim()) return null; try { new URL(v); return null } catch { return 'Please enter a valid URL (e.g. https://example.com).' } },
+    minimum_order_value: v => (v === '' || v === null || v === undefined) ? null : Number(v) < 0 ? 'Minimum order value cannot be negative.' : null,
+    years_of_experience: v => (v === '' || v === null || v === undefined) ? null : (!Number.isInteger(Number(v)) || Number(v) < 0) ? 'Years of experience must be a non-negative integer.' : null,
+    team_size: v => (v === '' || v === null || v === undefined) ? null : (!Number.isInteger(Number(v)) || Number(v) < 1) ? 'Team size must be at least 1.' : null,
 }
 
-const clientErrors = computed(() => {
-    const e = {}
-    for (const [f, r] of Object.entries(rules)) {
-        const msg = r(form[f])
-        if (msg) e[f] = msg
-    }
-    return e
-})
-
-const touch    = (f) => { touched[f] = true }
+const clientErrors = computed(() => { const e = {}; for (const [f, r] of Object.entries(rules)) { const m = r(form[f]); if (m) e[f] = m }; return e })
+const touch    = f => { touched[f] = true }
 const touchAll = () => Object.keys(rules).forEach(f => { touched[f] = true })
-const he = (f) => (touched[f] || showSummary.value) && !!clientErrors.value[f]
-const ge = (f) => form.errors[f] || clientErrors.value[f]
-const fc = (f) => he(f)
-    ? 'border-red-300 focus:border-red-500 focus:ring-red-500 bg-red-50'
-    : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500'
+const he = f => (touched[f] || showSummary.value) && !!clientErrors.value[f]
+const ge = f => form.errors[f] || clientErrors.value[f]
+const fc = f => he(f) ? 'ep-input-err' : ''
 
-// ── Submit ────────────────────────────────────────────────────────────────────
 const submit = () => {
     touchAll()
     showSummary.value = true
     if (Object.keys(clientErrors.value).length > 0) {
-        setTimeout(() => {
-            const el = document.querySelector('.border-red-300')
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }, 50)
+        setTimeout(() => { const el = document.querySelector('.ep-input-err'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }) }, 50)
         return
     }
     form.post(route('vendors.store'))
 }
 
-// ── Static ────────────────────────────────────────────────────────────────────
 const toggleSettings = [
     { key: 'is_active',   label: 'Active',   description: 'Vendor is visible and bookable' },
     { key: 'is_featured', label: 'Featured', description: 'Highlight in featured sections' },
 ]
+
+const formatPrice = n => n ? Number(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}) : '0'
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box}
+.page-wrap{background:#F7F5F2;min-height:100vh;padding:28px 24px 72px;font-family:'DM Sans',sans-serif;color:#1A1410}
+.page-header{margin-bottom:22px}
+.breadcrumb{display:flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;margin-bottom:6px}
+.bc-link{color:#9E9890;text-decoration:none;transition:color .15s}.bc-link:hover{color:#C0170F}
+.bc-sep{color:#C8C0B8}.bc-cur{color:#6B6560}
+.eyebrow-row{display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;color:#9E9890;text-transform:uppercase;margin-bottom:5px}
+.eyebrow-dot{width:6px;height:6px;border-radius:50%;background:#C0170F;animation:blink .9s ease-in-out infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.page-title{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,28px);font-weight:900;color:#1A1410;line-height:1.15;margin-bottom:4px}
+.page-sub{font-size:12px;color:#9E9890;font-family:'DM Mono',monospace}
+
+/* ── Validation summary ── */
+.val-summary{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;background:rgba(192,23,15,.05);border:1px solid rgba(192,23,15,.25);border-radius:14px;margin-bottom:18px}
+.val-icon{width:32px;height:32px;border-radius:9px;background:rgba(192,23,15,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.val-title{font-size:12px;font-weight:700;color:#C0170F;margin-bottom:6px}
+.val-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:3px}
+.val-item{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;color:#C0170F}
+.val-dot{width:4px;height:4px;border-radius:50%;background:#C0170F;flex-shrink:0}
+
+/* ── Layout ── */
+.form-layout{display:grid;grid-template-columns:1fr 280px;gap:18px;align-items:start}
+@media(max-width:1024px){.form-layout{grid-template-columns:1fr}}
+.form-main{display:flex;flex-direction:column;gap:16px}
+.form-sidebar{position:sticky;top:24px;display:flex;flex-direction:column;gap:14px}
+
+/* ── Cards ── */
+.ep-card{background:#fff;border:1px solid #E8E2DA;border-radius:18px;overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,.04)}
+.form-card{}
+.card-head{display:flex;align-items:center;gap:12px;padding:13px 18px;background:#F0EDE8;border-bottom:1px solid #E8E2DA}
+.card-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.card-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:900;color:#1A1410;line-height:1.2}
+.card-sub{font-family:'DM Mono',monospace;font-size:10px;color:#9E9890;margin-top:1px}
+.card-body{padding:18px}
+
+/* ── Fields ── */
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.col-3{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:700px){.field-grid,.col-3{grid-template-columns:1fr}}
+.col-span-2{grid-column:span 2}
+@media(max-width:700px){.col-span-2{grid-column:span 1}}
+.field-label{display:block;font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#6B6560;font-weight:700;margin-bottom:6px}
+.req{color:#C0170F;font-style:normal}
+.opt{color:#C8C0B8;font-style:normal;text-transform:none;letter-spacing:0;font-weight:400;font-size:10px}
+.ep-input{width:100%;padding:9px 12px;border:1.5px solid #E8E2DA;border-radius:11px;font-size:12px;font-family:'DM Sans',sans-serif;color:#1A1410;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s}
+.ep-input:focus{border-color:#C0170F;box-shadow:0 0 0 3px rgba(192,23,15,.09)}
+.ep-input::placeholder{color:#C8C0B8}
+.ep-input-plain:focus{border-color:#1D5C96;box-shadow:0 0 0 3px rgba(29,92,150,.09)}
+.ep-input-err{border-color:rgba(192,23,15,.5)!important;background:rgba(192,23,15,.03)!important}
+.ep-input-err:focus{border-color:#C0170F!important;box-shadow:0 0 0 3px rgba(192,23,15,.12)!important}
+.ep-select{cursor:pointer}
+.ep-textarea{resize:none;line-height:1.6}
+.prefix-wrap{position:relative}
+.prefix-label{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'DM Mono',monospace;font-size:10px;color:#9E9890;pointer-events:none;font-weight:700}
+.ep-input-prefix{padding-left:38px}
+
+/* ── Tags ── */
+.tag-input-row{display:flex;gap:8px;margin-bottom:8px}
+.tag-input{flex:1}
+.tag-add-btn{padding:9px 14px;border-radius:10px;border:1.5px solid rgba(192,23,15,.3);background:rgba(192,23,15,.06);color:#C0170F;font-family:'DM Mono',monospace;font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap}
+.tag-add-btn:hover{background:rgba(192,23,15,.1)}
+.tag-cloud{display:flex;flex-wrap:wrap;gap:5px;min-height:24px}
+.tag-navy{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:rgba(29,92,150,.1);color:#1D5C96;border:1px solid rgba(29,92,150,.25);font-family:'DM Mono',monospace;font-size:9px;font-weight:700}
+.tag-amber{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:rgba(249,178,51,.12);color:#b45309;border:1px solid rgba(249,178,51,.3);font-family:'DM Mono',monospace;font-size:9px;font-weight:700}
+.tag-rm{background:none;border:none;cursor:pointer;font-size:9px;opacity:.6;padding:0;line-height:1;transition:opacity .15s}
+.tag-rm:hover{opacity:1}
+.tag-empty{font-family:'DM Mono',monospace;font-size:10px;color:#C8C0B8}
+
+/* ── Sidebar DL ── */
+.dl-list{padding:0 16px;display:flex;flex-direction:column}
+.dl-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #F7F5F2}
+.dl-row:last-child{border-bottom:none}
+.dl-label{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#9E9890;font-weight:700;flex-shrink:0;padding-top:1px}
+.dl-value{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:#1A1410;text-align:right;word-break:break-word;max-width:140px}
+
+/* ── Toggles ── */
+.toggle-row{display:flex;align-items:center;gap:10px;cursor:pointer}
+.toggle-track{width:40px;height:22px;border-radius:11px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.track-on{background:linear-gradient(135deg,#C0170F,#F05A00)}
+.track-off{background:#E8E2DA}
+.toggle-thumb{position:absolute;top:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.18);transition:left .2s}
+.thumb-on{left:20px}
+.thumb-off{left:2px}
+.toggle-label{font-size:12px;font-weight:700;color:#1A1410}
+.toggle-desc{font-family:'DM Mono',monospace;font-size:10px;color:#9E9890;margin-top:1px}
+
+/* ── Buttons ── */
+.btn-cta{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 18px;border-radius:12px;border:none;cursor:pointer;background-image:linear-gradient(135deg,#C0170F 0%,#F05A00 50%,#F9B233 100%);background-size:200% auto;color:#fff;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif;text-decoration:none;box-shadow:0 4px 14px rgba(192,23,15,.28);animation:shine 3s linear infinite;transition:transform .2s,box-shadow .2s}
+.btn-cta:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(192,23,15,.38)}
+.btn-cta:disabled{opacity:.55;cursor:not-allowed;transform:none}
+@keyframes shine{0%{background-position:0% center}100%{background-position:200% center}}
+.btn-full{width:100%;text-align:center}
+.btn-ghost{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:12px;border:1.5px solid #E8E2DA;background:#fff;color:#6B6560;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;text-decoration:none;cursor:pointer;transition:all .18s}
+.btn-ghost:hover{border-color:#9E9890;color:#1A1410}
+.sidebar-actions{display:flex;flex-direction:column;gap:8px}
+.spin-icon{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
